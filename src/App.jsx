@@ -18,6 +18,7 @@ import PopularCategories from "./pages/PopularCategories";
 import Reviews from "./pages/Reviews";
 import Payments from "./pages/Payments";
 import Contact from "./pages/Contact";
+import Footer from "./pages/Footer";
 
 function App() {
   return (
@@ -37,11 +38,14 @@ function App() {
         <Route path="/payments" element={<Payments />} />
         <Route path="/contact" element={<Contact />} />
 
+
         {/* DASHBOARDS */}
         <Route path="/user-dashboard" element={<UserDashboard />} />
         <Route path="/business-dashboard" element={<BusinessDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
       </Routes>
+      <Footer />
+
     </BrowserRouter>
   );
 }
