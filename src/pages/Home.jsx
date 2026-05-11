@@ -13,7 +13,7 @@ import Testimonials from "../components/Testimonials";
 
 const categories = [
   "Salon",
-  "Gym",
+  "Gm",
   "Cafe",
   "Restaurant",
   "Hotel",
