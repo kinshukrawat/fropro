@@ -1,3 +1,4 @@
+import logo from "../assets/oye-rohini-logo.png";
 import React, { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
@@ -19,6 +20,11 @@ export default function Navbar() {
   return (
     <header className="bg-white shadow sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+
+        <Link to="/" className="flex items-center">
+        <img src={logo} alt="Oye Rohini Logo" className="h-12 w-auto" />
+        </Link> 
+
         <Link to="/" className="text-3xl font-bold text-blue-600">
           Oye Rohini
         </Link>
