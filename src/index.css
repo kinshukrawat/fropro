@@ -1,12 +1,5 @@
 @import "tailwindcss";
 
-img {
-  max-width: 100%;
-  display: block;
-}
-
-@import "tailwindcss";
-
 :root {
   --primary-blue: #0f5eff;
   --dark-blue: #003c9e;
@@ -19,4 +12,24 @@ img {
 body {
   background: var(--light-bg);
   font-family: Arial, sans-serif;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+@keyframes slidePopup {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.side-popup {
+  animation: slidePopup 0.6s ease-out, bounce 1.5s infinite 0.8s;
 }
