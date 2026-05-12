@@ -208,8 +208,6 @@ export default function Home() {
       <SearchSuggestions />
 
       <Testimonials />
-
-      {/* ================= FOOTER ================= */}
       
     </div>
   );

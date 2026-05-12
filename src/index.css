@@ -4,3 +4,19 @@ img {
   max-width: 100%;
   display: block;
 }
+
+@import "tailwindcss";
+
+:root {
+  --primary-blue: #0f5eff;
+  --dark-blue: #003c9e;
+  --black: #111827;
+  --white: #ffffff;
+  --light-bg: #f5f8ff;
+  --gray-text: #6b7280;
+}
+
+body {
+  background: var(--light-bg);
+  font-family: Arial, sans-serif;
+}
