@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 import {
   FaSearch,
@@ -54,6 +55,19 @@ const listings = [
 ];
 
 export default function Home() {
+
+  // ================= MODAL STATE =================
+  const [showModal, setShowModal] = useState(false);
+
+  // ================= AUTO OPEN MODAL =================
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowModal(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-100">
 
@@ -205,10 +219,43 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ================= ON LOAD POPUP ================= */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full relative shadow-2xl animate-bounce">
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-black text-2xl"
+            >
+              ×
+            </button>
+
+            <h2 className="text-3xl font-bold mb-3 text-center text-black">
+              Welcome to Oye Rohini 🎉
+            </h2>
+
+            <p className="text-gray-500 text-center mb-6">
+              Discover best salons, gyms, cafes, restaurants & more near you.
+            </p>
+
+            <button
+              onClick={() => setShowModal(false)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition"
+            >
+              Explore Now
+            </button>
+
+          </div>
+        </div>
+      )}
+
       <SearchSuggestions />
 
       <Testimonials />
-      
+
     </div>
   );
 }

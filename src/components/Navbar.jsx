@@ -29,7 +29,8 @@ export default function Navbar() {
           />
 
           <h1
-          className="text-3xl md:text-4xl font-black leading-none tracking-tight bg-gradient-to-r from-blue-700 via-blue-500 to-indigo-600 bg-clip-text text-transparent"            style={{ fontFamily: "'Poppins', sans-serif" }}
+          className="text-3xl md:text-4xl font-black leading-none tracking-tight bg-gradient-to-r from-blue-700 via-blue-500 to-indigo-600 bg-clip-text text-transparent"            
+          style={{ fontFamily: "'Poppins', sans-serif" }}
           >
             Oye Rohini
           </h1>
