@@ -80,11 +80,12 @@ export default function Home() {
           </button>
 
           <h3 className="font-bold text-lg mb-1">
-            Sign Up Now 🎉
+            List Your Business 🎉
           </h3>
 
           <p className="text-sm text-blue-100">
-            Create your account and explore best services near you.
+            Own a business in Rohini?
+            Sign up now and get featured
           </p>
         </Link>
       )}
