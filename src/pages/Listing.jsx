@@ -1,5 +1,5 @@
 import FilterSidebar from "../components/FilterSidebar";
-
+import { Link } from "react-router-dom";
 
 import {
   FaStar,
@@ -149,15 +149,17 @@ export default function Listings() {
                       {item.location}
                     </div>
 
-                    <div className="flex gap-3">
-                      <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition">
-                        View Details
-                      </button>
+                    <div className="flex items-center gap-3 mt-6">
+  <Link to={`/viewdetail/${encodeURIComponent(item.name)}`} className="flex-1">
+    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold transition">
+      View Details
+    </button>
+  </Link>
 
-                      <button className="bg-gray-100 hover:bg-gray-200 p-4 rounded-xl transition">
-                        <FaPhoneAlt className="text-blue-600" />
-                      </button>
-                    </div>
+  <button className="bg-gray-100 hover:bg-gray-200 p-4 rounded-xl transition">
+    <FaPhoneAlt className="text-blue-600" />
+  </button>
+</div>
                   </div>
                 </div>
               ))}

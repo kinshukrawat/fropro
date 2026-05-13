@@ -19,6 +19,7 @@ import Reviews from "./pages/Reviews";
 import Payments from "./pages/Payments";
 import Contact from "./pages/Contact";
 import Footer from "./pages/Footer";
+import ViewDetail from "./pages/ViewDetail";
 
 function App() {
   return (
@@ -37,6 +38,8 @@ function App() {
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/payments" element={<Payments />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/viewdetail/:id" element={<ViewDetail />} />
+        
 
 
         {/* DASHBOARDS */}

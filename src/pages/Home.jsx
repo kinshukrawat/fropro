@@ -242,6 +242,153 @@ export default function Home() {
 
       <Testimonials />
 
+      {/* ================= SPLIT QUERY SECTION ================= */}
+
+<section className="max-w-7xl mx-auto px-4 py-20">
+
+  <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden grid lg:grid-cols-2">
+
+    {/* ================= LEFT CONTENT ================= */}
+    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-10 md:p-16 flex flex-col justify-center">
+
+      <span className="bg-white/20 w-fit px-5 py-2 rounded-full text-sm font-semibold mb-6">
+        Contact Us
+      </span>
+
+      <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
+        Let’s Discuss <br />
+        Your Requirement
+      </h2>
+
+      <p className="text-blue-100 text-lg leading-8 mb-10">
+        Looking for salons, gyms, cafes, restaurants or any local
+        business service? Send your query and our team will help
+        you quickly.
+      </p>
+
+      {/* Features */}
+      <div className="space-y-5">
+
+        <div className="flex items-center gap-4">
+          <div className="bg-white/20 p-3 rounded-xl">
+            📞
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-lg">
+              Quick Support
+            </h4>
+
+            <p className="text-blue-100 text-sm">
+              Fast response from our support team
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="bg-white/20 p-3 rounded-xl">
+            ⭐
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-lg">
+              Trusted Businesses
+            </h4>
+
+            <p className="text-blue-100 text-sm">
+              Verified and top-rated listings
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="bg-white/20 p-3 rounded-xl">
+            📍
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-lg">
+              Hyperlocal Services
+            </h4>
+
+            <p className="text-blue-100 text-sm">
+              Discover businesses near your area
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    {/* ================= RIGHT FORM ================= */}
+    <div className="p-10 md:p-16">
+
+      <h3 className="text-3xl font-bold text-gray-900 mb-3">
+        Send Your Query
+      </h3>
+
+      <p className="text-gray-500 mb-10">
+        Fill out the form and we’ll contact you shortly.
+      </p>
+
+      <form className="space-y-6">
+
+        {/* Name */}
+        <div>
+          <label className="block mb-2 font-semibold text-gray-700">
+            Full Name
+          </label>
+
+          <input
+            type="text"
+            placeholder="Enter your full name"
+            className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition"
+          />
+        </div>
+
+        {/* Mobile */}
+        <div>
+          <label className="block mb-2 font-semibold text-gray-700">
+            Mobile Number
+          </label>
+
+          <input
+            type="tel"
+            placeholder="+91 9876543210"
+            className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition"
+          />
+        </div>
+
+        {/* Message */}
+        <div>
+          <label className="block mb-2 font-semibold text-gray-700">
+            Message
+          </label>
+
+          <textarea
+            rows="5"
+            placeholder="Write your message here..."
+            className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none resize-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition"
+          ></textarea>
+        </div>
+
+        {/* Button */}
+        <button
+          type="submit"
+          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 rounded-2xl font-semibold text-lg shadow-lg transition duration-300"
+        >
+          Submit Query
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</section>
+
     </div>
   );
 }
