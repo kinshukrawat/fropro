@@ -91,7 +91,7 @@ export default function Contact() {
                   </h3>
 
                   <p className="text-gray-500">
-                    Rohini Sector 13, New Delhi, India
+                    
                   </p>
                 </div>
               </div>

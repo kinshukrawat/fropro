@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
+
 import {
   FaSearch,
   FaMapMarkerAlt,
@@ -30,6 +31,7 @@ const listings = [
     category: "Salon",
     location: "Delhi",
     rating: 4.8,
+    
   },
   {
     id: 2,
@@ -37,6 +39,7 @@ const listings = [
     category: "Gym",
     location: "Mumbai",
     rating: 4.6,
+    
   },
   {
     id: 3,
@@ -44,6 +47,7 @@ const listings = [
     category: "Cafe",
     location: "Noida",
     rating: 4.7,
+    
   },
   {
     id: 4,
@@ -51,6 +55,7 @@ const listings = [
     category: "Restaurant",
     location: "Gurgaon",
     rating: 4.9,
+    
   },
 ];
 
@@ -114,7 +119,6 @@ export default function Home() {
                 className="w-full outline-none text-black"
               />
             </div>
-
             <div className="flex items-center flex-1 border rounded-lg px-4 py-3">
               <FaMapMarkerAlt className="text-gray-400 mr-3" />
 
@@ -167,76 +171,80 @@ export default function Home() {
       </section>
 
       {/* ================= FEATURED LISTINGS ================= */}
-      <section className="bg-white py-16">
+<section className="bg-white py-16">
 
-        <div className="max-w-7xl mx-auto px-4">
+  <div className="max-w-7xl mx-auto px-4">
 
-          {/* Heading */}
-          <div className="flex items-center justify-between mb-8">
+    {/* Heading */}
+    <div className="flex items-center justify-between mb-8">
 
-            <h2 className="text-3xl font-bold text-black">
-              Featured Listings
-            </h2>
+      <h2 className="text-3xl font-bold text-black">
+        Featured Listings
+      </h2>
 
-            <Link
-              to="/listings"
-              className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition"
-            >
-              View All
-              <FaChevronRight />
-            </Link>
+      <Link
+        to="/listings"
+        className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition"
+      >
+        View All
+        <FaChevronRight />
+      </Link>
 
-          </div>
+    </div>
 
-          {/* Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+    {/* Cards */}
+    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
 
-            {listings.map((item) => (
-              <div
-                key={item.id}
-                className="bg-gray-50 rounded-2xl overflow-hidden shadow hover:shadow-xl transition"
-              >
+      {listings.map((item) => (
+        <div
+          key={item.id}
+          className="bg-gray-50 rounded-2xl overflow-hidden shadow hover:shadow-xl transition"
+        >
 
-                {/* Image */}
-                <div className="h-48 bg-gray-300"></div>
+          {/* IMAGE */}
+          <img
+            src={item.image}
+            alt={item.name}
+            className="w-full h-48 object-cover"
+          />
 
-                {/* Content */}
-                <div className="p-5">
+          {/* Content */}
+          <div className="p-5">
 
-                  <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-3">
 
-                    <h3 className="text-xl font-bold">
-                      {item.name}
-                    </h3>
+              <h3 className="text-xl font-bold">
+                {item.name}
+              </h3>
 
-                    <div className="flex items-center bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
-                      <FaStar className="mr-1" />
-                      {item.rating}
-                    </div>
-
-                  </div>
-
-                  <p className="text-gray-500 mb-2">
-                    {item.category}
-                  </p>
-
-                  <div className="flex items-center text-gray-500 mb-5">
-                    <FaMapMarkerAlt className="mr-2" />
-                    {item.location}
-                  </div>
-
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 transition">
-                    <FaPhoneAlt />
-                    Contact Now
-                  </button>
-
-                </div>
+              <div className="flex items-center bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
+                <FaStar className="mr-1" />
+                {item.rating}
               </div>
-            ))}
+
+            </div>
+
+            <p className="text-gray-500 mb-2">
+              {item.category}
+            </p>
+
+            <div className="flex items-center text-gray-500 mb-5">
+              <FaMapMarkerAlt className="mr-2" />
+              {item.location}
+            </div>
+
+            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 transition">
+              <FaPhoneAlt />
+              Contact Now
+            </button>
 
           </div>
         </div>
-      </section>
+      ))}
+
+    </div>
+  </div>
+</section>
 
       <SearchSuggestions />
 
