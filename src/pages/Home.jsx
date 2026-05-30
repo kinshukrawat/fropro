@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
 import {
   FaSearch,
   FaMapMarkerAlt,
@@ -12,7 +11,7 @@ import {
 import SearchSuggestions from "../components/SearchSuggestions";
 import Testimonials from "../components/Testimonials";
 
-const categories = [
+const defaultCategories = [
   {
     name: "Salon",
     image:
@@ -55,7 +54,7 @@ const categories = [
   },
 ];
 
-const listings = [
+const defaultListings = [
   {
     id: 1,
     name: "Urban Salon",
@@ -96,10 +95,81 @@ const listings = [
 
 export default function Home() {
   const [showModal, setShowModal] = useState(true);
+  const [categories, setCategories] = useState(defaultCategories);
+  const [listings, setListings] = useState(defaultListings);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    mobile: "",
+    message: "",
+  });
+
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    if (!API_URL) return;
+
+    fetch(`${API_URL}/categories`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setCategories(data);
+        }
+      })
+      .catch((err) => console.log("Categories API Error:", err));
+
+    fetch(`${API_URL}/listings`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setListings(data);
+        }
+      })
+      .catch((err) => console.log("Listings API Error:", err));
+  }, [API_URL]);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleQuerySubmit = async (e) => {
+    e.preventDefault();
+
+    if (!API_URL) {
+      alert("Backend API URL missing. Please check .env file.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/queries`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        alert("Query submitted successfully!");
+        setFormData({
+          name: "",
+          mobile: "",
+          message: "",
+        });
+      } else {
+        alert("Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      console.log("Query Submit Error:", error);
+      alert("Backend not connected.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* ================= POPUP ================= */}
       {showModal && (
         <Link
           to="/login"
@@ -116,14 +186,12 @@ export default function Home() {
           </button>
 
           <h3 className="font-bold text-lg mb-1">List Your Business 🎉</h3>
-
           <p className="text-sm text-blue-100">
             Own a business in Rohini? Sign up now and get featured
           </p>
         </Link>
       )}
 
-      {/* ================= HERO SECTION ================= */}
       <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-white py-24">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <span className="inline-block bg-white/20 px-5 py-2 rounded-full text-sm font-semibold mb-6">
@@ -163,7 +231,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Trust Badges */}
           <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm">
             <span className="bg-white/20 px-4 py-2 rounded-full">
               ⭐ 4.8 Rated Businesses
@@ -178,7 +245,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ================= POPULAR CATEGORIES ================= */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="flex items-center justify-between mb-10">
           <div>
@@ -226,7 +292,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ================= FEATURED LISTINGS ================= */}
       <section className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
@@ -281,10 +346,13 @@ export default function Home() {
                     {item.location}
                   </div>
 
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition">
+                  <Link
+                    to={`/viewdetail/${item.name}`}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition"
+                  >
                     <FaPhoneAlt />
-                    Contact Now
-                  </button>
+                    View Details
+                  </Link>
                 </div>
               </div>
             ))}
@@ -292,7 +360,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ================= WHY CHOOSE US ================= */}
       <section className="bg-gray-100 py-16">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
@@ -332,10 +399,8 @@ export default function Home() {
       </section>
 
       <SearchSuggestions />
-
       <Testimonials />
 
-      {/* ================= CTA BANNER ================= */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-[32px] p-10 md:p-14 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
           <div>
@@ -357,7 +422,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ================= SEND YOUR QUERY SECTION ================= */}
       <section className="max-w-7xl mx-auto px-4 py-20">
         <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden grid lg:grid-cols-2">
           <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-10 md:p-16 flex flex-col justify-center">
@@ -421,7 +485,7 @@ export default function Home() {
               Fill out the form and we’ll contact you shortly.
             </p>
 
-            <form className="space-y-6">
+            <form onSubmit={handleQuerySubmit} className="space-y-6">
               <div>
                 <label className="block mb-2 font-semibold text-gray-700">
                   Full Name
@@ -429,8 +493,12 @@ export default function Home() {
 
                 <input
                   type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
                   placeholder="Enter your full name"
                   className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition"
+                  required
                 />
               </div>
 
@@ -441,8 +509,12 @@ export default function Home() {
 
                 <input
                   type="tel"
+                  name="mobile"
+                  value={formData.mobile}
+                  onChange={handleChange}
                   placeholder="+91 9876543210"
                   className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition"
+                  required
                 />
               </div>
 
@@ -453,8 +525,12 @@ export default function Home() {
 
                 <textarea
                   rows="5"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
                   placeholder="Write your message here..."
                   className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none resize-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition"
+                  required
                 ></textarea>
               </div>
 
