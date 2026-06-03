@@ -3,26 +3,38 @@ import { useNavigate } from "react-router-dom";
 import {
   FaHome,
   FaList,
-  FaPlus,
+  
   FaUsers,
   FaRupeeSign,
-  FaStar,
+
   FaCrown,
   FaEnvelope,
   FaCog,
   FaSignOutAlt,
-  FaEdit,
-  FaTrash,
+
   FaCheck,
   FaTimes,
   FaSearch,
+  FaBan,
+  FaChartLine,
 } from "react-icons/fa";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  BarChart,
+  Bar,
+} from "recharts";
+import API from "../../api/api";
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: <FaHome /> },
   { id: "listings", label: "Listings", icon: <FaList /> },
-  { id: "add", label: "Add Listing", icon: <FaPlus /> },
-  { id: "categories", label: "Categories", icon: <FaStar /> },
+
   { id: "users", label: "Users", icon: <FaUsers /> },
   { id: "payments", label: "Payments", icon: <FaRupeeSign /> },
   { id: "sponsored", label: "Sponsored", icon: <FaCrown /> },
@@ -30,270 +42,233 @@ const menuItems = [
   { id: "settings", label: "Settings", icon: <FaCog /> },
 ];
 
-const defaultListings = [
-  {
-    id: 1,
-    name: "Urban Salon",
-    category: "Salon",
-    location: "Rohini Sector 7",
-    phone: "9876543210",
-    status: "Pending",
-    sponsored: false,
-  },
-  {
-    id: 2,
-    name: "Fit Gym Club",
-    category: "Gym",
-    location: "Rohini Sector 11",
-    phone: "9876543211",
-    status: "Approved",
-    sponsored: true,
-  },
-];
 
-const defaultCategories = ["Salon", "Gym", "Cafe", "Restaurant", "Doctor"];
-
-const defaultUsers = [
-  { id: 1, name: "Business Owner", email: "owner@oyerohini.com", role: "Owner" },
-  { id: 2, name: "Normal User", email: "user@oyerohini.com", role: "User" },
-];
-
-const defaultPayments = [
-  {
-    id: "PAY123",
-    business: "Fit Gym Club",
-    amount: 2999,
-    plan: "6 Months",
-    status: "Paid",
-  },
-];
-
-const defaultEnquiries = [
-  {
-    id: 1,
-    name: "Rahul",
-    mobile: "9999999999",
-    business: "Urban Salon",
-    message: "Need appointment details",
-    status: "New",
-  },
-];
 
 export default function Dashboard() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("dashboard");
   const [listings, setListings] = useState([]);
-  const [categories, setCategories] = useState(defaultCategories);
+  const [users, setUsers] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [stats, setStats] = useState({});
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
-  const [editId, setEditId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({
-    name: "",
-    category: "",
-    location: "",
-    phone: "",
-  });
+  const fetchAdminData = async () => {
+    try {
+      setLoading(true);
 
-  const [newCategory, setNewCategory] = useState("");
+      const [statsRes, listingsRes] = await Promise.all([
+        API.get("/admin/stats"),
+        API.get("/admin/listings"),
+      ]);
+
+      setStats(statsRes.data || {});
+      setListings(listingsRes.data?.items || listingsRes.data || []);
+    } catch (error) {
+      console.log("Admin Data Error:", error.response?.data || error);
+
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        alert("Admin access required. Please login again.");
+        logout();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await API.get("/admin/users");
+      setUsers(res.data?.items || res.data || []);
+    } catch (error) {
+      console.log("Users Error:", error.response?.data || error);
+    }
+  };
+
+  const fetchPayments = async () => {
+    try {
+      const res = await API.get("/admin/payments");
+      setPayments(res.data?.items || res.data || []);
+    } catch (error) {
+      console.log("Payments Error:", error.response?.data || error);
+    }
+  };
 
   useEffect(() => {
-    const isLogin = localStorage.getItem("adminLogin");
+    const token = localStorage.getItem("token");
 
-    if (isLogin !== "true") {
+    if (!token) {
       navigate("/admin/login");
       return;
     }
 
-    const savedListings = JSON.parse(localStorage.getItem("adminListings"));
+    fetchAdminData();
+  }, []);
 
-    if (savedListings) {
-      setListings(savedListings);
-    } else {
-      setListings(defaultListings);
-      localStorage.setItem("adminListings", JSON.stringify(defaultListings));
-    }
-  }, [navigate]);
+  useEffect(() => {
+    if (activeTab === "users") fetchUsers();
+    if (activeTab === "payments") fetchPayments();
+  }, [activeTab]);
 
-  const saveListings = (data) => {
-    setListings(data);
-    localStorage.setItem("adminListings", JSON.stringify(data));
+  const logout = () => {
+    localStorage.removeItem("adminLogin");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/admin/login");
   };
 
-  const totalListings = listings.length;
-  const approved = listings.filter((i) => i.status === "Approved").length;
-  const pending = listings.filter((i) => i.status === "Pending").length;
-  const rejected = listings.filter((i) => i.status === "Rejected").length;
-  const sponsored = listings.filter((i) => i.sponsored).length;
+  const approveListing = async (id) => {
+    try {
+      await API.post(`/admin/listings/${id}/approve`);
+      alert("Listing approved successfully");
+      fetchAdminData();
+    } catch (error) {
+      console.log("Approve Error:", error.response?.data || error);
+      alert(error.response?.data?.message || "Failed to approve listing");
+    }
+  };
+
+  const rejectListing = async (id) => {
+    try {
+      await API.post(`/admin/listings/${id}/reject`);
+      alert("Listing rejected");
+      fetchAdminData();
+    } catch (error) {
+      console.log("Reject Error:", error.response?.data || error);
+      alert(error.response?.data?.message || "Failed to reject listing");
+    }
+  };
+
+  const suspendListing = async (id) => {
+    try {
+      await API.post(`/admin/listings/${id}/suspend`);
+      alert("Listing suspended");
+      fetchAdminData();
+    } catch (error) {
+      console.log("Suspend Error:", error.response?.data || error);
+      alert(error.response?.data?.message || "Failed to suspend listing");
+    }
+  };
+
+  const toggleFeatured = async (id, currentValue) => {
+    try {
+      await API.patch(`/admin/listings/${id}/featured`, {
+        isFeatured: !currentValue,
+      });
+
+      fetchAdminData();
+    } catch (error) {
+      console.log("Featured Error:", error.response?.data || error);
+      alert(error.response?.data?.message || "Failed to update featured status");
+    }
+  };
 
   const filteredListings = useMemo(() => {
     return listings.filter((item) => {
+      const name = item.name || "";
+      const category = item.category?.name || item.category || "";
+      const city = item.city?.name || item.city || "";
+      const status = item.status || "";
+
       const matchSearch =
-        item.name.toLowerCase().includes(search.toLowerCase()) ||
-        item.category.toLowerCase().includes(search.toLowerCase()) ||
-        item.location.toLowerCase().includes(search.toLowerCase());
+        name.toLowerCase().includes(search.toLowerCase()) ||
+        category.toLowerCase().includes(search.toLowerCase()) ||
+        city.toLowerCase().includes(search.toLowerCase());
 
       const matchStatus =
-        filterStatus === "All" || item.status === filterStatus;
+        filterStatus === "All" || status.toUpperCase() === filterStatus;
 
       return matchSearch && matchStatus;
     });
   }, [listings, search, filterStatus]);
 
-  const logout = () => {
-    localStorage.removeItem("adminLogin");
-    navigate("/admin/login");
-  };
+  const totalListings = stats.totalListings ?? listings.length;
+  const approved =
+    stats.approvedListings ??
+    listings.filter((i) => i.status === "APPROVED").length;
+  const pending =
+    stats.pendingListings ??
+    listings.filter((i) => i.status === "SUBMITTED" || i.status === "PENDING")
+      .length;
+  const rejected =
+    stats.rejectedListings ??
+    listings.filter((i) => i.status === "REJECTED").length;
+  const sponsored =
+    stats.featuredListings ?? listings.filter((i) => i.isFeatured).length;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const growthData = [
+    { month: "Jan", listings: 2, users: 5, payments: 1 },
+    { month: "Feb", listings: 5, users: 12, payments: 3 },
+    { month: "Mar", listings: 9, users: 18, payments: 5 },
+    { month: "Apr", listings: 14, users: 26, payments: 8 },
+    { month: "May", listings: 20, users: 35, payments: 12 },
+    { month: "Jun", listings: totalListings || 24, users: users.length || 42, payments: payments.length || 15 },
+  ];
 
-    if (!form.name || !form.category || !form.location || !form.phone) {
-      alert("Please fill all fields");
-      return;
-    }
-
-    if (editId) {
-      const updated = listings.map((item) =>
-        item.id === editId ? { ...item, ...form } : item
-      );
-
-      saveListings(updated);
-      setEditId(null);
-    } else {
-      const newListing = {
-        id: Date.now(),
-        ...form,
-        status: "Pending",
-        sponsored: false,
-      };
-
-      saveListings([...listings, newListing]);
-    }
-
-    setForm({
-      name: "",
-      category: "",
-      location: "",
-      phone: "",
-    });
-
-    setActiveTab("listings");
-  };
-
-  const editListing = (item) => {
-    setEditId(item.id);
-
-    setForm({
-      name: item.name,
-      category: item.category,
-      location: item.location,
-      phone: item.phone,
-    });
-
-    setActiveTab("add");
-  };
-
-  const deleteListing = (id) => {
-    if (window.confirm("Delete this listing?")) {
-      saveListings(listings.filter((item) => item.id !== id));
-    }
-  };
-
-  const updateStatus = (id, status) => {
-    saveListings(
-      listings.map((item) =>
-        item.id === id ? { ...item, status } : item
-      )
-    );
-  };
-
-  const toggleSponsored = (id) => {
-    saveListings(
-      listings.map((item) =>
-        item.id === id
-          ? { ...item, sponsored: !item.sponsored }
-          : item
-      )
-    );
-  };
-
-  const addCategory = (e) => {
-    e.preventDefault();
-
-    if (!newCategory.trim()) return;
-
-    setCategories([...categories, newCategory]);
-    setNewCategory("");
-  };
-
-  const deleteCategory = (cat) => {
-    setCategories(categories.filter((item) => item !== cat));
-  };
+  const statusData = [
+    { name: "Approved", value: approved },
+    { name: "Pending", value: pending },
+    { name: "Rejected", value: rejected },
+    { name: "Sponsored", value: sponsored },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar */}
+
       <aside className="w-72 bg-blue-900 text-white min-h-screen p-6 hidden md:block">
-        <h1 className="text-3xl font-extrabold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-          Oye Rohini Admin
-        </h1>
+        <h1 className="text-3xl font-extrabold">Oye Rohini Admin</h1>
+        <p className="text-blue-200 text-sm mt-1">Control Panel</p>
 
-        <p className="text-blue-200 text-sm mt-1">
-          Control Panel
-        </p>
-
-        <div className="h-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full my-6"></div>
+        <div className="h-1 bg-cyan-400 rounded-full my-6"></div>
 
         <nav className="space-y-2">
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-300 group ${
+              className={`w-full flex items-center gap-3 p-3 rounded-xl transition ${
                 activeTab === item.id
-                  ? "bg-white text-blue-900 shadow-lg scale-105 border-l-4 border-cyan-400"
-                  : "hover:bg-blue-800 hover:translate-x-2 hover:shadow-md"
+                  ? "bg-white text-blue-900 shadow-lg"
+                  : "hover:bg-blue-800"
               }`}
             >
-              <span className="text-lg transition-transform duration-300 group-hover:scale-125">
-                {item.icon}
-              </span>
-
+              <span>{item.icon}</span>
               <span className="font-medium">{item.label}</span>
             </button>
           ))}
 
           <button
             onClick={logout}
-            className="w-full flex items-center justify-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 text-white mt-8 shadow-lg hover:shadow-2xl hover:-translate-y-1 hover:scale-105 transition-all duration-300 border border-slate-600"
+            className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-900 mt-8"
           >
-            <FaSignOutAlt className="text-lg" />
-            <span className="font-semibold tracking-wide">Logout</span>
+            <FaSignOutAlt />
+            Logout
           </button>
         </nav>
       </aside>
 
-      {/* Main Content */}
+
       <main className="flex-1 p-4 md:p-8">
         <div className="bg-white p-5 rounded-2xl shadow mb-6 flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">
               Admin Dashboard
             </h2>
-            <p className="text-gray-500">
-              Manage Oye Rohini platform
-            </p>
+            <p className="text-gray-500">Manage Oye Rohini platform</p>
           </div>
 
           <button
             onClick={logout}
-            className="md:hidden bg-gradient-to-r from-slate-700 to-slate-900 text-white px-4 py-2 rounded-xl shadow-md hover:shadow-xl transition-all duration-300"
+            className="md:hidden bg-slate-900 text-white px-4 py-2 rounded-xl"
           >
             Logout
           </button>
         </div>
+
+        {loading && <p className="mb-4 text-blue-700">Loading data...</p>}
 
         {activeTab === "dashboard" && (
           <>
@@ -305,17 +280,83 @@ export default function Dashboard() {
               <Card title="Sponsored" value={sponsored} color="text-purple-600" />
             </div>
 
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+              <div className="xl:col-span-2 bg-white rounded-2xl shadow p-6">
+                <div className="flex items-center gap-3 mb-5">
+                  <FaChartLine className="text-blue-700 text-2xl" />
+                  <div>
+                    <h3 className="text-xl font-bold">Activities Growth</h3>
+                    <p className="text-gray-500 text-sm">
+                      Listings, users and payment growth overview
+                    </p>
+                  </div>
+                </div>
+
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={growthData}>
+                      <defs>
+                        <linearGradient id="listingColor" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#2563eb" stopOpacity={0.35} />
+                          <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Area
+                        type="monotone"
+                        dataKey="listings"
+                        stroke="#2563eb"
+                        fill="url(#listingColor)"
+                        strokeWidth={3}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="users"
+                        stroke="#16a34a"
+                        fillOpacity={0}
+                        strokeWidth={3}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="payments"
+                        stroke="#9333ea"
+                        fillOpacity={0}
+                        strokeWidth={3}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow p-6">
+                <h3 className="text-xl font-bold mb-5">Listing Status</h3>
+
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={statusData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="#1d4ed8" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-white rounded-2xl shadow p-6">
-              <h3 className="text-xl font-bold mb-4">
-                Recent Listings
-              </h3>
+              <h3 className="text-xl font-bold mb-4">Recent Listings</h3>
 
               <ListingTable
                 listings={listings.slice(0, 5)}
-                updateStatus={updateStatus}
-                editListing={editListing}
-                deleteListing={deleteListing}
-                toggleSponsored={toggleSponsored}
+                approveListing={approveListing}
+                rejectListing={rejectListing}
+                suspendListing={suspendListing}
+                toggleFeatured={toggleFeatured}
               />
             </div>
           </>
@@ -341,177 +382,80 @@ export default function Dashboard() {
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
-                <option>All</option>
-                <option>Pending</option>
-                <option>Approved</option>
-                <option>Rejected</option>
+                <option value="All">All</option>
+                <option value="SUBMITTED">Submitted</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="SUSPENDED">Suspended</option>
               </select>
             </div>
 
             <ListingTable
               listings={filteredListings}
-              updateStatus={updateStatus}
-              editListing={editListing}
-              deleteListing={deleteListing}
-              toggleSponsored={toggleSponsored}
+              approveListing={approveListing}
+              rejectListing={rejectListing}
+              suspendListing={suspendListing}
+              toggleFeatured={toggleFeatured}
             />
           </div>
         )}
 
-        {activeTab === "add" && (
-          <div className="bg-white rounded-2xl shadow p-6 max-w-3xl">
-            <h3 className="text-xl font-bold mb-5">
-              {editId ? "Edit Listing" : "Add New Listing"}
-            </h3>
-
-            <form onSubmit={handleSubmit} className="grid gap-4">
-              <input
-                className="border p-3 rounded-xl"
-                placeholder="Business Name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-
-              <select
-                className="border p-3 rounded-xl"
-                value={form.category}
-                onChange={(e) =>
-                  setForm({ ...form, category: e.target.value })
-                }
-              >
-                <option value="">Select Category</option>
-
-                {categories.map((cat) => (
-                  <option key={cat}>{cat}</option>
-                ))}
-              </select>
-
-              <input
-                className="border p-3 rounded-xl"
-                placeholder="Location"
-                value={form.location}
-                onChange={(e) =>
-                  setForm({ ...form, location: e.target.value })
-                }
-              />
-
-              <input
-                className="border p-3 rounded-xl"
-                placeholder="Phone Number"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
-
-              <button className="bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-semibold transition-all duration-300">
-                {editId ? "Update Listing" : "Add Listing"}
-              </button>
-            </form>
-          </div>
-        )}
-
-        {activeTab === "categories" && (
-          <div className="bg-white rounded-2xl shadow p-6 max-w-3xl">
-            <h3 className="text-xl font-bold mb-5">
-              Categories
-            </h3>
-
-            <form onSubmit={addCategory} className="flex gap-3 mb-5">
-              <input
-                className="border p-3 rounded-xl flex-1"
-                placeholder="Add category"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-              />
-
-              <button className="bg-blue-700 hover:bg-blue-800 text-white px-5 rounded-xl transition">
-                Add
-              </button>
-            </form>
-
-            <div className="space-y-3">
-              {categories.map((cat) => (
-                <div
-                  key={cat}
-                  className="border rounded-xl p-4 flex justify-between hover:bg-gray-50 transition"
-                >
-                  <span>{cat}</span>
-
-                  <button
-                    onClick={() => deleteCategory(cat)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Delete
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {activeTab === "users" && (
           <SimpleTable
             title="Users"
-            headers={["Name", "Email", "Role"]}
-            rows={defaultUsers.map((u) => [u.name, u.email, u.role])}
+            headers={["Name", "Email", "Phone", "Role"]}
+            rows={users.map((u) => [
+              u.name || "-",
+              u.email || "-",
+              u.phone || "-",
+              u.role || "-",
+            ])}
           />
         )}
 
         {activeTab === "payments" && (
           <SimpleTable
-            title="Payments / Subscriptions"
-            headers={["Payment ID", "Business", "Amount", "Plan", "Status"]}
-            rows={defaultPayments.map((p) => [
-              p.id,
-              p.business,
-              `₹${p.amount}`,
-              p.plan,
-              p.status,
+            title="Payments"
+            headers={["ID", "Amount", "Status", "Created At"]}
+            rows={payments.map((p) => [
+              p.id || "-",
+              p.amount ? `₹${p.amount}` : "-",
+              p.status || "-",
+              p.createdAt ? new Date(p.createdAt).toLocaleString() : "-",
             ])}
           />
         )}
 
         {activeTab === "sponsored" && (
           <div className="bg-white rounded-2xl shadow p-6">
-            <h3 className="text-xl font-bold mb-5">
-              Sponsored Listings
-            </h3>
+            <h3 className="text-xl font-bold mb-5">Sponsored Listings</h3>
 
             <ListingTable
-              listings={listings.filter((i) => i.sponsored)}
-              updateStatus={updateStatus}
-              editListing={editListing}
-              deleteListing={deleteListing}
-              toggleSponsored={toggleSponsored}
+              listings={listings.filter((i) => i.isFeatured)}
+              approveListing={approveListing}
+              rejectListing={rejectListing}
+              suspendListing={suspendListing}
+              toggleFeatured={toggleFeatured}
             />
           </div>
         )}
 
         {activeTab === "enquiries" && (
-          <SimpleTable
-            title="Enquiries / Leads"
-            headers={["Name", "Mobile", "Business", "Message", "Status"]}
-            rows={defaultEnquiries.map((e) => [
-              e.name,
-              e.mobile,
-              e.business,
-              e.message,
-              e.status,
-            ])}
-          />
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h3 className="text-xl font-bold mb-3">Enquiries</h3>
+            <p className="text-gray-500">
+              Contact/Query backend API abhi missing hai.
+            </p>
+          </div>
         )}
 
         {activeTab === "settings" && (
           <div className="bg-white rounded-2xl shadow p-6 max-w-3xl">
-            <h3 className="text-xl font-bold mb-5">
-              Website Settings
-            </h3>
+            <h3 className="text-xl font-bold mb-5">Website Settings</h3>
 
             <div className="grid gap-4">
-              <input
-                className="border p-3 rounded-xl"
-                defaultValue="Oye Rohini"
-              />
-
+              <input className="border p-3 rounded-xl" defaultValue="Oye Rohini" />
               <input
                 className="border p-3 rounded-xl"
                 defaultValue="oyerohini@gmail.com"
@@ -522,12 +466,7 @@ export default function Dashboard() {
                 defaultValue="+91 9876543210"
               />
 
-              <input
-                className="border p-3 rounded-xl"
-                defaultValue="https://instagram.com/oyerohini_"
-              />
-
-              <button className="bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl transition">
+              <button className="bg-blue-700 text-white py-3 rounded-xl">
                 Save Settings
               </button>
             </div>
@@ -540,21 +479,19 @@ export default function Dashboard() {
 
 function Card({ title, value, color = "text-blue-700" }) {
   return (
-    <div className="bg-white rounded-2xl shadow p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+    <div className="bg-white rounded-2xl shadow p-5 hover:shadow-lg transition">
       <p className="text-gray-500">{title}</p>
-      <h3 className={`text-3xl font-bold ${color}`}>
-        {value}
-      </h3>
+      <h3 className={`text-3xl font-bold ${color}`}>{value}</h3>
     </div>
   );
 }
 
 function ListingTable({
   listings,
-  updateStatus,
-  editListing,
-  deleteListing,
-  toggleSponsored,
+  approveListing,
+  rejectListing,
+  suspendListing,
+  toggleFeatured,
 }) {
   return (
     <div className="overflow-x-auto">
@@ -563,10 +500,10 @@ function ListingTable({
           <tr>
             <th className="p-4">Business</th>
             <th className="p-4">Category</th>
-            <th className="p-4">Location</th>
+            <th className="p-4">City</th>
             <th className="p-4">Phone</th>
             <th className="p-4">Status</th>
-            <th className="p-4">Sponsored</th>
+            <th className="p-4">Featured</th>
             <th className="p-4">Actions</th>
           </tr>
         </thead>
@@ -579,74 +516,66 @@ function ListingTable({
               </td>
             </tr>
           ) : (
-            listings.map((item) => (
-              <tr
-                key={item.id}
-                className="border-b hover:bg-blue-50 transition"
-              >
-                <td className="p-4 font-semibold">{item.name}</td>
-                <td className="p-4">{item.category}</td>
-                <td className="p-4">{item.location}</td>
-                <td className="p-4">{item.phone}</td>
+            listings.map((item) => {
+              const category = item.category?.name || item.category || "-";
+              const city = item.city?.name || item.city || "-";
+              const phone = item.contactPhone || item.phone || "-";
+              const status = item.status || "-";
 
-                <td className="p-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      item.status === "Approved"
-                        ? "bg-green-100 text-green-700"
-                        : item.status === "Rejected"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                </td>
+              return (
+                <tr key={item.id} className="border-b hover:bg-blue-50">
+                  <td className="p-4 font-semibold">{item.name}</td>
+                  <td className="p-4">{category}</td>
+                  <td className="p-4">{city}</td>
+                  <td className="p-4">{phone}</td>
 
-                <td className="p-4">
-                  <button
-                    onClick={() => toggleSponsored(item.id)}
-                    className={`px-3 py-1 rounded-full text-sm transition ${
-                      item.sponsored
-                        ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    {item.sponsored ? "Yes" : "No"}
-                  </button>
-                </td>
+                  <td className="p-4">
+                    <span className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700">
+                      {status}
+                    </span>
+                  </td>
 
-                <td className="p-4 flex gap-2 flex-wrap">
-                  <button
-                    onClick={() => updateStatus(item.id, "Approved")}
-                    className="bg-green-600 hover:bg-green-700 hover:scale-110 text-white p-2 rounded-lg transition"
-                  >
-                    <FaCheck />
-                  </button>
+                  <td className="p-4">
+                    <button
+                      onClick={() => toggleFeatured(item.id, item.isFeatured)}
+                      className={`px-3 py-1 rounded-full text-sm ${
+                        item.isFeatured
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {item.isFeatured ? "Yes" : "No"}
+                    </button>
+                  </td>
 
-                  <button
-                    onClick={() => updateStatus(item.id, "Rejected")}
-                    className="bg-red-600 hover:bg-red-700 hover:scale-110 text-white p-2 rounded-lg transition"
-                  >
-                    <FaTimes />
-                  </button>
+                  <td className="p-4 flex gap-2 flex-wrap">
+                    <button
+                      onClick={() => approveListing(item.id)}
+                      className="bg-green-600 text-white p-2 rounded-lg"
+                      title="Approve"
+                    >
+                      <FaCheck />
+                    </button>
 
-                  <button
-                    onClick={() => editListing(item)}
-                    className="bg-yellow-500 hover:bg-yellow-600 hover:scale-110 text-white p-2 rounded-lg transition"
-                  >
-                    <FaEdit />
-                  </button>
+                    <button
+                      onClick={() => rejectListing(item.id)}
+                      className="bg-red-600 text-white p-2 rounded-lg"
+                      title="Reject"
+                    >
+                      <FaTimes />
+                    </button>
 
-                  <button
-                    onClick={() => deleteListing(item.id)}
-                    className="bg-gray-800 hover:bg-black hover:scale-110 text-white p-2 rounded-lg transition"
-                  >
-                    <FaTrash />
-                  </button>
-                </td>
-              </tr>
-            ))
+                    <button
+                      onClick={() => suspendListing(item.id)}
+                      className="bg-gray-800 text-white p-2 rounded-lg"
+                      title="Suspend"
+                    >
+                      <FaBan />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
@@ -657,9 +586,7 @@ function ListingTable({
 function SimpleTable({ title, headers, rows }) {
   return (
     <div className="bg-white rounded-2xl shadow p-6 overflow-x-auto">
-      <h3 className="text-xl font-bold mb-5">
-        {title}
-      </h3>
+      <h3 className="text-xl font-bold mb-5">{title}</h3>
 
       <table className="w-full text-left">
         <thead className="bg-blue-700 text-white">
@@ -673,18 +600,23 @@ function SimpleTable({ title, headers, rows }) {
         </thead>
 
         <tbody>
-          {rows.map((row, index) => (
-            <tr
-              key={index}
-              className="border-b hover:bg-blue-50 transition"
-            >
-              {row.map((cell, i) => (
-                <td key={i} className="p-4">
-                  {cell}
-                </td>
-              ))}
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={headers.length} className="p-5 text-center">
+                No data found
+              </td>
             </tr>
-          ))}
+          ) : (
+            rows.map((row, index) => (
+              <tr key={index} className="border-b">
+                {row.map((cell, i) => (
+                  <td key={i} className="p-4">
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

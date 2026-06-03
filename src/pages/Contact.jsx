@@ -1,21 +1,56 @@
+import { useState } from "react";
 import {
   FaPhoneAlt,
   FaEnvelope,
   FaMapMarkerAlt,
   FaWhatsapp,
 } from "react-icons/fa";
+import API from "../api/api";
 
 export default function Contact() {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+
+      await API.post("/contact", form);
+
+      alert("Message sent successfully!");
+
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        message: "",
+      });
+    } catch (error) {
+      console.log("Contact Form Error:", error);
+      alert("Contact API backend me abhi available nahi hai.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 py-16">
       <div className="max-w-7xl mx-auto px-4">
 
-        {/* Heading */}
         <div className="text-center mb-14">
-          <h1 className="text-4xl font-bold text-gray-900">
-            Contact Us
-          </h1>
-
+          <h1 className="text-4xl font-bold text-gray-900">Contact Us</h1>
           <p className="text-gray-500 mt-3 text-lg">
             Have questions? We would love to hear from you.
           </p>
@@ -23,12 +58,9 @@ export default function Contact() {
 
         <div className="grid lg:grid-cols-2 gap-10">
 
-          {/* LEFT SIDE */}
-          <div className="bg-white rounded-2xl shadow p-8">
 
-            <h2 className="text-2xl font-bold mb-8">
-              Get In Touch
-            </h2>
+          <div className="bg-white rounded-2xl shadow p-8">
+            <h2 className="text-2xl font-bold mb-8">Get In Touch</h2>
 
             <div className="space-y-6">
 
@@ -38,13 +70,8 @@ export default function Contact() {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-lg">
-                    Phone Number
-                  </h3>
-
-                  <p className="text-gray-500">
-                    +91 84488 66017
-                  </p>
+                  <h3 className="font-semibold text-lg">Phone Number</h3>
+                  <p className="text-gray-500">+91 84488 66017</p>
                 </div>
               </div>
 
@@ -54,13 +81,8 @@ export default function Contact() {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-lg">
-                    WhatsApp
-                  </h3>
-
-                  <p className="text-gray-500">
-                    +91 84488 66017
-                  </p>
+                  <h3 className="font-semibold text-lg">WhatsApp</h3>
+                  <p className="text-gray-500">+91 84488 66017</p>
                 </div>
               </div>
 
@@ -70,10 +92,7 @@ export default function Contact() {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-lg">
-                    Email Address
-                  </h3>
-
+                  <h3 className="font-semibold text-lg">Email Address</h3>
                   <p className="text-gray-500">
                     Keyproductionofficial@gmail.com
                   </p>
@@ -86,81 +105,65 @@ export default function Contact() {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-lg">
-                    Office Address
-                  </h3>
-
-                  <p className="text-gray-500">
-                    
-                  </p>
+                  <h3 className="font-semibold text-lg">Office Address</h3>
+                  <p className="text-gray-500">Rohini, Delhi</p>
                 </div>
               </div>
 
             </div>
           </div>
 
-          {/* RIGHT SIDE */}
+
           <div className="bg-white rounded-2xl shadow p-8">
+            <h2 className="text-2xl font-bold mb-8">Send Message</h2>
 
-            <h2 className="text-2xl font-bold mb-8">
-              Send Message
-            </h2>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <input
+                type="text"
+                name="name"
+                placeholder="Enter your full name"
+                value={form.name}
+                onChange={handleChange}
+                className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
 
-            <form className="space-y-5">
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                value={form.email}
+                onChange={handleChange}
+                className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
 
-              <div>
-                <label className="block font-medium mb-2">
-                  Full Name
-                </label>
+              <input
+                type="text"
+                name="phone"
+                placeholder="Enter your phone number"
+                value={form.phone}
+                onChange={handleChange}
+                className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
 
-                <input
-                  type="text"
-                  placeholder="Enter your full name"
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium mb-2">
-                  Email Address
-                </label>
-
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium mb-2">
-                  Phone Number
-                </label>
-
-                <input
-                  type="text"
-                  placeholder="Enter your phone number"
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium mb-2">
-                  Message
-                </label>
-
-                <textarea
-                  rows="5"
-                  placeholder="Write your message..."
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                ></textarea>
-              </div>
+              <textarea
+                rows="5"
+                name="message"
+                placeholder="Write your message..."
+                value={form.message}
+                onChange={handleChange}
+                className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              ></textarea>
 
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition"
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition disabled:opacity-60"
               >
-                Send Message
+                {loading ? "Sending..." : "Send Message"}
               </button>
 
             </form>

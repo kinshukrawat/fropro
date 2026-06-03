@@ -12,7 +12,7 @@ import BusinessDetails from "./pages/BusinessDetails";
 import Login from "./pages/Login";
 import UserDashboard from "./pages/UserDashboard";
 import BusinessDashboard from "./pages/BusinessDashboard";
-// import AdminDashboard from "./pages/AdminDashboard";
+
 import Categories from "./pages/Categories";
 import AllCategories from "./pages/AllCategories";
 import PopularCategories from "./pages/PopularCategories";
@@ -21,21 +21,24 @@ import Payments from "./pages/Payments";
 import Contact from "./pages/Contact";
 import ViewDetail from "./pages/ViewDetail";
 
-// Admin
+
 import Dashboard from "./pages/admin/Dashboard";
 import AdminLogin from "./pages/admin/AdminLogin";
 
 function AppContent() {
   const location = useLocation();
 
-  const isAdminPage = location.pathname.startsWith("/admin");
+  const hideLayout =
+    location.pathname.startsWith("/admin") ||
+    location.pathname === "/business-dashboard" ||
+    location.pathname === "/user-dashboard";
 
   return (
     <>
-      {!isAdminPage && <Navbar />}
+      {!hideLayout && <Navbar />}
 
       <Routes>
-        {/* Public Pages */}
+     
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/listings" element={<Listing />} />
@@ -43,32 +46,22 @@ function AppContent() {
         <Route path="/login" element={<Login />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/all-categories" element={<AllCategories />} />
-        <Route
-          path="/popular-categories"
-          element={<PopularCategories />}
-        />
+        <Route path="/popular-categories" element={<PopularCategories />} />
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/payments" element={<Payments />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/viewdetail/:id" element={<ViewDetail />} />
 
-        {/* User Dashboards */}
-        <Route
-          path="/user-dashboard"
-          element={<UserDashboard />}
-        />
-        <Route
-          path="/business-dashboard"
-          element={<BusinessDashboard />}
-        />
+        <Route path="/user-dashboard" element={<UserDashboard />} />
+        <Route path="/business-dashboard" element={<BusinessDashboard />} />
 
-        {/* Admin Routes */}
+
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<Dashboard />} />
       </Routes>
 
-      {!isAdminPage && <Footer />}
+      {!hideLayout && <Footer />}
     </>
   );
 }

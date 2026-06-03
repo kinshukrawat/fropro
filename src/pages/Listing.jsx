@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import FilterSidebar from "../components/FilterSidebar";
 import { Link } from "react-router-dom";
-// import API from "../api/api";
-
 import {
   FaStar,
   FaMapMarkerAlt,
@@ -10,7 +7,11 @@ import {
   FaSearch,
 } from "react-icons/fa";
 
-export default function Listings() {
+import FilterSidebar from "../components/FilterSidebar";
+import API from "../api/api";
+
+
+export default function Listing() {
   const [listings, setListings] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -20,14 +21,13 @@ export default function Listings() {
       setLoading(true);
 
       const res = await API.get("/listings", {
-        params: {
-          q: search,
-        },
+        params: { q: search },
       });
 
-      setListings(res.data?.items || res.data?.data || res.data || []);
+      setListings(res.data?.items || []);
     } catch (error) {
       console.log("Listings API Error:", error);
+      setListings([]);
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,6 @@ export default function Listings() {
           <div className="bg-white rounded-xl p-3 flex flex-col md:flex-row gap-3 shadow-xl">
             <div className="flex items-center flex-1 border rounded-lg px-4 py-3">
               <FaSearch className="text-gray-400 mr-3" />
-
               <input
                 type="text"
                 placeholder="Search businesses..."
@@ -83,10 +82,7 @@ export default function Listings() {
           <div className="flex-1">
             <div className="flex items-center justify-between mb-10">
               <h2 className="text-3xl font-bold">Featured Businesses</h2>
-
-              <p className="text-gray-500">
-                {listings.length} Listings Found
-              </p>
+              <p className="text-gray-500">{listings.length} Listings Found</p>
             </div>
 
             {loading ? (
@@ -102,7 +98,6 @@ export default function Listings() {
                   >
                     <img
                       src={
-                        item.image ||
                         item.images?.[0]?.url ||
                         "https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1200&auto=format&fit=crop"
                       }
@@ -121,26 +116,23 @@ export default function Listings() {
                       </div>
 
                       <p className="text-blue-600 font-medium mb-3">
-                        {item.category?.name || item.category || "Business"}
+                        {item.category?.name || "Business"}
                       </p>
 
                       <div className="flex items-center text-gray-500 mb-6">
                         <FaMapMarkerAlt className="mr-2" />
-                        {item.city?.name || item.location || item.address}
+                        {item.city?.name || item.addressLine1 || "Location"}
                       </div>
 
                       <div className="flex items-center gap-3 mt-6">
-                        <Link
-                          to={`/viewdetail/${item.slug || encodeURIComponent(item.name)}`}
-                          className="flex-1"
-                        >
+                        <Link to={`/viewdetail/${item.slug}`} className="flex-1">
                           <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold transition">
                             View Details
                           </button>
                         </Link>
 
                         <a
-                          href={`tel:${item.phone || item.mobile || ""}`}
+                          href={`tel:${item.contactPhone || ""}`}
                           className="bg-gray-100 hover:bg-gray-200 p-4 rounded-xl transition"
                         >
                           <FaPhoneAlt className="text-blue-600" />

@@ -10,93 +10,25 @@ import {
 
 import SearchSuggestions from "../components/SearchSuggestions";
 import Testimonials from "../components/Testimonials";
+import API from "../api/api";
 
 const defaultCategories = [
-  {
-    name: "Salon",
-    image:
-      "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=500",
-  },
-  {
-    name: "Gym",
-    image:
-      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=500",
-  },
-  {
-    name: "Cafe",
-    image:
-      "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=500",
-  },
-  {
-    name: "Restaurant",
-    image:
-      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500",
-  },
-  {
-    name: "Hotel",
-    image:
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=500",
-  },
-  {
-    name: "Spa",
-    image:
-      "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=500",
-  },
-  {
-    name: "Doctor",
-    image:
-      "https://images.unsplash.com/photo-1584982751601-97dcc096659c?q=80&w=500",
-  },
-  {
-    name: "Repair",
-    image:
-      "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=500",
-  },
-];
-
-const defaultListings = [
-  {
-    id: 1,
-    name: "Urban Salon",
-    category: "Salon",
-    location: "Delhi",
-    rating: 4.8,
-    image:
-      "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=500",
-  },
-  {
-    id: 2,
-    name: "Fit Gym Club",
-    category: "Gym",
-    location: "Mumbai",
-    rating: 4.6,
-    image:
-      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=500",
-  },
-  {
-    id: 3,
-    name: "Coffee House",
-    category: "Cafe",
-    location: "Noida",
-    rating: 4.7,
-    image:
-      "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=500",
-  },
-  {
-    id: 4,
-    name: "Royal Restaurant",
-    category: "Restaurant",
-    location: "Gurgaon",
-    rating: 4.9,
-    image:
-      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500",
-  },
+  { name: "Salon", image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=500" },
+  { name: "Gym", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=500" },
+  { name: "Cafe", image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=500" },
+  { name: "Restaurant", image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500" },
+  { name: "Hotel", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=500" },
+  { name: "Spa", image: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=500" },
+  { name: "Doctor", image: "https://images.unsplash.com/photo-1584982751601-97dcc096659c?q=80&w=500" },
+  { name: "Repair", image: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=500" },
 ];
 
 export default function Home() {
   const [showModal, setShowModal] = useState(true);
   const [categories, setCategories] = useState(defaultCategories);
-  const [listings, setListings] = useState(defaultListings);
+  const [listings, setListings] = useState([]);
+  const [search, setSearch] = useState("");
+  const [location, setLocation] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -104,29 +36,31 @@ export default function Home() {
     message: "",
   });
 
-  const API_URL = import.meta.env.VITE_API_URL;
-
   useEffect(() => {
-    if (!API_URL) return;
-
-    fetch(`${API_URL}/categories`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setCategories(data);
+    API.get("/categories")
+      .then((res) => {
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setCategories(res.data);
         }
       })
       .catch((err) => console.log("Categories API Error:", err));
 
-    fetch(`${API_URL}/listings`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setListings(data);
-        }
+    API.get("/listings")
+      .then((res) => {
+        const data = res.data?.items || [];
+        setListings(data);
       })
       .catch((err) => console.log("Listings API Error:", err));
-  }, [API_URL]);
+  }, []);
+
+  const handleSearch = () => {
+    const query = new URLSearchParams();
+
+    if (search) query.append("q", search);
+    if (location) query.append("city", location.toLowerCase());
+
+    window.location.href = `/listings?${query.toString()}`;
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -138,33 +72,18 @@ export default function Home() {
   const handleQuerySubmit = async (e) => {
     e.preventDefault();
 
-    if (!API_URL) {
-      alert("Backend API URL missing. Please check .env file.");
-      return;
-    }
-
     try {
-      const res = await fetch(`${API_URL}/queries`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      await API.post("/queries", formData);
 
-      if (res.ok) {
-        alert("Query submitted successfully!");
-        setFormData({
-          name: "",
-          mobile: "",
-          message: "",
-        });
-      } else {
-        alert("Something went wrong. Please try again.");
-      }
+      alert("Query submitted successfully!");
+      setFormData({
+        name: "",
+        mobile: "",
+        message: "",
+      });
     } catch (error) {
       console.log("Query Submit Error:", error);
-      alert("Backend not connected.");
+      alert("Query API backend me available nahi hai.");
     }
   };
 
@@ -213,6 +132,8 @@ export default function Home() {
               <input
                 type="text"
                 placeholder="Search services..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 className="w-full outline-none text-black"
               />
             </div>
@@ -222,25 +143,18 @@ export default function Home() {
               <input
                 type="text"
                 placeholder="Enter location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
                 className="w-full outline-none text-black"
               />
             </div>
 
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition">
+            <button
+              onClick={handleSearch}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition"
+            >
               Search
             </button>
-          </div>
-
-          <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm">
-            <span className="bg-white/20 px-4 py-2 rounded-full">
-              ⭐ 4.8 Rated Businesses
-            </span>
-            <span className="bg-white/20 px-4 py-2 rounded-full">
-              ✅ Verified Listings
-            </span>
-            <span className="bg-white/20 px-4 py-2 rounded-full">
-              📍 Rohini Local Services
-            </span>
           </div>
         </div>
       </section>
@@ -258,22 +172,24 @@ export default function Home() {
 
           <Link
             to="/popular-categories"
-            className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition"
+            className="flex items-center gap-2 text-blue-600 font-semibold"
           >
-            View All
-            <FaChevronRight />
+            View All <FaChevronRight />
           </Link>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-7">
           {categories.map((item, index) => (
             <div
-              key={index}
+              key={item.id || index}
               className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 cursor-pointer group"
             >
               <div className="h-44 overflow-hidden">
                 <img
-                  src={item.image}
+                  src={
+                    item.image ||
+                    "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=500"
+                  }
                   alt={item.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                 />
@@ -306,57 +222,64 @@ export default function Home() {
 
             <Link
               to="/listings"
-              className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition"
+              className="flex items-center gap-2 text-blue-600 font-semibold"
             >
-              View All
-              <FaChevronRight />
+              View All <FaChevronRight />
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {listings.map((item) => (
-              <div
-                key={item.id}
-                className="relative bg-gray-50 rounded-3xl overflow-hidden shadow hover:shadow-2xl transition group"
-              >
-                <span className="absolute top-4 left-4 z-10 bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
-                  {item.category}
-                </span>
+          {listings.length === 0 ? (
+            <p className="text-gray-500">No featured listings found.</p>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {listings.map((item) => (
+                <div
+                  key={item.id}
+                  className="relative bg-gray-50 rounded-3xl overflow-hidden shadow hover:shadow-2xl transition group"
+                >
+                  <span className="absolute top-4 left-4 z-10 bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
+                    {item.category?.name || item.category || "Business"}
+                  </span>
 
-                <div className="overflow-hidden">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-full h-52 object-cover group-hover:scale-110 transition duration-500"
-                  />
-                </div>
+                  <div className="overflow-hidden">
+                    <img
+                      src={
+                        item.images?.[0]?.url ||
+                        item.image ||
+                        "https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1200&auto=format&fit=crop"
+                      }
+                      alt={item.name}
+                      className="w-full h-52 object-cover group-hover:scale-110 transition duration-500"
+                    />
+                  </div>
 
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xl font-bold">{item.name}</h3>
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-xl font-bold">{item.name}</h3>
 
-                    <div className="flex items-center bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
-                      <FaStar className="mr-1" />
-                      {item.rating}
+                      <div className="flex items-center bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
+                        <FaStar className="mr-1" />
+                        {item.rating || "4.5"}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center text-gray-500 mb-5">
-                    <FaMapMarkerAlt className="mr-2" />
-                    {item.location}
-                  </div>
+                    <div className="flex items-center text-gray-500 mb-5">
+                      <FaMapMarkerAlt className="mr-2" />
+                      {item.city?.name || item.location || item.addressLine1 || "Location"}
+                    </div>
 
-                  <Link
-                    to={`/viewdetail/${item.name}`}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition"
-                  >
-                    <FaPhoneAlt />
-                    View Details
-                  </Link>
+                    <Link
+                      to={`/viewdetail/${item.slug}`}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition"
+                    >
+                      <FaPhoneAlt />
+                      View Details
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -371,29 +294,20 @@ export default function Home() {
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-3xl shadow hover:shadow-xl transition text-center">
-              <div className="text-4xl mb-4">✅</div>
-              <h3 className="text-xl font-bold mb-2">Verified Businesses</h3>
-              <p className="text-gray-500">
-                We list trusted and quality local businesses near you.
-              </p>
-            </div>
-
-            <div className="bg-white p-8 rounded-3xl shadow hover:shadow-xl transition text-center">
-              <div className="text-4xl mb-4">⚡</div>
-              <h3 className="text-xl font-bold mb-2">Quick Discovery</h3>
-              <p className="text-gray-500">
-                Find salons, gyms, cafes, restaurants and more in seconds.
-              </p>
-            </div>
-
-            <div className="bg-white p-8 rounded-3xl shadow hover:shadow-xl transition text-center">
-              <div className="text-4xl mb-4">📍</div>
-              <h3 className="text-xl font-bold mb-2">Hyperlocal Search</h3>
-              <p className="text-gray-500">
-                Explore businesses and services around Rohini easily.
-              </p>
-            </div>
+            {[
+              ["✅", "Verified Businesses", "We list trusted and quality local businesses near you."],
+              ["⚡", "Quick Discovery", "Find salons, gyms, cafes, restaurants and more in seconds."],
+              ["📍", "Hyperlocal Search", "Explore businesses and services around Rohini easily."],
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="bg-white p-8 rounded-3xl shadow hover:shadow-xl transition text-center"
+              >
+                <div className="text-4xl mb-4">{item[0]}</div>
+                <h3 className="text-xl font-bold mb-2">{item[1]}</h3>
+                <p className="text-gray-500">{item[2]}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -407,7 +321,6 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-bold mb-3">
               Own a Business in Rohini?
             </h2>
-
             <p className="text-blue-100">
               List your business today and reach more local customers.
             </p>
@@ -438,42 +351,6 @@ export default function Home() {
               Looking for salons, gyms, cafes, restaurants or any local business
               service? Send your query and our team will help you quickly.
             </p>
-
-            <div className="space-y-5">
-              <div className="flex items-center gap-4">
-                <div className="bg-white/20 p-3 rounded-xl">📞</div>
-                <div>
-                  <h4 className="font-semibold text-lg">Quick Support</h4>
-                  <p className="text-blue-100 text-sm">
-                    Fast response from our support team
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="bg-white/20 p-3 rounded-xl">⭐</div>
-                <div>
-                  <h4 className="font-semibold text-lg">
-                    Trusted Businesses
-                  </h4>
-                  <p className="text-blue-100 text-sm">
-                    Verified and top-rated listings
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="bg-white/20 p-3 rounded-xl">📍</div>
-                <div>
-                  <h4 className="font-semibold text-lg">
-                    Hyperlocal Services
-                  </h4>
-                  <p className="text-blue-100 text-sm">
-                    Discover businesses near your area
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
 
           <div className="p-10 md:p-16">
@@ -486,57 +363,39 @@ export default function Home() {
             </p>
 
             <form onSubmit={handleQuerySubmit} className="space-y-6">
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700">
-                  Full Name
-                </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Enter your full name"
+                className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none"
+                required
+              />
 
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Enter your full name"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition"
-                  required
-                />
-              </div>
+              <input
+                type="tel"
+                name="mobile"
+                value={formData.mobile}
+                onChange={handleChange}
+                placeholder="+91 9876543210"
+                className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none"
+                required
+              />
 
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700">
-                  Mobile Number
-                </label>
-
-                <input
-                  type="tel"
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={handleChange}
-                  placeholder="+91 9876543210"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700">
-                  Message
-                </label>
-
-                <textarea
-                  rows="5"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  placeholder="Write your message here..."
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none resize-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition"
-                  required
-                ></textarea>
-              </div>
+              <textarea
+                rows="5"
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Write your message here..."
+                className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none resize-none"
+                required
+              ></textarea>
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 rounded-2xl font-semibold text-lg shadow-lg transition duration-300"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-semibold text-lg shadow-lg"
               >
                 Submit Query
               </button>
