@@ -43,6 +43,7 @@ function AppContent() {
         <Route path="/about" element={<About />} />
         <Route path="/listings" element={<Listing />} />
         <Route path="/business-details" element={<BusinessDetails />} />
+        <Route path="/business/detail/:slug" element={<BusinessDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/all-categories" element={<AllCategories />} />

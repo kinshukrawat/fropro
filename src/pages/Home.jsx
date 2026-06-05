@@ -127,7 +127,12 @@ export default function Home() {
     e.preventDefault();
 
     try {
-      await API.post("/queries", formData);
+    await API.post("/contact", {
+  name: formData.name,
+  email: "no-email@example.com",
+  phone: formData.mobile,
+  message: formData.message,
+});
 
       alert("Query submitted successfully!");
       setFormData({
@@ -338,7 +343,7 @@ export default function Home() {
                     </div>
 
                     <Link
-                      to={`/viewdetail/${item.slug}`}
+                     to={`/business/detail/${item.slug}`}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition"
                     >
                       <FaPhoneAlt />
