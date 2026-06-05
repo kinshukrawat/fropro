@@ -6,6 +6,17 @@ import {
   FaStar,
   FaPhoneAlt,
   FaChevronRight,
+  FaCut,
+  FaDumbbell,
+  FaCoffee,
+  FaUtensils,
+  FaSpa,
+  FaUserMd,
+  FaShoppingBasket,
+  FaBirthdayCake,
+  FaPaw,
+  FaTooth,
+  FaStore,
 } from "react-icons/fa";
 
 import SearchSuggestions from "../components/SearchSuggestions";
@@ -13,15 +24,58 @@ import Testimonials from "../components/Testimonials";
 import API from "../api/api";
 
 const defaultCategories = [
-  { name: "Salon", image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=500" },
-  { name: "Gym", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=500" },
-  { name: "Cafe", image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=500" },
-  { name: "Restaurant", image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500" },
-  { name: "Hotel", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=500" },
-  { name: "Spa", image: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=500" },
-  { name: "Doctor", image: "https://images.unsplash.com/photo-1584982751601-97dcc096659c?q=80&w=500" },
-  { name: "Repair", image: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=500" },
+  { name: "Salon", slug: "salon" },
+  { name: "Gym", slug: "gym" },
+  { name: "Cafe", slug: "cafe" },
+  { name: "Restaurant", slug: "restaurant" },
+  { name: "Spa", slug: "spa" },
+  { name: "Doctor", slug: "doctor" },
+  { name: "Grocery", slug: "grocery" },
+  { name: "Bakery", slug: "bakery" },
 ];
+
+const categoryStyles = {
+  Salon: {
+    icon: <FaCut />,
+    color: "bg-pink-100 text-pink-600",
+  },
+  Gym: {
+    icon: <FaDumbbell />,
+    color: "bg-blue-100 text-blue-600",
+  },
+  Cafe: {
+    icon: <FaCoffee />,
+    color: "bg-yellow-100 text-yellow-600",
+  },
+  Restaurant: {
+    icon: <FaUtensils />,
+    color: "bg-red-100 text-red-600",
+  },
+  Spa: {
+    icon: <FaSpa />,
+    color: "bg-purple-100 text-purple-600",
+  },
+  Doctor: {
+    icon: <FaUserMd />,
+    color: "bg-green-100 text-green-600",
+  },
+  Grocery: {
+    icon: <FaShoppingBasket />,
+    color: "bg-emerald-100 text-emerald-600",
+  },
+  Bakery: {
+    icon: <FaBirthdayCake />,
+    color: "bg-orange-100 text-orange-600",
+  },
+  "Pet Shop": {
+    icon: <FaPaw />,
+    color: "bg-cyan-100 text-cyan-600",
+  },
+  "Dental Clinic": {
+    icon: <FaTooth />,
+    color: "bg-indigo-100 text-indigo-600",
+  },
+};
 
 export default function Home() {
   const [showModal, setShowModal] = useState(true);
@@ -85,6 +139,15 @@ export default function Home() {
       console.log("Query Submit Error:", error);
       alert("Query API backend me available nahi hai.");
     }
+  };
+
+  const getCategoryStyle = (name) => {
+    return (
+      categoryStyles[name] || {
+        icon: <FaStore />,
+        color: "bg-blue-100 text-blue-600",
+      }
+    );
   };
 
   return (
@@ -179,32 +242,35 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-7">
-          {categories.map((item, index) => (
-            <div
-              key={item.id || index}
-              className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 cursor-pointer group"
-            >
-              <div className="h-44 overflow-hidden">
-                <img
-                  src={
-                    item.image ||
-                    "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=500"
-                  }
-                  alt={item.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-                />
-              </div>
+          {categories.map((item, index) => {
+            const style = getCategoryStyle(item.name);
 
-              <div className="p-5 text-center">
-                <h3 className="text-2xl font-bold text-gray-800">
+            return (
+              <Link
+                to={`/listings?category=${item.slug || item.name}`}
+                key={item.id || index}
+                className="group bg-white rounded-3xl p-7 text-center shadow-md hover:shadow-2xl transition duration-300 cursor-pointer hover:-translate-y-2 border border-gray-100"
+              >
+                <div
+                  className={`w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl mb-5 ${style.color}`}
+                >
+                  {style.icon}
+                </div>
+
+                <h3 className="text-xl font-bold text-gray-800">
                   {item.name}
                 </h3>
+
                 <p className="text-gray-500 mt-2 text-sm">
                   Explore Best {item.name}
                 </p>
-              </div>
-            </div>
-          ))}
+
+                <div className="mt-5 text-blue-600 font-semibold text-sm group-hover:translate-x-1 transition">
+                  Explore →
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
@@ -265,7 +331,10 @@ export default function Home() {
 
                     <div className="flex items-center text-gray-500 mb-5">
                       <FaMapMarkerAlt className="mr-2" />
-                      {item.city?.name || item.location || item.addressLine1 || "Location"}
+                      {item.city?.name ||
+                        item.location ||
+                        item.addressLine1 ||
+                        "Location"}
                     </div>
 
                     <Link
@@ -295,9 +364,21 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              ["✅", "Verified Businesses", "We list trusted and quality local businesses near you."],
-              ["⚡", "Quick Discovery", "Find salons, gyms, cafes, restaurants and more in seconds."],
-              ["📍", "Hyperlocal Search", "Explore businesses and services around Rohini easily."],
+              [
+                "✅",
+                "Verified Businesses",
+                "We list trusted and quality local businesses near you.",
+              ],
+              [
+                "⚡",
+                "Quick Discovery",
+                "Find salons, gyms, cafes, restaurants and more in seconds.",
+              ],
+              [
+                "📍",
+                "Hyperlocal Search",
+                "Explore businesses and services around Rohini easily.",
+              ],
             ].map((item, index) => (
               <div
                 key={index}
