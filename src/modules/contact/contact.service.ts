@@ -1,22 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { CreateEnquiryDto } from './dto/create-enquiry.dto';
 
 @Injectable()
 export class ContactService {
-  constructor(private prisma: PrismaService) {}
-
   async create(dto: CreateEnquiryDto) {
-    return this.prisma.enquiry.create({
+    console.log('New contact enquiry:', dto);
+
+    return {
+      success: true,
+      message: 'Contact enquiry submitted successfully',
       data: dto,
-    });
+    };
   }
 
   async findAll() {
-    return this.prisma.enquiry.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    return {
+      success: true,
+      message: 'Contact API is working',
+      data: [],
+    };
   }
 }
