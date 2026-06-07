@@ -76,6 +76,11 @@ export class AdminController {
     return this.admin.findSubscriptions();
   }
 
+  @Get('contact')
+getEnquiries() {
+  return this.admin.findEnquiries();
+}
+
   @Patch('subscriptions/:id')
   updateSubscription(
     @CurrentUser() user: CurrentUser,

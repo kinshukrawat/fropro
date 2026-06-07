@@ -146,6 +146,12 @@ export class AdminService {
     ]);
   }
 
+  findEnquiries() {
+  return this.prisma.enquiry.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
   stats() {
     return this.analytics.platformStats();
   }
