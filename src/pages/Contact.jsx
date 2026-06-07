@@ -28,6 +28,7 @@ export default function Contact() {
       setLoading(true);
 
       await API.post("/contact", form);
+      
 
       alert("Message sent successfully!");
 

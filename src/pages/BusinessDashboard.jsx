@@ -344,19 +344,18 @@ export default function BusinessDashboard() {
                         Category <span className="text-red-500">*</span>
                       </label>
                       <select
-                        name="categoryId"
-                        value={formData.categoryId}
-                        onChange={handleChange}
-                        className="w-full mt-1 outline-none bg-white"
-                        required
-                      >
-                        <option value="">Select Category</option>
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
+  name="category"
+  value={form.category}
+  onChange={handleChange}
+  className="w-full outline-none bg-transparent"
+>
+  <option value="">Select Category</option>
+  <option value="Salon">Salon</option>
+  <option value="Gym">Gym</option>
+  <option value="Cafe">Cafe</option>
+  <option value="Restaurant">Restaurant</option>
+  <option value="Hotel">Hotel</option>
+</select>
                     </div>
 
                     <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
@@ -364,19 +363,18 @@ export default function BusinessDashboard() {
                         City <span className="text-red-500">*</span>
                       </label>
                       <select
-                        name="cityId"
-                        value={formData.cityId}
-                        onChange={handleChange}
-                        className="w-full mt-1 outline-none bg-white"
-                        required
-                      >
-                        <option value="">Select City</option>
-                        {cities.map((city) => (
-                          <option key={city.id} value={city.id}>
-                            {city.name}
-                          </option>
-                        ))}
-                      </select>
+  name="city"
+  value={form.city}
+  onChange={handleChange}
+  className="w-full outline-none bg-transparent"
+>
+  <option value="">Select City</option>
+  <option value="Rohini">Rohini</option>
+  <option value="Delhi">Delhi</option>
+  <option value="Noida">Noida</option>
+  <option value="Gurgaon">Gurgaon</option>
+  <option value="Mumbai">Mumbai</option>
+</select>
                     </div>
 
                     <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">

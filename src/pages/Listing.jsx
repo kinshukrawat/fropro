@@ -125,7 +125,7 @@ export default function Listing() {
                       </div>
 
                       <div className="flex items-center gap-3 mt-6">
-                        <Link to={`/viewdetail/${item.slug}`} className="flex-1">
+                        <Link to={`/business/detail/${item.slug}`} className="flex-1">
                           <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold transition">
                             View Details
                           </button>
