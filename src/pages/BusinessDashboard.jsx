@@ -59,6 +59,8 @@ export default function BusinessDashboard() {
       setCities(cityRes.data?.items || cityRes.data || []);
     } catch (error) {
       console.log("Dropdown Error:", error.response?.data || error);
+      setCategories([]);
+      setCities([]);
     }
   };
 
@@ -87,11 +89,11 @@ export default function BusinessDashboard() {
   }, [listings]);
 
   const getCategoryName = (id) => {
-    return categories.find((cat) => cat.id === id)?.name || "—";
+    return categories.find((cat) => String(cat.id) === String(id))?.name || "—";
   };
 
   const getCityName = (id) => {
-    return cities.find((city) => city.id === id)?.name || "—";
+    return cities.find((city) => String(city.id) === String(id))?.name || "—";
   };
 
   const getStatusStyle = (status = "Draft") => {
@@ -106,10 +108,10 @@ export default function BusinessDashboard() {
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
 
   const clearForm = () => {
@@ -219,12 +221,12 @@ export default function BusinessDashboard() {
             <p className="text-sm text-gray-300 mt-2">
               Upgrade to premium and get more visibility.
             </p>
-           <button
-  onClick={() => setActiveTab("payments")}
-  className="mt-4 w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-xl"
->
-  Upgrade Now
-</button>
+            <button
+              onClick={() => setActiveTab("payments")}
+              className="mt-4 w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-xl"
+            >
+              Upgrade Now
+            </button>
           </div>
         </div>
 
@@ -276,45 +278,45 @@ export default function BusinessDashboard() {
           </div>
 
           {activeTab !== "dashboard" && (
-  <div className="bg-white rounded-3xl border shadow-sm p-10">
-    {activeTab === "payments" ? (
-      <>
-        <h2 className="text-3xl font-bold mb-3">Premium Plans</h2>
-        <p className="text-gray-500 mb-8">
-          Upgrade your business listing for more visibility and leads.
-        </p>
+            <div className="bg-white rounded-3xl border shadow-sm p-10">
+              {activeTab === "payments" ? (
+                <>
+                  <h2 className="text-3xl font-bold mb-3">Premium Plans</h2>
+                  <p className="text-gray-500 mb-8">
+                    Upgrade your business listing for more visibility and leads.
+                  </p>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            ["3 Months", "₹999", "Basic visibility boost"],
-            ["6 Months", "₹1799", "Recommended for growing business"],
-            ["12 Months", "₹2999", "Best value yearly plan"],
-          ].map(([plan, price, desc]) => (
-            <div key={plan} className="border rounded-3xl p-6 hover:shadow-lg">
-              <h3 className="text-xl font-bold">{plan}</h3>
-              <p className="text-3xl font-bold text-blue-600 my-4">{price}</p>
-              <p className="text-gray-500 mb-6">{desc}</p>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    {[
+                      ["3 Months", "₹999", "Basic visibility boost"],
+                      ["6 Months", "₹1799", "Recommended for growing business"],
+                      ["12 Months", "₹2999", "Best value yearly plan"],
+                    ].map(([plan, price, desc]) => (
+                      <div key={plan} className="border rounded-3xl p-6 hover:shadow-lg">
+                        <h3 className="text-xl font-bold">{plan}</h3>
+                        <p className="text-3xl font-bold text-blue-600 my-4">{price}</p>
+                        <p className="text-gray-500 mb-6">{desc}</p>
 
-              <button
-                onClick={() => alert("Razorpay integration next step me add karenge")}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl font-semibold"
-              >
-                Choose Plan
-              </button>
+                        <button
+                          onClick={() => alert("Razorpay integration next step me add karenge")}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl font-semibold"
+                        >
+                          Choose Plan
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center">
+                  <h2 className="text-3xl font-bold mb-3">{tabTitle[activeTab]}</h2>
+                  <p className="text-gray-500">
+                    This section is ready. Backend integration will be added next.
+                  </p>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      </>
-    ) : (
-      <div className="text-center">
-        <h2 className="text-3xl font-bold mb-3">{tabTitle[activeTab]}</h2>
-        <p className="text-gray-500">
-          This section is ready. Backend integration will be added next.
-        </p>
-      </div>
-    )}
-  </div>
-)}
+          )}
 
           {activeTab === "dashboard" && (
             <>
@@ -344,18 +346,19 @@ export default function BusinessDashboard() {
                         Category <span className="text-red-500">*</span>
                       </label>
                       <select
-  name="category"
-  value={form.category}
-  onChange={handleChange}
-  className="w-full outline-none bg-transparent"
->
-  <option value="">Select Category</option>
-  <option value="Salon">Salon</option>
-  <option value="Gym">Gym</option>
-  <option value="Cafe">Cafe</option>
-  <option value="Restaurant">Restaurant</option>
-  <option value="Hotel">Hotel</option>
-</select>
+                        name="categoryId"
+                        value={formData.categoryId}
+                        onChange={handleChange}
+                        className="w-full outline-none bg-transparent mt-2"
+                        required
+                      >
+                        <option value="">Select Category</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
@@ -363,18 +366,19 @@ export default function BusinessDashboard() {
                         City <span className="text-red-500">*</span>
                       </label>
                       <select
-  name="city"
-  value={form.city}
-  onChange={handleChange}
-  className="w-full outline-none bg-transparent"
->
-  <option value="">Select City</option>
-  <option value="Rohini">Rohini</option>
-  <option value="Delhi">Delhi</option>
-  <option value="Noida">Noida</option>
-  <option value="Gurgaon">Gurgaon</option>
-  <option value="Mumbai">Mumbai</option>
-</select>
+                        name="cityId"
+                        value={formData.cityId}
+                        onChange={handleChange}
+                        className="w-full outline-none bg-transparent mt-2"
+                        required
+                      >
+                        <option value="">Select City</option>
+                        {cities.map((city) => (
+                          <option key={city.id} value={city.id}>
+                            {city.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
