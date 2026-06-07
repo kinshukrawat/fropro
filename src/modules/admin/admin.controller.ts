@@ -14,6 +14,9 @@ import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 export class AdminController {
   constructor(private readonly admin: AdminService) {}
 
+  @Get('contact')
+
+
   @Get('stats')
   stats() {
     return this.admin.stats();
