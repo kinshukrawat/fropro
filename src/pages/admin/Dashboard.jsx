@@ -107,7 +107,7 @@ export default function Dashboard() {
 
   const fetchEnquiries = async () => {
     try {
-      const res = await API.get("/admin/contact");
+      const res = await API.get("/contact");
 
       setEnquiries(res.data?.data || []);
     } catch (error) {

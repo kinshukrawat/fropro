@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://fropro-production.up.railway.app/api",
+  baseURL: "http://localhost:3000/api",
 });
 
 API.interceptors.request.use((config) => {
@@ -18,3 +18,4 @@ export default API;
 
 export const getCategories = () => API.get("/categories");
 export const getCities = () => API.get("/cities");
+export const getcontact = () => API.post("/contact");
