@@ -18,7 +18,7 @@ async function bootstrap() {
   );
   app.use(helmet());
   app.enableCors({
-    origin: true,
+    origin: ['https://www.oyerohini.com', 'https://oyerohini.com'],
     credentials: true,
   });
   app.setGlobalPrefix('api');
