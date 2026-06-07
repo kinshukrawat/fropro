@@ -215,14 +215,7 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([actorUserId])
 }
-model ContactEnquiry {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  phone     String?
-  message   String
-  createdAt DateTime @default(now())
-}
+
 model Enquiry {
   id        String   @id @default(cuid())
   name      String

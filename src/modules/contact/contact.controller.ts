@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { ContactService } from './contact.service';
 import { CreateEnquiryDto } from './dto/create-enquiry.dto';
 
@@ -11,7 +11,7 @@ export class ContactController {
     return this.contactService.create(dto);
   }
 
-  @Get()
+  @Get()  // ← Yeh hona chahiye
   findAll() {
     return this.contactService.findAll();
   }
