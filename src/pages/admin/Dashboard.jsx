@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   FaHome,
   FaList,
-  
+
   FaUsers,
   FaRupeeSign,
 
@@ -51,10 +51,18 @@ export default function Dashboard() {
   const [listings, setListings] = useState([]);
   const [users, setUsers] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [enquiries, setEnquiries] = useState([]);
   const [stats, setStats] = useState({});
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [loading, setLoading] = useState(false);
+
+  const logout = () => {
+    localStorage.removeItem("adminLogin");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/admin/login");
+  };
 
   const fetchAdminData = async () => {
     try {
@@ -97,6 +105,15 @@ export default function Dashboard() {
     }
   };
 
+  const fetchEnquiries = async () => {
+    try {
+      const res = await API.get("/contact");
+      setEnquiries(res.data?.data || []);
+    } catch (error) {
+      console.log("Enquiries Error:", error.response?.data || error);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -111,14 +128,9 @@ export default function Dashboard() {
   useEffect(() => {
     if (activeTab === "users") fetchUsers();
     if (activeTab === "payments") fetchPayments();
+    if (activeTab === "enquiries") fetchEnquiries();
   }, [activeTab]);
-
-  const logout = () => {
-    localStorage.removeItem("adminLogin");
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/admin/login");
-  };
+  
 
   const approveListing = async (id) => {
     try {
@@ -205,7 +217,12 @@ export default function Dashboard() {
     { month: "Mar", listings: 9, users: 18, payments: 5 },
     { month: "Apr", listings: 14, users: 26, payments: 8 },
     { month: "May", listings: 20, users: 35, payments: 12 },
-    { month: "Jun", listings: totalListings || 24, users: users.length || 42, payments: payments.length || 15 },
+    {
+      month: "Jun",
+      listings: totalListings || 24,
+      users: users.length || 42,
+      payments: payments.length || 15,
+    },
   ];
 
   const statusData = [
@@ -296,15 +313,31 @@ export default function Dashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={growthData}>
                       <defs>
-                        <linearGradient id="listingColor" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#2563eb" stopOpacity={0.35} />
-                          <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                        <linearGradient
+                          id="listingColor"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#2563eb"
+                            stopOpacity={0.35}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#2563eb"
+                            stopOpacity={0}
+                          />
                         </linearGradient>
                       </defs>
+
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis />
                       <Tooltip />
+
                       <Area
                         type="monotone"
                         dataKey="listings"
@@ -312,6 +345,7 @@ export default function Dashboard() {
                         fill="url(#listingColor)"
                         strokeWidth={3}
                       />
+
                       <Area
                         type="monotone"
                         dataKey="users"
@@ -319,6 +353,7 @@ export default function Dashboard() {
                         fillOpacity={0}
                         strokeWidth={3}
                       />
+
                       <Area
                         type="monotone"
                         dataKey="payments"
@@ -341,7 +376,11 @@ export default function Dashboard() {
                       <XAxis dataKey="name" />
                       <YAxis allowDecimals={false} />
                       <Tooltip />
-                      <Bar dataKey="value" fill="#1d4ed8" radius={[8, 8, 0, 0]} />
+                      <Bar
+                        dataKey="value"
+                        fill="#1d4ed8"
+                        radius={[8, 8, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -420,7 +459,7 @@ export default function Dashboard() {
             headers={["ID", "Amount", "Status", "Created At"]}
             rows={payments.map((p) => [
               p.id || "-",
-              p.amount ? `₹${p.amount}` : "-",
+              p.amountPaise ? `₹${p.amountPaise / 100}` : "-",
               p.status || "-",
               p.createdAt ? new Date(p.createdAt).toLocaleString() : "-",
             ])}
@@ -442,12 +481,17 @@ export default function Dashboard() {
         )}
 
         {activeTab === "enquiries" && (
-          <div className="bg-white rounded-2xl shadow p-6">
-            <h3 className="text-xl font-bold mb-3">Enquiries</h3>
-            <p className="text-gray-500">
-              Contact/Query backend API abhi missing hai.
-            </p>
-          </div>
+          <SimpleTable
+            title="Contact Form Enquiries"
+            headers={["Name", "Email", "Phone", "Message", "Date"]}
+            rows={enquiries.map((e) => [
+              e.name || "-",
+              e.email || "-",
+              e.phone || "-",
+              e.message || "-",
+              e.createdAt ? new Date(e.createdAt).toLocaleString() : "-",
+            ])}
+          />
         )}
 
         {activeTab === "settings" && (
@@ -456,6 +500,7 @@ export default function Dashboard() {
 
             <div className="grid gap-4">
               <input className="border p-3 rounded-xl" defaultValue="Oye Rohini" />
+
               <input
                 className="border p-3 rounded-xl"
                 defaultValue="oyerohini@gmail.com"

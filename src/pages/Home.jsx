@@ -142,7 +142,7 @@ export default function Home() {
       });
     } catch (error) {
       console.log("Query Submit Error:", error);
-      alert("Query API backend me available nahi hai.");
+      alert("Query submit failed. Please try again.");
     }
   };
 
