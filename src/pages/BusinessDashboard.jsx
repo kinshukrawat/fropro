@@ -51,18 +51,56 @@ export default function BusinessDashboard() {
   };
 
   const fetchDropdownData = async () => {
-    try {
-      const categoryRes = await getCategories();
-      const cityRes = await getCities();
+  try {
+    const categoryRes = await getCategories();
+    const cityRes = await getCities();
 
-      setCategories(categoryRes.data?.items || categoryRes.data || []);
-      setCities(cityRes.data?.items || cityRes.data || []);
-    } catch (error) {
-      console.log("Dropdown Error:", error.response?.data || error);
-      setCategories([]);
-      setCities([]);
-    }
-  };
+    const apiCategories = categoryRes.data?.items || categoryRes.data || [];
+    const apiCities = cityRes.data?.items || cityRes.data || [];
+
+    setCategories(
+      apiCategories.length > 0
+        ? apiCategories
+        : [
+            { id: "salon", name: "Salon" },
+            { id: "gym", name: "Gym" },
+            { id: "cafe", name: "Cafe" },
+            { id: "restaurant", name: "Restaurant" },
+            { id: "hotel", name: "Hotel" },
+          ]
+    );
+
+    setCities(
+      apiCities.length > 0
+        ? apiCities
+        : [
+            { id: "rohini", name: "Rohini" },
+            { id: "delhi", name: "Delhi" },
+            { id: "noida", name: "Noida" },
+            { id: "gurgaon", name: "Gurgaon" },
+            { id: "mumbai", name: "Mumbai" },
+          ]
+    );
+  } catch (error) {
+    console.log("Dropdown Error:", error.response?.data || error);
+
+    setCategories([
+      { id: "salon", name: "Salon" },
+      { id: "gym", name: "Gym" },
+      { id: "cafe", name: "Cafe" },
+      { id: "restaurant", name: "Restaurant" },
+      { id: "hotel", name: "Hotel" },
+    ]);
+
+    setCities([
+      { id: "rohini", name: "Rohini" },
+      { id: "delhi", name: "Delhi" },
+      { id: "noida", name: "Noida" },
+      { id: "gurgaon", name: "Gurgaon" },
+      { id: "mumbai", name: "Mumbai" },
+    ]);
+  }
+};
 
   useEffect(() => {
     fetchMyListings();
