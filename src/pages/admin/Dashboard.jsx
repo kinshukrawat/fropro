@@ -68,13 +68,10 @@ export default function Dashboard() {
     try {
       setLoading(true);
 
-      const [statsRes, listingsRes] = await Promise.all([
-        API.get("/admin/stats"),
-        API.get("/admin/listings"),
-      ]);
+      const listingsRes = await API.get("/admin/listings");
 
-      setStats(statsRes.data || {});
-      setListings(listingsRes.data?.items || listingsRes.data || []);
+setStats({});
+setListings(listingsRes.data?.items || listingsRes.data || []);
     } catch (error) {
       console.log("Admin Data Error:", error.response?.data || error);
 
