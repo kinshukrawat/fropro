@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { ListingStatus, Prisma, SubscriptionStatus } from '@prisma/client';
+import { ListingStatus, Prisma } from '@prisma/client';
 import { slugify } from '../../common/utils/slugify';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateListingDto } from './dto/create-listing.dto';
@@ -13,6 +13,7 @@ export class ListingsService {
   async searchPublic(query: SearchListingsDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
+
     const where: Prisma.BusinessListingWhereInput = {
       ...this.publicWhere(),
     };
@@ -55,7 +56,7 @@ export class ListingsService {
         images: { orderBy: { sortOrder: 'asc' } },
       },
     });
-
+    
 
     if (!listing) {
       throw new NotFoundException('Listing not found.');
@@ -99,6 +100,7 @@ export class ListingsService {
 
   async updateOwnerListing(ownerId: string, id: string, dto: UpdateListingDto) {
     await this.assertOwnerListing(ownerId, id);
+
     return this.prisma.businessListing.update({
       where: { id },
       data: {
@@ -111,6 +113,7 @@ export class ListingsService {
 
   async submitOwnerListing(ownerId: string, id: string) {
     await this.assertOwnerListing(ownerId, id);
+
     return this.prisma.businessListing.update({
       where: { id },
       data: {
@@ -140,12 +143,7 @@ export class ListingsService {
     return {
       status: ListingStatus.APPROVED,
       isDeleted: false,
-      subscriptions: {
-        some: {
-          status: SubscriptionStatus.ACTIVE,
-          expiresAt: { gt: new Date() },
-        },
-      },
+
     };
   }
 
