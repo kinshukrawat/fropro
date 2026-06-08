@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { ListingStatus, Prisma, SubscriptionStatus } from '@prisma/client';
+import { EnquiryStatus, ListingStatus, Prisma, SubscriptionStatus } from '@prisma/client';
 import { AnalyticsService } from '../analytics/analytics.service';
+import { EnquiriesService } from '../enquiries/enquiries.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly analytics: AnalyticsService,
+    private readonly enquiries: EnquiriesService,
   ) {}
 
   findListings(q?: string) {
@@ -148,6 +150,14 @@ export class AdminService {
 
   stats() {
     return this.analytics.platformStats();
+  }
+
+  findEnquiries(status?: EnquiryStatus) {
+    return this.enquiries.findAll(status);
+  }
+
+  updateEnquiryStatus(id: string, status: EnquiryStatus) {
+    return this.enquiries.updateStatus(id, status);
   }
 
   private audit(

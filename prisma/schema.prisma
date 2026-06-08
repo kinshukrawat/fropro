@@ -38,6 +38,13 @@ enum PlanDuration {
   SIX_MONTHS
 }
 
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  RESOLVED
+  SPAM
+}
+
 model User {
   id           String    @id @default(cuid())
   name         String
@@ -127,11 +134,28 @@ model BusinessListing {
   images        ListingImage[]
   subscriptions Subscription[]
   payments      Payment[]
+  enquiries     Enquiry[]
 
   @@index([status, isDeleted])
   @@index([categoryId, status])
   @@index([cityId, status])
   @@index([isFeatured, status])
+}
+
+model Enquiry {
+  id        String        @id @default(cuid())
+  name      String
+  phone     String
+  message   String
+  status    EnquiryStatus @default(NEW)
+  listingId String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  listing BusinessListing? @relation(fields: [listingId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([listingId])
 }
 
 model ListingImage {

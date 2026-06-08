@@ -25,6 +25,7 @@ A listing is public only when it is approved, has an active non-expired subscrip
 - Public discovery: listing search, category/city filters, listing detail view counter
 - Owner dashboard: listing CRUD, submit for approval, images, subscription/payment history, analytics
 - Admin: listing approval/rejection/suspension, featured toggle, users, subscriptions, payments, stats
+- Enquiries: public query form submission and admin follow-up status management
 - Payments: Razorpay order creation, signature verification, webhook activation
 - Media: Cloudinary image metadata storage with a 10-image listing limit
 

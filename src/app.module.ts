@@ -6,6 +6,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { CitiesModule } from './modules/cities/cities.module';
+import { EnquiriesModule } from './modules/enquiries/enquiries.module';
 import { ListingsModule } from './modules/listings/listings.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
@@ -27,6 +28,7 @@ import { UsersModule } from './modules/users/users.module';
     UsersModule,
     CategoriesModule,
     CitiesModule,
+    EnquiriesModule,
     ListingsModule,
     SubscriptionsModule,
     PaymentsModule,
