@@ -18,9 +18,14 @@ async function bootstrap() {
   );
   app.use(helmet());
   app.enableCors({
-    origin: true,
-    credentials: true,
-  });
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'https://www.oyerohini.com',
+    'https://oyerohini.com',
+  ],
+  credentials: true,
+});
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
     new ValidationPipe({

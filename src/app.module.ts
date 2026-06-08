@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+
 import { AdminModule } from './modules/admin/admin.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { CitiesModule } from './modules/cities/cities.module';
 import { EnquiriesModule } from './modules/enquiries/enquiries.module';
+import { ContactModule } from './modules/contact/contact.module';
 import { ListingsModule } from './modules/listings/listings.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
@@ -16,13 +18,17 @@ import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+
     ThrottlerModule.forRoot([
       {
         ttl: 60_000,
         limit: 120,
       },
     ]),
+
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -35,6 +41,7 @@ import { UsersModule } from './modules/users/users.module';
     UploadsModule,
     AnalyticsModule,
     AdminModule,
+    ContactModule,
   ],
 })
 export class AppModule {}
