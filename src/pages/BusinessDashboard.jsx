@@ -268,10 +268,16 @@ export default function BusinessDashboard() {
           </div>
         </div>
 
-        <button className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white">
-          <FaSignOutAlt />
-          Logout
-        </button>
+        <button
+  onClick={() => {
+    localStorage.clear();
+    window.location.href = "/login";
+  }}
+  className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white"
+>
+  <FaSignOutAlt />
+  Logout
+</button>
       </aside>
 
       <main className="flex-1">
