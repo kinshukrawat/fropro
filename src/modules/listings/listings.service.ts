@@ -140,12 +140,10 @@ export class ListingsService {
   }
 
   private publicWhere(): Prisma.BusinessListingWhereInput {
-    return {
-      status: ListingStatus.APPROVED,
-      isDeleted: false,
-
-    };
-  }
+  return {
+    status: ListingStatus.APPROVED,
+  };
+}
 
   private publicInclude(): Prisma.BusinessListingInclude {
     return {
