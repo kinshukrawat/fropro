@@ -22,6 +22,7 @@ import {
   FaPhoneAlt,
   FaBuilding,
   FaListUl,
+  FaImage,
 } from "react-icons/fa";
 import API, { getCategories, getCities } from "../api/api";
 
@@ -31,6 +32,8 @@ export default function BusinessDashboard() {
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -51,56 +54,16 @@ export default function BusinessDashboard() {
   };
 
   const fetchDropdownData = async () => {
-  try {
-    const categoryRes = await getCategories();
-    const cityRes = await getCities();
+    try {
+      const categoryRes = await getCategories();
+      const cityRes = await getCities();
 
-    const apiCategories = categoryRes.data?.items || categoryRes.data || [];
-    const apiCities = cityRes.data?.items || cityRes.data || [];
-
-    setCategories(
-      apiCategories.length > 0
-        ? apiCategories
-        : [
-            { id: "salon", name: "Salon" },
-            { id: "gym", name: "Gym" },
-            { id: "cafe", name: "Cafe" },
-            { id: "restaurant", name: "Restaurant" },
-            { id: "hotel", name: "Hotel" },
-          ]
-    );
-
-    setCities(
-      apiCities.length > 0
-        ? apiCities
-        : [
-            { id: "rohini", name: "Rohini" },
-            { id: "delhi", name: "Delhi" },
-            { id: "noida", name: "Noida" },
-            { id: "gurgaon", name: "Gurgaon" },
-            { id: "mumbai", name: "Mumbai" },
-          ]
-    );
-  } catch (error) {
-    console.log("Dropdown Error:", error.response?.data || error);
-
-    setCategories([
-      { id: "salon", name: "Salon" },
-      { id: "gym", name: "Gym" },
-      { id: "cafe", name: "Cafe" },
-      { id: "restaurant", name: "Restaurant" },
-      { id: "hotel", name: "Hotel" },
-    ]);
-
-    setCities([
-      { id: "rohini", name: "Rohini" },
-      { id: "delhi", name: "Delhi" },
-      { id: "noida", name: "Noida" },
-      { id: "gurgaon", name: "Gurgaon" },
-      { id: "mumbai", name: "Mumbai" },
-    ]);
-  }
-};
+      setCategories(categoryRes.data?.items || categoryRes.data || []);
+      setCities(cityRes.data?.items || cityRes.data || []);
+    } catch (error) {
+      console.log("Dropdown Error:", error.response?.data || error);
+    }
+  };
 
   useEffect(() => {
     fetchMyListings();
@@ -152,6 +115,20 @@ export default function BusinessDashboard() {
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Only image files allowed");
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
   const clearForm = () => {
     setFormData({
       name: "",
@@ -161,6 +138,9 @@ export default function BusinessDashboard() {
       categoryId: "",
       cityId: "",
     });
+
+    setImageFile(null);
+    setImagePreview("");
   };
 
   const handleAddListing = async (e) => {
@@ -179,7 +159,30 @@ export default function BusinessDashboard() {
         services: ["General Service"],
       };
 
-      await API.post("/listings", payload);
+      const listingRes = await API.post("/listings", payload);
+
+      const createdListing =
+        listingRes.data?.data || listingRes.data?.item || listingRes.data;
+
+      const listingId = createdListing?.id;
+
+      if (imageFile && listingId) {
+        const uploadForm = new FormData();
+        uploadForm.append("file", imageFile);
+
+        const uploadRes = await API.post("/uploads/image", uploadForm, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        await API.post("/uploads/listing-images", {
+          listingId,
+          url: uploadRes.data.url,
+          cloudinaryId: uploadRes.data.cloudinaryId,
+          altText: formData.name,
+        });
+      }
 
       alert("Business listing created successfully");
       clearForm();
@@ -269,15 +272,15 @@ export default function BusinessDashboard() {
         </div>
 
         <button
-  onClick={() => {
-    localStorage.clear();
-    window.location.href = "/login";
-  }}
-  className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white"
->
-  <FaSignOutAlt />
-  Logout
-</button>
+          onClick={() => {
+            localStorage.clear();
+            window.location.href = "/login";
+          }}
+          className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white"
+        >
+          <FaSignOutAlt />
+          Logout
+        </button>
       </aside>
 
       <main className="flex-1">
@@ -314,10 +317,13 @@ export default function BusinessDashboard() {
         <div className="p-6 lg:p-8">
           <div className="mb-8">
             <h1 className="text-4xl font-bold">
-              {activeTab === "dashboard" ? "Business Dashboard" : tabTitle[activeTab]}
+              {activeTab === "dashboard"
+                ? "Business Dashboard"
+                : tabTitle[activeTab]}
             </h1>
             <p className="text-gray-500 mt-2">
-              Dashboard / {activeTab === "dashboard" ? "Overview" : tabTitle[activeTab]}
+              Dashboard /{" "}
+              {activeTab === "dashboard" ? "Overview" : tabTitle[activeTab]}
             </p>
           </div>
 
@@ -336,13 +342,20 @@ export default function BusinessDashboard() {
                       ["6 Months", "₹1799", "Recommended for growing business"],
                       ["12 Months", "₹2999", "Best value yearly plan"],
                     ].map(([plan, price, desc]) => (
-                      <div key={plan} className="border rounded-3xl p-6 hover:shadow-lg">
+                      <div
+                        key={plan}
+                        className="border rounded-3xl p-6 hover:shadow-lg"
+                      >
                         <h3 className="text-xl font-bold">{plan}</h3>
-                        <p className="text-3xl font-bold text-blue-600 my-4">{price}</p>
+                        <p className="text-3xl font-bold text-blue-600 my-4">
+                          {price}
+                        </p>
                         <p className="text-gray-500 mb-6">{desc}</p>
 
                         <button
-                          onClick={() => alert("Razorpay integration next step me add karenge")}
+                          onClick={() =>
+                            alert("Razorpay integration next step me add karenge")
+                          }
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl font-semibold"
                         >
                           Choose Plan
@@ -353,7 +366,9 @@ export default function BusinessDashboard() {
                 </>
               ) : (
                 <div className="text-center">
-                  <h2 className="text-3xl font-bold mb-3">{tabTitle[activeTab]}</h2>
+                  <h2 className="text-3xl font-bold mb-3">
+                    {tabTitle[activeTab]}
+                  </h2>
                   <p className="text-gray-500">
                     This section is ready. Backend integration will be added next.
                   </p>
@@ -365,10 +380,34 @@ export default function BusinessDashboard() {
           {activeTab === "dashboard" && (
             <>
               <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-                <StatCard icon={<FaStore />} title="Total Businesses" value={stats.total} subtitle="Active Listings" color="blue" />
-                <StatCard icon={<FaClipboardList />} title="Pending Listings" value={stats.pending} subtitle="Waiting approval" color="green" />
-                <StatCard icon={<FaStar />} title="Average Rating" value={stats.rating} subtitle="Total Reviews" color="yellow" />
-                <StatCard icon={<FaChartLine />} title="Approved Listings" value={stats.approved} subtitle="Live on website" color="red" />
+                <StatCard
+                  icon={<FaStore />}
+                  title="Total Businesses"
+                  value={stats.total}
+                  subtitle="Active Listings"
+                  color="blue"
+                />
+                <StatCard
+                  icon={<FaClipboardList />}
+                  title="Pending Listings"
+                  value={stats.pending}
+                  subtitle="Waiting approval"
+                  color="green"
+                />
+                <StatCard
+                  icon={<FaStar />}
+                  title="Average Rating"
+                  value={stats.rating}
+                  subtitle="Total Reviews"
+                  color="yellow"
+                />
+                <StatCard
+                  icon={<FaChartLine />}
+                  title="Approved Listings"
+                  value={stats.approved}
+                  subtitle="Live on website"
+                  color="red"
+                />
               </div>
 
               <div className="grid xl:grid-cols-2 gap-6 mb-8">
@@ -380,10 +419,34 @@ export default function BusinessDashboard() {
                     <h2 className="text-2xl font-bold">Add Business Listing</h2>
                   </div>
 
-                  <form onSubmit={handleAddListing} className="grid md:grid-cols-2 gap-4">
-                    <InputBox icon={<FaBuilding />} label="Business Name" name="name" placeholder="Enter business name" value={formData.name} onChange={handleChange} />
-                    <InputBox icon={<FaPhoneAlt />} label="Phone Number" name="phone" placeholder="Enter phone number" value={formData.phone} onChange={handleChange} />
-                    <InputBox icon={<FaMapMarkerAlt />} label="Business Address" name="address" placeholder="Enter full address" value={formData.address} onChange={handleChange} />
+                  <form
+                    onSubmit={handleAddListing}
+                    className="grid md:grid-cols-2 gap-4"
+                  >
+                    <InputBox
+                      icon={<FaBuilding />}
+                      label="Business Name"
+                      name="name"
+                      placeholder="Enter business name"
+                      value={formData.name}
+                      onChange={handleChange}
+                    />
+                    <InputBox
+                      icon={<FaPhoneAlt />}
+                      label="Phone Number"
+                      name="phone"
+                      placeholder="Enter phone number"
+                      value={formData.phone}
+                      onChange={handleChange}
+                    />
+                    <InputBox
+                      icon={<FaMapMarkerAlt />}
+                      label="Business Address"
+                      name="address"
+                      placeholder="Enter full address"
+                      value={formData.address}
+                      onChange={handleChange}
+                    />
 
                     <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
                       <label className="text-sm text-gray-500">
@@ -425,9 +488,34 @@ export default function BusinessDashboard() {
                       </select>
                     </div>
 
+                    <div className="border rounded-2xl px-4 py-3 md:col-span-2">
+                      <label className="text-sm text-gray-500">
+                        Business Image
+                      </label>
+
+                      <div className="flex items-center gap-3 mt-3">
+                        <FaImage className="text-gray-400" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="w-full"
+                        />
+                      </div>
+
+                      {imagePreview && (
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="mt-4 w-full h-48 object-cover rounded-2xl border"
+                        />
+                      )}
+                    </div>
+
                     <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
                       <label className="text-sm text-gray-500">
-                        Business Description <span className="text-red-500">*</span>
+                        Business Description{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         name="description"
@@ -470,13 +558,26 @@ export default function BusinessDashboard() {
 
                   <div className="h-72 flex items-end gap-4 border-b border-l p-4">
                     {[35, 25, 52, 43, 75, 58, 68].map((height, index) => (
-                      <div key={index} className="flex-1 flex flex-col items-center gap-2">
+                      <div
+                        key={index}
+                        className="flex-1 flex flex-col items-center gap-2"
+                      >
                         <div
                           className="w-full rounded-t-xl bg-gradient-to-t from-blue-600 to-blue-300"
                           style={{ height: `${height}%` }}
                         ></div>
                         <span className="text-xs text-gray-400">
-                          {["May", "Jun 5", "Jun 10", "Jun 15", "Jun 20", "Jun 25", "Now"][index]}
+                          {
+                            [
+                              "May",
+                              "Jun 5",
+                              "Jun 10",
+                              "Jun 15",
+                              "Jun 20",
+                              "Jun 25",
+                              "Now",
+                            ][index]
+                          }
                         </span>
                       </div>
                     ))}
@@ -484,7 +585,11 @@ export default function BusinessDashboard() {
 
                   <div className="grid md:grid-cols-2 gap-4 mt-6">
                     <MiniStat title="Page Views" value="120" growth="+18%" />
-                    <MiniStat title="Search Appearances" value="85" growth="+12%" />
+                    <MiniStat
+                      title="Search Appearances"
+                      value="85"
+                      growth="+12%"
+                    />
                     <MiniStat title="Profile Clicks" value="24" growth="+8%" />
                     <MiniStat title="Phone Clicks" value="15" growth="+5%" />
                   </div>
@@ -527,13 +632,23 @@ export default function BusinessDashboard() {
                           <tr key={item.id} className="border-t hover:bg-gray-50">
                             <td className="p-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
-                                  <FaStore />
+                                <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 overflow-hidden">
+                                  {item.images?.[0]?.url ? (
+                                    <img
+                                      src={item.images[0].url}
+                                      alt={item.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <FaStore />
+                                  )}
                                 </div>
                                 <div>
                                   <h4 className="font-bold">{item.name}</h4>
                                   <p className="text-sm text-gray-500">
-                                    {item.addressLine1 || item.address || "No address"}
+                                    {item.addressLine1 ||
+                                      item.address ||
+                                      "No address"}
                                   </p>
                                 </div>
                               </div>
@@ -541,7 +656,8 @@ export default function BusinessDashboard() {
 
                             <td className="p-4">
                               <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm">
-                                {item.category?.name || getCategoryName(item.categoryId)}
+                                {item.category?.name ||
+                                  getCategoryName(item.categoryId)}
                               </span>
                             </td>
 
@@ -552,7 +668,11 @@ export default function BusinessDashboard() {
                             </td>
 
                             <td className="p-4">
-                              <span className={`px-3 py-1 rounded-full border text-sm ${getStatusStyle(item.status)}`}>
+                              <span
+                                className={`px-3 py-1 rounded-full border text-sm ${getStatusStyle(
+                                  item.status
+                                )}`}
+                              >
                                 {item.status || "Draft"}
                               </span>
                             </td>
@@ -609,7 +729,9 @@ function StatCard({ icon, title, value, subtitle, color }) {
         <p className="text-sm text-gray-400 mt-3">{subtitle}</p>
       </div>
 
-      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl ${colors[color]}`}>
+      <div
+        className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl ${colors[color]}`}
+      >
         {icon}
       </div>
     </div>
