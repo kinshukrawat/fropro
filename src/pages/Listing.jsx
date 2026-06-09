@@ -10,7 +10,6 @@ import {
 import FilterSidebar from "../components/FilterSidebar";
 import API from "../api/api";
 
-
 export default function Listing() {
   const [listings, setListings] = useState([]);
   const [search, setSearch] = useState("");
@@ -24,7 +23,17 @@ export default function Listing() {
         params: { q: search },
       });
 
-      setListings(res.data?.items || []);
+      console.log("Listings API Response:", res.data);
+
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data?.items || [];
+
+      const approvedListings = data.filter(
+        (item) => item.status === "APPROVED"
+      );
+
+      setListings(approvedListings);
     } catch (error) {
       console.log("Listings API Error:", error);
       setListings([]);
@@ -61,6 +70,9 @@ export default function Listing() {
                 placeholder="Search businesses..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") fetchListings();
+                }}
                 className="w-full outline-none text-black"
               />
             </div>
@@ -99,15 +111,18 @@ export default function Listing() {
                     <img
                       src={
                         item.images?.[0]?.url ||
+                        item.imageUrl ||
                         "https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1200&auto=format&fit=crop"
                       }
-                      alt={item.name}
+                      alt={item.name || "Business"}
                       className="h-56 w-full object-cover"
                     />
 
                     <div className="p-6">
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-2xl font-bold">{item.name}</h3>
+                        <h3 className="text-2xl font-bold">
+                          {item.name || "Business Name"}
+                        </h3>
 
                         <div className="flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-lg text-sm font-semibold">
                           <FaStar className="mr-1" />
@@ -116,23 +131,29 @@ export default function Listing() {
                       </div>
 
                       <p className="text-blue-600 font-medium mb-3">
-                        {item.category?.name || "Business"}
+                        {item.category?.name || item.category || "Business"}
                       </p>
 
                       <div className="flex items-center text-gray-500 mb-6">
                         <FaMapMarkerAlt className="mr-2" />
-                        {item.city?.name || item.addressLine1 || "Location"}
+                        {item.city?.name ||
+                          item.city ||
+                          item.addressLine1 ||
+                          "Location"}
                       </div>
 
                       <div className="flex items-center gap-3 mt-6">
-                        <Link to={`/business/detail/${item.slug}`} className="flex-1">
+                        <Link
+                          to={`/business/detail/${item.slug || item.id}`}
+                          className="flex-1"
+                        >
                           <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold transition">
                             View Details
                           </button>
                         </Link>
 
                         <a
-                          href={`tel:${item.contactPhone || ""}`}
+                          href={`tel:${item.contactPhone || item.phone || ""}`}
                           className="bg-gray-100 hover:bg-gray-200 p-4 rounded-xl transition"
                         >
                           <FaPhoneAlt className="text-blue-600" />
