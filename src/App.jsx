@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
 import "./App.css";
@@ -28,6 +29,10 @@ import AdminLogin from "./pages/admin/AdminLogin";
 function AppContent() {
   const location = useLocation();
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   const hideLayout =
     location.pathname.startsWith("/admin") ||
     location.pathname === "/business-dashboard" ||
@@ -38,7 +43,7 @@ function AppContent() {
       {!hideLayout && <Navbar />}
 
       <Routes>
-     
+
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/listings" element={<Listing />} />
