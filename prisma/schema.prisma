@@ -151,7 +151,7 @@ model Enquiry {
   status    EnquiryStatus @default(NEW)
   listingId String?
   createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  updatedAt DateTime      @default(now()) @updatedAt
 
   listing BusinessListing? @relation(fields: [listingId], references: [id])
 
