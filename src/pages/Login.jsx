@@ -38,7 +38,6 @@ export default function Login() {
         console.log("LOGIN RESPONSE:", res.data);
 
         const token = res.data.accessToken || res.data.token;
-        const user = res.data.user;
 
         if (!token) {
           alert("Login failed: token not received");
