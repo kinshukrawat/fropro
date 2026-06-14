@@ -14,7 +14,7 @@ export class AdminService {
 
   findListings(q?: string) {
     return this.prisma.businessListing.findMany({
-      where: q
+      where: q 
         ? {
             OR: [
               { name: { contains: q, mode: 'insensitive' } },
