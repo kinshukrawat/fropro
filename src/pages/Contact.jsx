@@ -11,7 +11,7 @@ export default function Contact() {
   const [form, setForm] = useState({
     name: "",
     phone: "",
-    businessType: "",
+    email: "",
     message: "",
   });
 
@@ -31,10 +31,10 @@ export default function Contact() {
       setLoading(true);
 
       await API.post("/contact", {
-        name: form.name,
-        phone: form.phone,
-        businessType: form.businessType,
-        message: form.message,
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        message: form.message.trim(),
       });
 
       alert("Query submitted successfully!");
@@ -42,13 +42,18 @@ export default function Contact() {
       setForm({
         name: "",
         phone: "",
-        businessType: "",
+        email: "",
         message: "",
       });
     } catch (error) {
       console.log("Contact Form Error:", error.response?.data || error.message);
+
+      const message = error.response?.data?.message;
+
       alert(
-        error.response?.data?.message || "Query submit failed. Please try again."
+        Array.isArray(message)
+          ? message.join("\n")
+          : message || "Query submit failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -109,7 +114,7 @@ export default function Contact() {
                 <div className="bg-yellow-100 p-4 rounded-xl">
                   <FaMapMarkerAlt className="text-yellow-600 text-xl" />
                 </div>
-
+                
                 <div>
                   <h3 className="font-semibold text-lg">Office Address</h3>
                   <p className="text-gray-500">Rohini, Delhi</p>
@@ -133,7 +138,7 @@ export default function Contact() {
               />
 
               <input
-                type="text"
+                type="tel"
                 name="phone"
                 placeholder="Enter your phone number"
                 value={form.phone}
@@ -143,10 +148,10 @@ export default function Contact() {
               />
 
               <input
-                type="text"
-                name="businessType"
-                placeholder="Business / Query Type"
-                value={form.businessType}
+                type="email"
+                name="email"
+                placeholder="Enter your email address"
+                value={form.email}
                 onChange={handleChange}
                 className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                 required
