@@ -69,6 +69,42 @@ export default function UserDashboard() {
             <p className="text-gray-500">Manage Account</p>
           </div>
         </div>
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h3 className="text-xl font-bold mb-4">Latest Payments</h3>
+            <div className="space-y-3">
+              {payments.slice(0, 5).map((payment) => (
+                <div key={payment.id} className="border rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <strong>{payment.listing?.name || "Listing"}</strong>
+                    <span>{payment.status}</span>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Amount: {(payment.amountPaise || 0) / 100} INR
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h3 className="text-xl font-bold mb-4">My Subscriptions</h3>
+            <div className="space-y-3">
+              {subscriptions.slice(0, 5).map((subscription) => (
+                <div key={subscription.id} className="border rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <strong>{subscription.listing?.name || "Listing"}</strong>
+                    <span>{subscription.status}</span>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {subscription.plan?.name || "Plan"} · {subscription.plan?.duration || "-"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

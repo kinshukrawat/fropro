@@ -27,7 +27,7 @@ export default function BusinessDetails() {
     try {
       setLoading(true);
 
-      const res = await API.get(`/listings/slug/${slug}`);
+      const res = await API.get(`/listings/${slug}`);
 
       setBusiness(res.data);
     } catch (error) {

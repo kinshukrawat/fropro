@@ -38,12 +38,12 @@ export default function Login() {
         console.log("LOGIN RESPONSE:", res.data);
 
         const token = res.data.accessToken || res.data.token;
-        const user = res.data.user;
 
         if (!token) {
           alert("Login failed: token not received");
           return;
         }
+        const user = res.data.user || {};
 
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user || {}));
@@ -53,7 +53,7 @@ export default function Login() {
         if (user?.role === "ADMIN") {
           navigate("/admin/dashboard");
         } else {
-          navigate("/business-dashboard");
+          navigate(user.role === "ADMIN" ? "/admin/dashboard" : "/business-dashboard");
         }
       } else {
         await API.post("/auth/register", {
@@ -116,6 +116,7 @@ export default function Login() {
               >
                 Sign Up
               </button>
+
             </div>
           </div>
 
@@ -159,7 +160,7 @@ export default function Login() {
                     required={!isLogin}
                   />
                 </div>
-              </>
+                </>
             )}
 
             <div className="flex items-center border rounded-xl px-4 py-4">

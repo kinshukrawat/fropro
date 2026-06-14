@@ -10,7 +10,6 @@ import API from "../api/api";
 export default function Contact() {
   const [form, setForm] = useState({
     name: "",
-    
     phone: "",
     businessType: "",
     message: "",
@@ -42,14 +41,15 @@ export default function Contact() {
 
       setForm({
         name: "",
-
         phone: "",
         businessType: "",
         message: "",
       });
     } catch (error) {
       console.log("Contact Form Error:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Query submit failed. Please try again.");
+      alert(
+        error.response?.data?.message || "Query submit failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,6 @@ export default function Contact() {
   return (
     <div className="min-h-screen bg-gray-100 py-16">
       <div className="max-w-7xl mx-auto px-4">
-
         <div className="text-center mb-14">
           <h1 className="text-4xl font-bold text-gray-900">Contact Us</h1>
           <p className="text-gray-500 mt-3 text-lg">
@@ -67,12 +66,10 @@ export default function Contact() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-10">
-
           <div className="bg-white rounded-2xl shadow p-8">
             <h2 className="text-2xl font-bold mb-8">Get In Touch</h2>
 
             <div className="space-y-6">
-              
               <div className="flex items-start gap-4">
                 <div className="bg-blue-100 p-4 rounded-xl">
                   <FaPhoneAlt className="text-blue-600 text-xl" />
@@ -118,10 +115,8 @@ export default function Contact() {
                   <p className="text-gray-500">Rohini, Delhi</p>
                 </div>
               </div>
-
             </div>
           </div>
-
 
           <div className="bg-white rounded-2xl shadow p-8">
             <h2 className="text-2xl font-bold mb-8">Send Your Query</h2>
@@ -174,12 +169,9 @@ export default function Contact() {
               >
                 {loading ? "Submitting..." : "Submit Query"}
               </button>
-
             </form>
           </div>
-
         </div>
-
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   FaSearch,
@@ -21,7 +21,7 @@ import {
 
 import SearchSuggestions from "../components/SearchSuggestions";
 import Testimonials from "../components/Testimonials";
-import API from "../api/api";
+import API, { getCategories, searchListings, getContact } from "../api/api";
 
 const defaultCategories = [
   { name: "Salon", slug: "salon" },
@@ -78,6 +78,7 @@ const categoryStyles = {
 };
 
 export default function Home() {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(true);
   const [categories, setCategories] = useState(defaultCategories);
   const [listings, setListings] = useState([]);
@@ -91,15 +92,16 @@ export default function Home() {
   });
 
   useEffect(() => {
-    API.get("/categories")
+    getCategories()
       .then((res) => {
-        if (Array.isArray(res.data) && res.data.length > 0) {
-          setCategories(res.data);
+        const data = res.data?.items || res.data || [];
+        if (Array.isArray(data) && data.length > 0) {
+          setCategories(data);
         }
       })
       .catch((err) => console.log("Categories API Error:", err));
 
-    API.get("/listings")
+    searchListings()
       .then((res) => {
         const data = res.data?.items || [];
         setListings(data);
@@ -113,7 +115,7 @@ export default function Home() {
     if (search) query.append("q", search);
     if (location) query.append("city", location.toLowerCase());
 
-    window.location.href = `/listings?${query.toString()}`;
+    navigate(`/listings?${query.toString()}`);
   };
 
   const handleChange = (e) => {
@@ -127,7 +129,7 @@ export default function Home() {
     e.preventDefault();
 
     try {
-    await API.post("/contact", {
+    await getContact({
   name: formData.name,
   email: "no-email@example.com",
   phone: formData.mobile,

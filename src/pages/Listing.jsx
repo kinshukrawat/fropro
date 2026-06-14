@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   FaStar,
   FaMapMarkerAlt,
@@ -14,22 +14,25 @@ const fallbackImage =
   "https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1200&auto=format&fit=crop";
 
 export default function Listing() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [listings, setListings] = useState([]);
   const [search, setSearch] = useState("");
+  const [city, setCity] = useState("");
+  const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const fetchListings = async () => {
+  const fetchListings = async (params = {}) => {
     try {
       setLoading(true);
 
       const res = await API.get("/listings", {
-        params: search ? { q: search } : {},
+        params,
       });
       
 
-      const data = Array.isArray(res.data)
-        ? res.data
-        : res.data?.items || res.data?.data || [];
+      const data = res.data?.items || res.data?.data || [];
 
       setListings(data);
     } catch (error) {
@@ -41,11 +44,51 @@ export default function Listing() {
   };
 
   useEffect(() => {
-    fetchListings();
-  }, []);
+    const q = searchParams.get("q") || "";
+    const cityParam = searchParams.get("city") || "";
+    const categoryParam = searchParams.get("category") || "";
+
+    setSearch(q);
+    setCity(cityParam);
+    setCategory(categoryParam);
+
+    fetchListings(
+      [q, cityParam, categoryParam].some(Boolean)
+        ? {
+            ...(q ? { q } : {}),
+            ...(cityParam ? { city: cityParam } : {}),
+            ...(categoryParam ? { category: categoryParam } : {}),
+          }
+        : {}
+    );
+  }, [location.search]);
 
   const handleSearch = () => {
-    fetchListings();
+    const params = new URLSearchParams();
+    if (search) params.set("q", search);
+    if (city) params.set("city", city);
+    if (category) params.set("category", category);
+
+    navigate(`/listings?${params.toString()}`);
+  };
+
+  const handleCategoryChange = (value) => {
+    const nextCategory = value === "All" ? "" : value;
+    setCategory(nextCategory);
+
+    const params = new URLSearchParams();
+    if (search) params.set("q", search);
+    if (city) params.set("city", city);
+    if (nextCategory) params.set("category", nextCategory);
+
+    navigate(`/listings?${params.toString()}`);
+  };
+
+  const handleResetFilters = () => {
+    setSearch("");
+    setCity("");
+    setCategory("");
+    navigate("/listings");
   };
 
   return (
@@ -69,7 +112,7 @@ export default function Listing() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") fetchListings();
+                  if (e.key === "Enter") handleSearch();
                 }}
                 className="w-full outline-none text-black"
               />
@@ -87,7 +130,12 @@ export default function Listing() {
 
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="flex flex-col lg:flex-row gap-8">
-          <FilterSidebar />
+          <FilterSidebar
+            selectedCategory={category || "All"}
+            onCategoryChange={handleCategoryChange}
+            onApply={handleSearch}
+            onReset={handleResetFilters}
+          />
 
           <div className="flex-1">
             <div className="flex items-center justify-between mb-10">
