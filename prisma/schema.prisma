@@ -46,15 +46,15 @@ enum EnquiryStatus {
 }
 
 model User {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   name         String
-  email        String    @unique
+  email        String   @unique
   phone        String?
   passwordHash String
-  role         UserRole  @default(BUSINESS_OWNER)
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  role         UserRole @default(BUSINESS_OWNER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   listings      BusinessListing[]
   payments      Payment[]
@@ -160,13 +160,13 @@ model Enquiry {
 }
 
 model ListingImage {
-  id          String   @id @default(cuid())
-  listingId   String
+  id           String   @id @default(cuid())
+  listingId    String
   cloudinaryId String
-  url         String
-  altText     String?
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
+  url          String
+  altText      String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
 
   listing BusinessListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
@@ -174,13 +174,13 @@ model ListingImage {
 }
 
 model SubscriptionPlan {
-  id          String       @id @default(cuid())
-  name        String
-  duration    PlanDuration @unique
-  pricePaise  Int
-  isActive    Boolean      @default(true)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id         String       @id @default(cuid())
+  name       String
+  duration   PlanDuration @unique
+  pricePaise Int
+  isActive   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
   subscriptions Subscription[]
 }
@@ -196,9 +196,9 @@ model Subscription {
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
-  user    User                @relation(fields: [userId], references: [id])
-  listing BusinessListing     @relation(fields: [listingId], references: [id])
-  plan    SubscriptionPlan    @relation(fields: [planId], references: [id])
+  user     User             @relation(fields: [userId], references: [id])
+  listing  BusinessListing  @relation(fields: [listingId], references: [id])
+  plan     SubscriptionPlan @relation(fields: [planId], references: [id])
   payments Payment[]
 
   @@index([listingId, status, expiresAt])
@@ -206,19 +206,19 @@ model Subscription {
 }
 
 model Payment {
-  id                   String        @id @default(cuid())
-  userId               String
-  listingId            String?
-  subscriptionId       String?
-  razorpayOrderId      String        @unique
-  razorpayPaymentId    String?
-  razorpaySignature    String?
-  amountPaise          Int
-  currency             String        @default("INR")
-  status               PaymentStatus @default(PENDING)
-  failureReason        String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  id                String        @id @default(cuid())
+  userId            String
+  listingId         String?
+  subscriptionId    String?
+  razorpayOrderId   String        @unique
+  razorpayPaymentId String?
+  razorpaySignature String?
+  amountPaise       Int
+  currency          String        @default("INR")
+  status            PaymentStatus @default(PENDING)
+  failureReason     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   user         User             @relation(fields: [userId], references: [id])
   listing      BusinessListing? @relation(fields: [listingId], references: [id])

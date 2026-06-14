@@ -11,11 +11,12 @@ export class ListingsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async searchPublic(query: SearchListingsDto) {
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 20;
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 20;
 
     const where: Prisma.BusinessListingWhereInput = {
-      ...this.publicWhere(),
+      status: ListingStatus.APPROVED,
+      isDeleted: false,
     };
 
     const searchFilters: Prisma.BusinessListingWhereInput[] = [];
@@ -66,25 +67,36 @@ export class ListingsService {
       where.AND = searchFilters;
     }
 
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.businessListing.findMany({
-        where,
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: [{ isFeatured: 'desc' }, { updatedAt: 'desc' }],
-        include: this.publicInclude(),
-      }),
-      this.prisma.businessListing.count({ where }),
-    ]);
+    const items = await this.prisma.businessListing.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: [{ isFeatured: 'desc' }, { updatedAt: 'desc' }],
+      include: {
+        category: true,
+        city: true,
+        images: {
+          orderBy: { sortOrder: 'asc' },
+          take: 1,
+        },
+      },
+    });
+
+    const total = await this.prisma.businessListing.count({ where });
 
     return { items, page, limit, total };
   }
 
   async findPublicBySlug(slug: string) {
     const listing = await this.prisma.businessListing.findFirst({
-      where: { slug, ...this.publicWhere() },
+      where: {
+        slug,
+        status: ListingStatus.APPROVED,
+        isDeleted: false,
+      },
       include: {
-        ...this.publicInclude(),
+        category: true,
+        city: true,
         images: { orderBy: { sortOrder: 'asc' } },
       },
     });
@@ -157,9 +169,16 @@ export class ListingsService {
 
   findPublicListings() {
     return this.prisma.businessListing.findMany({
-      where: this.publicWhere(),
+      where: {
+        status: ListingStatus.APPROVED,
+        isDeleted: false,
+      },
       orderBy: [{ isFeatured: 'desc' }, { updatedAt: 'desc' }],
-      include: this.publicInclude(),
+      include: {
+        category: true,
+        city: true,
+        images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+      },
     });
   }
 
@@ -171,21 +190,6 @@ export class ListingsService {
     });
   }
 
-  private publicWhere(): Prisma.BusinessListingWhereInput {
-    return {
-      status: ListingStatus.APPROVED,
-      isDeleted: false,
-
-    };
-  }
-
-  private publicInclude(): Prisma.BusinessListingInclude {
-    return {
-      category: true,
-      city: true,
-      images: { orderBy: { sortOrder: 'asc' }, take: 1 },
-    };
-  }
 
   private async assertOwnerListing(ownerId: string, id: string) {
     const listing = await this.prisma.businessListing.findUnique({

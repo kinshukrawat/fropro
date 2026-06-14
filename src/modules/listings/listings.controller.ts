@@ -22,10 +22,16 @@ import { ListingsService } from './listings.service';
 export class ListingsController {
   constructor(private readonly listings: ListingsService) {}
 
+  @Get('debug/all')
+debugAll() {
+  return this.listings.findPublicListings();
+}
+
   @Get()
   searchPublic(@Query() query: SearchListingsDto) {
     return this.listings.searchPublic(query);
   }
+  
 
   @Post()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
