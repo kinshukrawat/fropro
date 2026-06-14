@@ -10,15 +10,19 @@ import API from "../api/api";
 export default function Contact() {
   const [form, setForm] = useState({
     name: "",
-    email: "",
+    
     phone: "",
+    businessType: "",
     message: "",
   });
 
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -27,20 +31,25 @@ export default function Contact() {
     try {
       setLoading(true);
 
-      await API.post("/contact", form);
-      
+      await API.post("/contact", {
+        name: form.name,
+        phone: form.phone,
+        businessType: form.businessType,
+        message: form.message,
+      });
 
-      alert("Message sent successfully!");
+      alert("Query submitted successfully!");
 
       setForm({
         name: "",
-        email: "",
+
         phone: "",
+        businessType: "",
         message: "",
       });
     } catch (error) {
-      console.log("Contact Form Error:", error);
-      alert("Contact API backend me abhi available nahi hai.");
+      console.log("Contact Form Error:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Query submit failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -59,12 +68,11 @@ export default function Contact() {
 
         <div className="grid lg:grid-cols-2 gap-10">
 
-
           <div className="bg-white rounded-2xl shadow p-8">
             <h2 className="text-2xl font-bold mb-8">Get In Touch</h2>
 
             <div className="space-y-6">
-
+              
               <div className="flex items-start gap-4">
                 <div className="bg-blue-100 p-4 rounded-xl">
                   <FaPhoneAlt className="text-blue-600 text-xl" />
@@ -116,7 +124,7 @@ export default function Contact() {
 
 
           <div className="bg-white rounded-2xl shadow p-8">
-            <h2 className="text-2xl font-bold mb-8">Send Message</h2>
+            <h2 className="text-2xl font-bold mb-8">Send Your Query</h2>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <input
@@ -124,16 +132,6 @@ export default function Contact() {
                 name="name"
                 placeholder="Enter your full name"
                 value={form.name}
-                onChange={handleChange}
-                className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-
-              <input
-                type="email"
-                name="email"
-                placeholder="Enter your email"
-                value={form.email}
                 onChange={handleChange}
                 className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                 required
@@ -149,6 +147,16 @@ export default function Contact() {
                 required
               />
 
+              <input
+                type="text"
+                name="businessType"
+                placeholder="Business / Query Type"
+                value={form.businessType}
+                onChange={handleChange}
+                className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+
               <textarea
                 rows="5"
                 name="message"
@@ -157,14 +165,14 @@ export default function Contact() {
                 onChange={handleChange}
                 className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                 required
-              ></textarea>
+              />
 
               <button
                 type="submit"
                 disabled={loading}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition disabled:opacity-60"
               >
-                {loading ? "Sending..." : "Send Message"}
+                {loading ? "Submitting..." : "Submit Query"}
               </button>
 
             </form>
