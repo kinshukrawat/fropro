@@ -35,13 +35,26 @@ export default function Login() {
           password: formData.password,
         });
 
+        console.log("LOGIN RESPONSE:", res.data);
+
         const token = res.data.accessToken || res.data.token;
+        const user = res.data.user;
+
+        if (!token) {
+          alert("Login failed: token not received");
+          return;
+        }
 
         localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(res.data.user || {}));
+        localStorage.setItem("user", JSON.stringify(user || {}));
 
         alert("Login successful");
-        navigate("/business-dashboard");
+
+        if (user?.role === "ADMIN") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/business-dashboard");
+        }
       } else {
         await API.post("/auth/register", {
           name: formData.name,
@@ -177,10 +190,7 @@ export default function Login() {
 
             {isLogin && (
               <div className="text-right">
-                <button
-                  type="button"
-                  className="text-blue-600 hover:underline"
-                >
+                <button type="button" className="text-blue-600 hover:underline">
                   Forgot Password?
                 </button>
               </div>

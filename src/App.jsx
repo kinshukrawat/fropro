@@ -21,7 +21,7 @@ import Reviews from "./pages/Reviews";
 import Payments from "./pages/Payments";
 import Contact from "./pages/Contact";
 import ViewDetail from "./pages/ViewDetail";
-
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import Dashboard from "./pages/admin/Dashboard";
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -59,7 +59,14 @@ function AppContent() {
         <Route path="/viewdetail/:id" element={<ViewDetail />} />
 
         <Route path="/user-dashboard" element={<UserDashboard />} />
-        <Route path="/business-dashboard" element={<BusinessDashboard />} />
+        <Route
+  path="/business-dashboard"
+  element={
+    <ProtectedRoute>
+      <BusinessDashboard />
+    </ProtectedRoute>
+  }
+/>
 
 
         <Route path="/admin" element={<AdminLogin />} />
