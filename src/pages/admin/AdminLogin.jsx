@@ -32,6 +32,7 @@ export default function AdminLogin() {
         res.data?.accessToken ||
         res.data?.token ||
         res.data?.access_token;
+      const user = res.data?.user || {};
 
       if (!token) {
         console.log("Login Response:", res.data);
@@ -41,7 +42,12 @@ export default function AdminLogin() {
 
       localStorage.setItem("token", token);
       localStorage.setItem("adminLogin", "true");
-      localStorage.setItem("adminUser", JSON.stringify(res.data?.user || {}));
+      localStorage.setItem("adminUser", JSON.stringify(user));
+
+      if (user.role !== "ADMIN") {
+        alert("This account is not an admin account.");
+        return;
+      }
 
       navigate("/admin/dashboard");
     } catch (error) {

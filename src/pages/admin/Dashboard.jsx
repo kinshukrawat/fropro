@@ -29,7 +29,14 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import API from "../../api/api";
+import API, {
+  getAdminEnquiries,
+  getAdminListings,
+  getAdminPayments,
+  getAdminStats,
+  getAdminUsers,
+  toggleAdminFeatured,
+} from "../../api/api";
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: <FaHome /> },
@@ -68,10 +75,13 @@ export default function Dashboard() {
     try {
       setLoading(true);
 
-      const listingsRes = await API.get("/admin/listings");
+      const [statsRes, listingsRes] = await Promise.all([
+        getAdminStats(),
+        getAdminListings(),
+      ]);
 
-setStats({});
-setListings(listingsRes.data?.items || listingsRes.data || []);
+      setStats(statsRes.data || {});
+      setListings(listingsRes.data?.items || listingsRes.data || []);
     } catch (error) {
       console.log("Admin Data Error:", error.response?.data || error);
 
@@ -86,7 +96,7 @@ setListings(listingsRes.data?.items || listingsRes.data || []);
 
   const fetchUsers = async () => {
     try {
-      const res = await API.get("/admin/users");
+      const res = await getAdminUsers();
       setUsers(res.data?.items || res.data || []);
     } catch (error) {
       console.log("Users Error:", error.response?.data || error);
@@ -95,7 +105,7 @@ setListings(listingsRes.data?.items || listingsRes.data || []);
 
   const fetchPayments = async () => {
     try {
-      const res = await API.get("/admin/payments");
+      const res = await getAdminPayments();
       setPayments(res.data?.items || res.data || []);
     } catch (error) {
       console.log("Payments Error:", error.response?.data || error);
@@ -104,9 +114,8 @@ setListings(listingsRes.data?.items || listingsRes.data || []);
 
   const fetchEnquiries = async () => {
     try {
-      const res = await API.get("/contact");
-
-      setEnquiries(res.data?.data || []);
+      const res = await getAdminEnquiries();
+      setEnquiries(res.data?.items || res.data?.data || res.data || []);
     } catch (error) {
       console.log("Enquiries Error:", error.response?.data || error);
     }
@@ -165,9 +174,7 @@ setListings(listingsRes.data?.items || listingsRes.data || []);
 
   const toggleFeatured = async (id, currentValue) => {
     try {
-      await API.patch(`/admin/listings/${id}/featured`, {
-        isFeatured: !currentValue,
-      });
+      await toggleAdminFeatured(id, !currentValue);
 
       fetchAdminData();
     } catch (error) {
@@ -481,13 +488,12 @@ setListings(listingsRes.data?.items || listingsRes.data || []);
         {activeTab === "enquiries" && (
           <SimpleTable
             title="Contact Form Enquiries"
-            headers={["Name", "Email", "Phone", "Message", "Date"]}
+            headers={["Name", "Phone", "Message", "Status"]}
             rows={enquiries.map((e) => [
               e.name || "-",
-              e.email || "-",
               e.phone || "-",
               e.message || "-",
-              e.createdAt ? new Date(e.createdAt).toLocaleString() : "-",
+              e.status || "-",
             ])}
           />
         )}

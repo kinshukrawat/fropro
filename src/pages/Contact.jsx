@@ -5,7 +5,7 @@ import {
   FaMapMarkerAlt,
   FaWhatsapp,
 } from "react-icons/fa";
-import API from "../api/api";
+import { getContact } from "../api/api";
 
 export default function Contact() {
   const [form, setForm] = useState({
@@ -27,7 +27,7 @@ export default function Contact() {
     try {
       setLoading(true);
 
-      await API.post("/contact", form);
+      await getContact(form);
       
 
       alert("Message sent successfully!");

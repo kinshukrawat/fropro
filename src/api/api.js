@@ -1,7 +1,11 @@
 import axios from "axios";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://fropro-production.up.railway.app/api";
+
 const API = axios.create({
-  baseURL: "https://fropro-production.up.railway.app/api",
+  baseURL: API_BASE_URL,
 });
 
 API.interceptors.request.use((config) => {
@@ -19,3 +23,26 @@ export default API;
 export const getCategories = () => API.get("/categories");
 export const getCities = () => API.get("/cities");
 export const getContact = (data) => API.post("/contact", data);
+export const getSubscriptions = () => API.get("/subscriptions/mine");
+export const getSubscriptionPlans = () => API.get("/subscriptions/plans");
+export const getMyPayments = () => API.get("/payments/mine");
+export const getMyListings = () => API.get("/listings/owner/mine");
+export const createListing = (data) => API.post("/listings", data);
+export const updateListing = (id, data) => API.patch(`/listings/${id}`, data);
+export const submitListing = (id) => API.post(`/listings/${id}/submit`);
+export const getListingBySlug = (slug) => API.get(`/listings/${slug}`);
+export const searchListings = (params) => API.get("/listings", { params });
+export const trackWhatsappTap = (id) =>
+  API.post(`/analytics/listings/${id}/whatsapp-tap`);
+export const getAdminListings = () => API.get("/admin/listings");
+export const getAdminUsers = () => API.get("/admin/users");
+export const getAdminPayments = () => API.get("/admin/payments");
+export const getAdminStats = () => API.get("/admin/stats");
+export const getAdminEnquiries = (status) =>
+  API.get("/admin/enquiries", { params: status ? { status } : {} });
+export const updateAdminEnquiryStatus = (id, status) =>
+  API.patch(`/admin/enquiries/${id}/status`, { status });
+export const toggleAdminFeatured = (id, isFeatured) =>
+  API.patch(`/admin/listings/${id}/featured`, { isFeatured });
+export const removeListingImage = (id) =>
+  API.delete(`/uploads/listing-images/${id}`);

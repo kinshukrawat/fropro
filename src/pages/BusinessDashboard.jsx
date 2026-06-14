@@ -24,7 +24,11 @@ import {
   FaListUl,
   FaImage,
 } from "react-icons/fa";
-import API, { getCategories, getCities } from "../api/api";
+import API, {
+  getCategories,
+  getCities,
+  getMyListings,
+} from "../api/api";
 
 export default function BusinessDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -46,11 +50,15 @@ export default function BusinessDashboard() {
 
   const fetchMyListings = async () => {
     try {
-      const res = await API.get("/listings/owner/mine");
+      const res = await getMyListings();
       setListings(res.data?.items || res.data || []);
     } catch (error) {
       console.log("My Listings Error:", error.response?.data || error);
     }
+  };
+
+  const fetchOwnerFinance = async () => {
+    return Promise.resolve();
   };
 
   const fetchDropdownData = async () => {
@@ -68,6 +76,7 @@ export default function BusinessDashboard() {
   useEffect(() => {
     fetchMyListings();
     fetchDropdownData();
+    fetchOwnerFinance();
   }, []);
 
   const stats = useMemo(() => {
@@ -632,7 +641,7 @@ export default function BusinessDashboard() {
                           <tr key={item.id} className="border-t hover:bg-gray-50">
                             <td className="p-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 overflow-hidden">
+                              <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 overflow-hidden">
                                   {item.images?.[0]?.url ? (
                                     <img
                                       src={item.images[0].url}

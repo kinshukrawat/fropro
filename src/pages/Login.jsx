@@ -36,12 +36,13 @@ export default function Login() {
         });
 
         const token = res.data.accessToken || res.data.token;
+        const user = res.data.user || {};
 
         localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(res.data.user || {}));
+        localStorage.setItem("user", JSON.stringify(user));
 
         alert("Login successful");
-        navigate("/business-dashboard");
+        navigate(user.role === "ADMIN" ? "/admin/dashboard" : "/business-dashboard");
       } else {
         await API.post("/auth/register", {
           name: formData.name,
@@ -103,6 +104,7 @@ export default function Login() {
               >
                 Sign Up
               </button>
+
             </div>
           </div>
 
@@ -146,7 +148,7 @@ export default function Login() {
                     required={!isLogin}
                   />
                 </div>
-              </>
+                </>
             )}
 
             <div className="flex items-center border rounded-xl px-4 py-4">
@@ -174,17 +176,6 @@ export default function Login() {
                 required
               />
             </div>
-
-            {isLogin && (
-              <div className="text-right">
-                <button
-                  type="button"
-                  className="text-blue-600 hover:underline"
-                >
-                  Forgot Password?
-                </button>
-              </div>
-            )}
 
             <button
               type="submit"
