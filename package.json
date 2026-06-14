@@ -9,7 +9,8 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/src/main.js",
-    "start:migrate": "npx prisma migrate deploy && node dist/src/main.js",
+    
+    "start:migrate": "npm exec prisma migrate deploy && node dist/src/main.js",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"prisma/**/*.prisma\"",
     "test": "jest",
