@@ -142,15 +142,25 @@ setListings(listingsRes.data?.items || listingsRes.data || []);
   };
 
   const rejectListing = async (id) => {
-    try {
-      await API.post(`/admin/listings/${id}/reject`);
-      alert("Listing rejected");
-      fetchAdminData();
-    } catch (error) {
-      console.log("Reject Error:", error.response?.data || error);
-      alert(error.response?.data?.message || "Failed to reject listing");
-    }
-  };
+  const reason = prompt("Enter rejection reason:");
+
+  if (!reason || reason.trim() === "") {
+    alert("Rejection reason is required");
+    return;
+  }
+
+  try {
+    await API.post(`/admin/listings/${id}/reject`, {
+      reason: reason.trim(),
+    });
+
+    alert("Listing rejected");
+    fetchAdminData();
+  } catch (error) {
+    console.log("Reject Error:", error.response?.data || error);
+    alert(error.response?.data?.message || "Failed to reject listing");
+  }
+};
 
   const suspendListing = async (id) => {
     try {
