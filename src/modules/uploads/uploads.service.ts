@@ -18,7 +18,7 @@ export class UploadsService {
     });
   }
 
-  async uploadImage(file: Express.Multer.File) {
+  async uploadImage(file: any) {
     if (!file) {
       throw new BadRequestException('Image file is required.');
     }
