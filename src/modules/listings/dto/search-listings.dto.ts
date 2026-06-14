@@ -13,4 +13,8 @@ export class SearchListingsDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   city?: string;
+
+  @IsOptional()
+  @IsString()
+  location?: string;
 }

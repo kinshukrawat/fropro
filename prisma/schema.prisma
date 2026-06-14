@@ -145,6 +145,7 @@ model BusinessListing {
 model Enquiry {
   id        String        @id @default(cuid())
   name      String
+  email     String?
   phone     String
   message   String
   status    EnquiryStatus @default(NEW)
@@ -238,13 +239,4 @@ model AuditLog {
 
   @@index([entityType, entityId])
   @@index([actorUserId])
-}
-
-model Enquiry {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  phone     String?
-  message   String
-  createdAt DateTime @default(now())
 }

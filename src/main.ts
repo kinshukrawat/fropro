@@ -3,7 +3,16 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { json } from 'express';
 import helmet from 'helmet';
+import * as dotenv from 'dotenv';
+import { resolve } from 'path';
 import { AppModule } from './app.module';
+
+const envFilePath =
+  process.env.APP_ENV === 'railway'
+    ? resolve(process.cwd(), '.env.railway')
+    : resolve(process.cwd(), '.env.local');
+
+dotenv.config({ path: envFilePath, override: true });
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

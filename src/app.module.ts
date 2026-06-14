@@ -16,10 +16,12 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { UsersModule } from './modules/users/users.module';
 
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      ignoreEnvFile: true,
     }),
 
     ThrottlerModule.forRoot([

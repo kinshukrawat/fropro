@@ -18,20 +18,52 @@ export class ListingsService {
       ...this.publicWhere(),
     };
 
+    const searchFilters: Prisma.BusinessListingWhereInput[] = [];
+
     if (query.q) {
-      where.OR = [
+      searchFilters.push(
         { name: { contains: query.q, mode: 'insensitive' } },
         { description: { contains: query.q, mode: 'insensitive' } },
-        { services: { has: query.q } },
-      ];
+        { addressLine1: { contains: query.q, mode: 'insensitive' } },
+        { addressLine2: { contains: query.q, mode: 'insensitive' } },
+        { landmark: { contains: query.q, mode: 'insensitive' } },
+        { pincode: { contains: query.q, mode: 'insensitive' } },
+        { services: { hasSome: [query.q] } },
+      );
     }
 
     if (query.category) {
-      where.category = { slug: query.category };
+      searchFilters.push({
+        OR: [
+          { category: { slug: query.category } },
+          { category: { name: { contains: query.category, mode: 'insensitive' } } },
+        ],
+      });
     }
 
     if (query.city) {
-      where.city = { slug: query.city };
+      searchFilters.push({
+        OR: [
+          { city: { slug: query.city } },
+          { city: { name: { contains: query.city, mode: 'insensitive' } } },
+        ],
+      });
+    }
+
+    if (query.location) {
+      searchFilters.push({
+        OR: [
+          { city: { name: { contains: query.location, mode: 'insensitive' } } },
+          { addressLine1: { contains: query.location, mode: 'insensitive' } },
+          { addressLine2: { contains: query.location, mode: 'insensitive' } },
+          { landmark: { contains: query.location, mode: 'insensitive' } },
+          { pincode: { contains: query.location, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (searchFilters.length > 0) {
+      where.AND = searchFilters;
     }
 
     const [items, total] = await this.prisma.$transaction([

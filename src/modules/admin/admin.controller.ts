@@ -15,6 +15,9 @@ export class AdminController {
   constructor(private readonly admin: AdminService) {}
 
   @Get('contact')
+  getContact() {
+    return this.admin.findEnquiries();
+  }
 
 
   @Get('stats')
@@ -91,11 +94,6 @@ export class AdminController {
   subscriptions() {
     return this.admin.findSubscriptions();
   }
-
-  @Get('contact')
-getEnquiries() {
-  return this.admin.findEnquiries();
-}
 
   @Patch('subscriptions/:id')
   updateSubscription(
