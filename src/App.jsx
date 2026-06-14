@@ -17,7 +17,7 @@ import BusinessDashboard from "./pages/BusinessDashboard";
 import Categories from "./pages/Categories";
 import AllCategories from "./pages/AllCategories";
 import PopularCategories from "./pages/PopularCategories";
-import Reviews from "./pages/Reviews";a
+import Reviews from "./pages/Reviews";
 import Payments from "./pages/Payments";
 import Contact from "./pages/Contact";
 import ViewDetail from "./pages/ViewDetail";
