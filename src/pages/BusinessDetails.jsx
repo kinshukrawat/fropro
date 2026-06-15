@@ -22,13 +22,12 @@ export default function BusinessDetails() {
 
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const fetchBusinessDetails = async () => {
     try {
       setLoading(true);
-
       const res = await API.get(`/listings/${slug}`);
-
       setBusiness(res.data);
     } catch (error) {
       console.log("Business Details API Error:", error);
@@ -39,9 +38,7 @@ export default function BusinessDetails() {
   };
 
   useEffect(() => {
-    if (slug) {
-      fetchBusinessDetails();
-    }
+    if (slug) fetchBusinessDetails();
   }, [slug]);
 
   if (loading) {
@@ -60,23 +57,17 @@ export default function BusinessDetails() {
     );
   }
 
-  const image =
-    business.images?.[0]?.url ||
-    business.image ||
-    fallbackImage;
+  const image = business.images?.[0]?.url || business.image || fallbackImage;
 
   const gallery =
     business.images?.length > 0
       ? business.images.map((img) => img.url)
-      : [
-          image,
-          "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=1200&auto=format&fit=crop",
-          "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=1200&auto=format&fit=crop",
-        ];
+      : [image];
 
   const category = business.category?.name || business.category || "Business";
   const rating = business.rating || "4.5";
   const reviews = business.reviews || business.reviewCount || 0;
+
   const location =
     business.city?.name ||
     business.addressLine1 ||
@@ -85,10 +76,12 @@ export default function BusinessDetails() {
 
   const phone = business.contactPhone || business.phone || "";
   const website = business.website || "";
+
   const timing =
-  business.opensAt && business.closesAt
-    ? `${business.opensAt} - ${business.closesAt}`
-    : "Timing not available";
+    business.opensAt && business.closesAt
+      ? `${business.opensAt} - ${business.closesAt}`
+      : "Timing not available";
+
   const description =
     business.description || "No description available for this business.";
 
@@ -196,7 +189,9 @@ export default function BusinessDetails() {
                     <FaPhoneAlt className="text-blue-600 mr-3 text-xl" />
                     <h3 className="font-bold text-lg">Phone Number</h3>
                   </div>
-                  <p className="text-gray-600">{phone || "Phone not available"}</p>
+                  <p className="text-gray-600">
+                    {phone || "Phone not available"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -204,13 +199,14 @@ export default function BusinessDetails() {
             <div className="bg-white rounded-3xl shadow p-8 mb-8">
               <h2 className="text-3xl font-bold mb-6">Gallery</h2>
 
-              <div className="grid md:grid-cols-3 gap-5">
-                {gallery.slice(0, 3).map((img, index) => (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                {gallery.map((img, index) => (
                   <img
                     key={index}
                     src={img}
-                    alt={business.name}
-                    className="rounded-2xl h-56 object-cover w-full hover:scale-105 transition duration-300"
+                    alt={`${business.name} ${index + 1}`}
+                    onClick={() => setSelectedImage(img)}
+                    className="rounded-2xl h-56 object-cover w-full hover:scale-105 transition duration-300 cursor-pointer"
                   />
                 ))}
               </div>
@@ -246,7 +242,9 @@ export default function BusinessDetails() {
               <div className="space-y-6">
                 <div className="border-b pb-4">
                   <p className="font-semibold text-black mb-2">Phone Number</p>
-                  <p className="text-gray-600">{phone || "Phone not available"}</p>
+                  <p className="text-gray-600">
+                    {phone || "Phone not available"}
+                  </p>
                 </div>
 
                 <div className="border-b pb-4">
@@ -280,6 +278,27 @@ export default function BusinessDetails() {
           </div>
         </div>
       </section>
+
+      {selectedImage && (
+        <div
+          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+        >
+          <button
+            onClick={() => setSelectedImage(null)}
+            className="absolute top-5 right-6 text-white text-5xl font-bold"
+          >
+            ×
+          </button>
+
+          <img
+            src={selectedImage}
+            alt="Preview"
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-full max-h-[90vh] rounded-2xl object-contain"
+          />
+        </div>
+      )}
     </div>
   );
 }
