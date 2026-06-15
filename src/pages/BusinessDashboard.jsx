@@ -38,8 +38,8 @@ export default function BusinessDashboard() {
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState("");
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -129,17 +129,19 @@ export default function BusinessDashboard() {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
+    const files = Array.from(e.target.files || []);
 
-    if (!file) return;
+    if (!files.length) return;
 
-    if (!file.type.startsWith("image/")) {
-      alert("Only image files allowed");
+    const validFiles = files.filter((file) => file.type.startsWith("image/"));
+
+    if (validFiles.length > 10) {
+      alert("Maximum 10 images allowed");
       return;
     }
 
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setImageFiles(validFiles);
+    setImagePreviews(validFiles.map((file) => URL.createObjectURL(file)));
   };
 
   const clearForm = () => {
@@ -154,8 +156,8 @@ export default function BusinessDashboard() {
       closesAt: "",
     });
 
-    setImageFile(null);
-    setImagePreview("");
+    setImageFiles([]);
+    setImagePreviews([]);
   };
 
   const handleAddListing = async (e) => {
@@ -183,22 +185,24 @@ export default function BusinessDashboard() {
 
       const listingId = createdListing?.id;
 
-      if (imageFile && listingId) {
-        const uploadForm = new FormData();
-        uploadForm.append("file", imageFile);
+      if (imageFiles.length && listingId) {
+        for (const file of imageFiles) {
+          const uploadForm = new FormData();
+          uploadForm.append("file", file);
 
-        const uploadRes = await API.post("/uploads/image", uploadForm, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+          const uploadRes = await API.post("/uploads/image", uploadForm, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
 
-        await API.post("/uploads/listing-images", {
-          listingId,
-          url: uploadRes.data.url,
-          cloudinaryId: uploadRes.data.cloudinaryId,
-          altText: formData.name,
-        });
+          await API.post("/uploads/listing-images", {
+            listingId,
+            url: uploadRes.data.url,
+            cloudinaryId: uploadRes.data.cloudinaryId,
+            altText: formData.name,
+          });
+        }
       }
 
       alert("Business listing created successfully");
@@ -525,7 +529,7 @@ export default function BusinessDashboard() {
 
                     <div className="border rounded-2xl px-4 py-3 md:col-span-2">
                       <label className="text-sm text-gray-500">
-                        Business Image
+                        Business Images / Gallery
                       </label>
 
                       <div className="flex items-center gap-3 mt-3">
@@ -533,17 +537,23 @@ export default function BusinessDashboard() {
                         <input
                           type="file"
                           accept="image/*"
+                          multiple
                           onChange={handleImageChange}
                           className="w-full"
                         />
                       </div>
 
-                      {imagePreview && (
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className="mt-4 w-full h-48 object-cover rounded-2xl border"
-                        />
+                      {imagePreviews.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
+                          {imagePreviews.map((img, index) => (
+                            <img
+                              key={index}
+                              src={img}
+                              alt=""
+                              className="w-full h-32 object-cover rounded-xl border"
+                            />
+                          ))}
+                        </div>
                       )}
                     </div>
 
@@ -664,7 +674,10 @@ export default function BusinessDashboard() {
 
                       <tbody>
                         {listings.map((item) => (
-                          <tr key={item.id} className="border-t hover:bg-gray-50">
+                          <tr
+                            key={item.id}
+                            className="border-t hover:bg-gray-50"
+                          >
                             <td className="p-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 overflow-hidden">
