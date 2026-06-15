@@ -460,7 +460,7 @@ export default function Dashboard() {
             />
           </div>
         )}
-        
+
 
         {activeTab === "users" && (
           <SimpleTable
@@ -641,18 +641,24 @@ function ListingTable({
                   className="border-b border-gray-100 hover:bg-gray-50 transition-all duration-200"
                 >
                   <td className="px-6 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl border border-gray-200 bg-white shadow-sm flex items-center justify-center">
-                        {getCategoryIcon(category)}
-                      </div>
+  <div className="flex items-center gap-4">
+    {/* Category Icon */}
+    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 shadow-md flex items-center justify-center transition-transform duration-300 hover:scale-110">
+      {getCategoryIcon(category)}
+    </div>
 
-                      <div>
-                        <p className="font-semibold text-gray-900 text-base leading-6">
-                          {item.name}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
+    {/* Business Details */}
+    <div>
+      <p className="font-semibold text-gray-900 text-base">
+        {item.name}
+      </p>
+
+      <p className="text-sm text-gray-500">
+        {category}
+      </p>
+    </div>
+  </div>
+</td>
 
                   <td className="px-6 py-6">
                     <span className="text-blue-600 break-all">
