@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   FaHome,
   FaList,
-  
+
   FaUsers,
   FaRupeeSign,
 
@@ -137,7 +137,7 @@ export default function Dashboard() {
     if (activeTab === "payments") fetchPayments();
     if (activeTab === "enquiries") fetchEnquiries();
   }, [activeTab]);
-  
+
 
   const approveListing = async (id) => {
     try {
@@ -218,7 +218,8 @@ export default function Dashboard() {
     listings.filter((i) => i.status === "APPROVED").length;
   const pending =
     stats.pendingListings ??
-    listings.filter((i) => i.status === "SUBMITTED" || i.status === "PENDING").length;
+    listings.filter((i) => i.status === "SUBMITTED" || i.status === "PENDING")
+      .length;
   const rejected =
     stats.rejectedListings ??
     listings.filter((i) => i.status === "REJECTED").length;
@@ -325,9 +326,23 @@ export default function Dashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={growthData}>
                       <defs>
-                        <linearGradient id="listingColor" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#2563eb" stopOpacity={0.35} />
-                          <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                        <linearGradient
+                          id="listingColor"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#2563eb"
+                            stopOpacity={0.35}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#2563eb"
+                            stopOpacity={0}
+                          />
                         </linearGradient>
                       </defs>
 
@@ -335,9 +350,27 @@ export default function Dashboard() {
                       <XAxis dataKey="month" />
                       <YAxis />
                       <Tooltip />
-                      <Area type="monotone" dataKey="listings" stroke="#2563eb" fill="url(#listingColor)" strokeWidth={3} />
-                      <Area type="monotone" dataKey="users" stroke="#16a34a" fillOpacity={0} strokeWidth={3} />
-                      <Area type="monotone" dataKey="payments" stroke="#9333ea" fillOpacity={0} strokeWidth={3} />
+                      <Area
+                        type="monotone"
+                        dataKey="listings"
+                        stroke="#2563eb"
+                        fill="url(#listingColor)"
+                        strokeWidth={3}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="users"
+                        stroke="#16a34a"
+                        fillOpacity={0}
+                        strokeWidth={3}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="payments"
+                        stroke="#9333ea"
+                        fillOpacity={0}
+                        strokeWidth={3}
+                      />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -353,15 +386,26 @@ export default function Dashboard() {
                       <XAxis dataKey="name" />
                       <YAxis allowDecimals={false} />
                       <Tooltip />
-                      <Bar dataKey="value" fill="#1d4ed8" radius={[8, 8, 0, 0]} />
+                      <Bar
+                        dataKey="value"
+                        fill="#1d4ed8"
+                        radius={[8, 8, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow p-6">
-              <h3 className="text-xl font-bold mb-4">Recent Listings</h3>
+            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Recent Listings
+                </h3>
+                <p className="text-gray-500 mt-1">
+                  Overview of recently added or updated business listings.
+                </p>
+              </div>
 
               <ListingTable
                 listings={listings.slice(0, 5)}
@@ -375,22 +419,22 @@ export default function Dashboard() {
         )}
 
         {activeTab === "listings" && (
-          <div className="bg-white rounded-2xl shadow p-5">
-            <div className="flex flex-col md:flex-row gap-4 justify-between mb-5">
-              <div className="flex items-center border rounded-xl px-3 w-full md:w-96">
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
+            <div className="flex flex-col md:flex-row gap-4 justify-between mb-6">
+              <div className="flex items-center border border-gray-200 rounded-xl px-4 w-full md:w-96 bg-gray-50">
                 <FaSearch className="text-gray-400" />
 
                 <input
                   type="text"
                   placeholder="Search listing..."
-                  className="p-3 outline-none w-full"
+                  className="p-3 outline-none w-full bg-transparent"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
 
               <select
-                className="border p-3 rounded-xl"
+                className="border border-gray-200 p-3 rounded-xl bg-gray-50"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
@@ -440,7 +484,7 @@ export default function Dashboard() {
         )}
 
         {activeTab === "sponsored" && (
-          <div className="bg-white rounded-2xl shadow p-6">
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
             <h3 className="text-xl font-bold mb-5">Sponsored Listings</h3>
 
             <ListingTable
@@ -471,10 +515,21 @@ export default function Dashboard() {
             <h3 className="text-xl font-bold mb-5">Website Settings</h3>
 
             <div className="grid gap-4">
-              <input className="border p-3 rounded-xl" defaultValue="Oye Rohini" />
-              <input className="border p-3 rounded-xl" defaultValue="oyerohini@gmail.com" />
-              <input className="border p-3 rounded-xl" defaultValue="+91 9876543210" />
-              <button className="bg-blue-700 text-white py-3 rounded-xl">Save Settings</button>
+              <input
+                className="border p-3 rounded-xl"
+                defaultValue="Oye Rohini"
+              />
+              <input
+                className="border p-3 rounded-xl"
+                defaultValue="oyerohini@gmail.com"
+              />
+              <input
+                className="border p-3 rounded-xl"
+                defaultValue="+91 9876543210"
+              />
+              <button className="bg-blue-700 text-white py-3 rounded-xl">
+                Save Settings
+              </button>
             </div>
           </div>
         )}
@@ -492,27 +547,43 @@ function Card({ title, value, color = "text-blue-700" }) {
   );
 }
 
-function ListingTable({ listings, approveListing, rejectListing, suspendListing, toggleFeatured }) {
+function getStatusClass(status) {
+  if (status === "APPROVED") return "bg-green-100 text-green-700";
+  if (status === "REJECTED") return "bg-red-100 text-red-700";
+  if (status === "DRAFT") return "bg-blue-100 text-blue-700";
+  if (status === "SUSPENDED") return "bg-gray-200 text-gray-700";
+  return "bg-yellow-100 text-yellow-700";
+}
+
+function ListingTable({
+  listings,
+  approveListing,
+  rejectListing,
+  suspendListing,
+  toggleFeatured,
+}) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left">
-        <thead className="bg-blue-700 text-white">
-          <tr>
-            <th className="p-4">Business</th>
-            <th className="p-4">Owner Email</th>
-            <th className="p-4">Category</th>
-            <th className="p-4">City</th>
-            <th className="p-4">Phone</th>
-            <th className="p-4">Status</th>
-            <th className="p-4">Featured</th>
-            <th className="p-4">Actions</th>
+      <table className="w-full text-left border-collapse min-w-[1100px]">
+        <thead>
+          <tr className="bg-blue-50 text-blue-700 border-b border-gray-200">
+            <th className="px-6 py-5 font-semibold rounded-l-xl">Business</th>
+            <th className="px-6 py-5 font-semibold">Owner Email</th>
+            <th className="px-6 py-5 font-semibold">Category</th>
+            <th className="px-6 py-5 font-semibold">City</th>
+            <th className="px-6 py-5 font-semibold">Phone</th>
+            <th className="px-6 py-5 font-semibold">Status</th>
+            <th className="px-6 py-5 font-semibold">Featured</th>
+            <th className="px-6 py-5 font-semibold rounded-r-xl text-center">
+              Actions
+            </th>
           </tr>
         </thead>
 
         <tbody>
           {listings.length === 0 ? (
             <tr>
-              <td colSpan="8" className="p-5 text-center text-gray-500">
+              <td colSpan="8" className="px-6 py-10 text-center text-gray-500">
                 No listings found
               </td>
             </tr>
@@ -522,26 +593,50 @@ function ListingTable({ listings, approveListing, rejectListing, suspendListing,
               const city = item.city?.name || item.city || "-";
               const phone = item.contactPhone || item.phone || "-";
               const status = item.status || "-";
-              const ownerEmail = item.owner?.email || item.user?.email || item.ownerEmail || "-";
+              const ownerEmail =
+                item.owner?.email || item.user?.email || item.ownerEmail || "-";
 
               return (
-                <tr key={item.id} className="border-b hover:bg-blue-50">
-                  <td className="p-4 font-semibold">{item.name}</td>
-                  <td className="p-4 text-blue-600">{ownerEmail}</td>
-                  <td className="p-4">{category}</td>
-                  <td className="p-4">{city}</td>
-                  <td className="p-4">{phone}</td>
+                <tr
+                  key={item.id}
+                  className="border-b border-gray-100 hover:bg-gray-50 transition-all duration-200"
+                >
+                  <td className="px-6 py-6">
+                    <div className="font-semibold text-gray-900 text-base">
+                      {item.name}
+                    </div>
+                  </td>
 
-                  <td className="p-4">
-                    <span className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700">
+                  <td className="px-6 py-6">
+                    <span className="text-blue-600 break-all">
+                      {ownerEmail}
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-6">
+                    <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                      {category}
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-6 text-gray-700">{city}</td>
+
+                  <td className="px-6 py-6 text-gray-700">{phone}</td>
+
+                  <td className="px-6 py-6">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusClass(
+                        status
+                      )}`}
+                    >
                       {status}
                     </span>
                   </td>
 
-                  <td className="p-4">
+                  <td className="px-6 py-6">
                     <button
                       onClick={() => toggleFeatured(item.id, item.isFeatured)}
-                      className={`px-3 py-1 rounded-full text-sm ${
+                      className={`px-4 py-1 rounded-full text-sm font-medium transition ${
                         item.isFeatured
                           ? "bg-purple-100 text-purple-700"
                           : "bg-gray-100 text-gray-600"
@@ -551,30 +646,32 @@ function ListingTable({ listings, approveListing, rejectListing, suspendListing,
                     </button>
                   </td>
 
-                  <td className="p-4 flex gap-2 flex-wrap">
-                    <button
-                      onClick={() => approveListing(item.id)}
-                      className="bg-green-600 text-white p-2 rounded-lg"
-                      title="Approve"
-                    >
-                      <FaCheck />
-                    </button>
+                  <td className="px-6 py-6">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => approveListing(item.id)}
+                        className="w-10 h-10 rounded-xl bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition"
+                        title="Approve"
+                      >
+                        <FaCheck />
+                      </button>
 
-                    <button
-                      onClick={() => rejectListing(item.id)}
-                      className="bg-red-600 text-white p-2 rounded-lg"
-                      title="Reject"
-                    >
-                      <FaTimes />
-                    </button>
+                      <button
+                        onClick={() => rejectListing(item.id)}
+                        className="w-10 h-10 rounded-xl bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition"
+                        title="Reject"
+                      >
+                        <FaTimes />
+                      </button>
 
-                    <button
-                      onClick={() => suspendListing(item.id)}
-                      className="bg-gray-800 text-white p-2 rounded-lg"
-                      title="Suspend"
-                    >
-                      <FaBan />
-                    </button>
+                      <button
+                        onClick={() => suspendListing(item.id)}
+                        className="w-10 h-10 rounded-xl bg-slate-700 hover:bg-slate-800 text-white flex items-center justify-center transition"
+                        title="Suspend"
+                      >
+                        <FaBan />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -588,14 +685,21 @@ function ListingTable({ listings, approveListing, rejectListing, suspendListing,
 
 function SimpleTable({ title, headers, rows }) {
   return (
-    <div className="bg-white rounded-2xl shadow p-6 overflow-x-auto">
+    <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 overflow-x-auto">
       <h3 className="text-xl font-bold mb-5">{title}</h3>
 
       <table className="w-full text-left">
-        <thead className="bg-blue-700 text-white">
-          <tr>
-            {headers.map((head) => (
-              <th key={head} className="p-4">{head}</th>
+        <thead>
+          <tr className="bg-blue-50 text-blue-700">
+            {headers.map((head, index) => (
+              <th
+                key={head}
+                className={`px-6 py-5 font-semibold ${
+                  index === 0 ? "rounded-l-xl" : ""
+                } ${index === headers.length - 1 ? "rounded-r-xl" : ""}`}
+              >
+                {head}
+              </th>
             ))}
           </tr>
         </thead>
@@ -603,13 +707,20 @@ function SimpleTable({ title, headers, rows }) {
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={headers.length} className="p-5 text-center">No data found</td>
+              <td
+                colSpan={headers.length}
+                className="px-6 py-10 text-center text-gray-500"
+              >
+                No data found
+              </td>
             </tr>
           ) : (
             rows.map((row, index) => (
-              <tr key={index} className="border-b">
+              <tr key={index} className="border-b border-gray-100">
                 {row.map((cell, i) => (
-                  <td key={i} className="p-4">{cell}</td>
+                  <td key={i} className="px-6 py-5 text-gray-700">
+                    {cell}
+                  </td>
                 ))}
               </tr>
             ))
