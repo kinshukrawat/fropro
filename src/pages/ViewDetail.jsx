@@ -22,7 +22,7 @@ export default function ViewDetail() {
   const fetchBusinessDetail = async () => {
     try {
       setLoading(true);
-      
+
       const res = await API.get(`/listings/${slug}`);
       setBusiness(res.data);
     } catch (error) {
@@ -69,6 +69,7 @@ export default function ViewDetail() {
       .join(", ") || "Address not available";
 
   const mapAddress = encodeURIComponent(address);
+  const directionAddress = encodeURIComponent(`${business.name}, ${address}`);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -169,7 +170,7 @@ export default function ViewDetail() {
             </a>
 
             <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${mapAddress}`}
+              href={`https://www.google.com/maps/dir/?api=1&destination=${directionAddress}&travelmode=driving`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-3 bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition"
