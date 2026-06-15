@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   FaHome,
   FaList,
-
+  
   FaUsers,
   FaRupeeSign,
 
@@ -151,25 +151,25 @@ export default function Dashboard() {
   };
 
   const rejectListing = async (id) => {
-  const reason = prompt("Enter rejection reason:");
+    const reason = prompt("Enter rejection reason:");
 
-  if (!reason || reason.trim() === "") {
-    alert("Rejection reason is required");
-    return;
-  }
+    if (!reason || reason.trim() === "") {
+      alert("Rejection reason is required");
+      return;
+    }
 
-  try {
-    await API.post(`/admin/listings/${id}/reject`, {
-      reason: reason.trim(),
-    });
+    try {
+      await API.post(`/admin/listings/${id}/reject`, {
+        reason: reason.trim(),
+      });
 
-    alert("Listing rejected");
-    fetchAdminData();
-  } catch (error) {
-    console.log("Reject Error:", error.response?.data || error);
-    alert(error.response?.data?.message || "Failed to reject listing");
-  }
-};
+      alert("Listing rejected");
+      fetchAdminData();
+    } catch (error) {
+      console.log("Reject Error:", error.response?.data || error);
+      alert(error.response?.data?.message || "Failed to reject listing");
+    }
+  };
 
   const suspendListing = async (id) => {
     try {
@@ -218,8 +218,7 @@ export default function Dashboard() {
     listings.filter((i) => i.status === "APPROVED").length;
   const pending =
     stats.pendingListings ??
-    listings.filter((i) => i.status === "SUBMITTED" || i.status === "PENDING")
-      .length;
+    listings.filter((i) => i.status === "SUBMITTED" || i.status === "PENDING").length;
   const rejected =
     stats.rejectedListings ??
     listings.filter((i) => i.status === "REJECTED").length;
@@ -286,9 +285,7 @@ export default function Dashboard() {
       <main className="flex-1 p-4 md:p-8">
         <div className="bg-white p-5 rounded-2xl shadow mb-6 flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">
-              Admin Dashboard
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-800">Admin Dashboard</h2>
             <p className="text-gray-500">Manage Oye Rohini platform</p>
           </div>
 
@@ -328,23 +325,9 @@ export default function Dashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={growthData}>
                       <defs>
-                        <linearGradient
-                          id="listingColor"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="5%"
-                            stopColor="#2563eb"
-                            stopOpacity={0.35}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor="#2563eb"
-                            stopOpacity={0}
-                          />
+                        <linearGradient id="listingColor" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#2563eb" stopOpacity={0.35} />
+                          <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                         </linearGradient>
                       </defs>
 
@@ -352,30 +335,9 @@ export default function Dashboard() {
                       <XAxis dataKey="month" />
                       <YAxis />
                       <Tooltip />
-
-                      <Area
-                        type="monotone"
-                        dataKey="listings"
-                        stroke="#2563eb"
-                        fill="url(#listingColor)"
-                        strokeWidth={3}
-                      />
-
-                      <Area
-                        type="monotone"
-                        dataKey="users"
-                        stroke="#16a34a"
-                        fillOpacity={0}
-                        strokeWidth={3}
-                      />
-
-                      <Area
-                        type="monotone"
-                        dataKey="payments"
-                        stroke="#9333ea"
-                        fillOpacity={0}
-                        strokeWidth={3}
-                      />
+                      <Area type="monotone" dataKey="listings" stroke="#2563eb" fill="url(#listingColor)" strokeWidth={3} />
+                      <Area type="monotone" dataKey="users" stroke="#16a34a" fillOpacity={0} strokeWidth={3} />
+                      <Area type="monotone" dataKey="payments" stroke="#9333ea" fillOpacity={0} strokeWidth={3} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -391,11 +353,7 @@ export default function Dashboard() {
                       <XAxis dataKey="name" />
                       <YAxis allowDecimals={false} />
                       <Tooltip />
-                      <Bar
-                        dataKey="value"
-                        fill="#1d4ed8"
-                        radius={[8, 8, 0, 0]}
-                      />
+                      <Bar dataKey="value" fill="#1d4ed8" radius={[8, 8, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -514,20 +472,9 @@ export default function Dashboard() {
 
             <div className="grid gap-4">
               <input className="border p-3 rounded-xl" defaultValue="Oye Rohini" />
-
-              <input
-                className="border p-3 rounded-xl"
-                defaultValue="oyerohini@gmail.com"
-              />
-
-              <input
-                className="border p-3 rounded-xl"
-                defaultValue="+91 9876543210"
-              />
-
-              <button className="bg-blue-700 text-white py-3 rounded-xl">
-                Save Settings
-              </button>
+              <input className="border p-3 rounded-xl" defaultValue="oyerohini@gmail.com" />
+              <input className="border p-3 rounded-xl" defaultValue="+91 9876543210" />
+              <button className="bg-blue-700 text-white py-3 rounded-xl">Save Settings</button>
             </div>
           </div>
         )}
@@ -545,19 +492,14 @@ function Card({ title, value, color = "text-blue-700" }) {
   );
 }
 
-function ListingTable({
-  listings,
-  approveListing,
-  rejectListing,
-  suspendListing,
-  toggleFeatured,
-}) {
+function ListingTable({ listings, approveListing, rejectListing, suspendListing, toggleFeatured }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left">
         <thead className="bg-blue-700 text-white">
           <tr>
             <th className="p-4">Business</th>
+            <th className="p-4">Owner Email</th>
             <th className="p-4">Category</th>
             <th className="p-4">City</th>
             <th className="p-4">Phone</th>
@@ -570,7 +512,7 @@ function ListingTable({
         <tbody>
           {listings.length === 0 ? (
             <tr>
-              <td colSpan="7" className="p-5 text-center text-gray-500">
+              <td colSpan="8" className="p-5 text-center text-gray-500">
                 No listings found
               </td>
             </tr>
@@ -580,10 +522,12 @@ function ListingTable({
               const city = item.city?.name || item.city || "-";
               const phone = item.contactPhone || item.phone || "-";
               const status = item.status || "-";
+              const ownerEmail = item.owner?.email || item.user?.email || item.ownerEmail || "-";
 
               return (
                 <tr key={item.id} className="border-b hover:bg-blue-50">
                   <td className="p-4 font-semibold">{item.name}</td>
+                  <td className="p-4 text-blue-600">{ownerEmail}</td>
                   <td className="p-4">{category}</td>
                   <td className="p-4">{city}</td>
                   <td className="p-4">{phone}</td>
@@ -651,9 +595,7 @@ function SimpleTable({ title, headers, rows }) {
         <thead className="bg-blue-700 text-white">
           <tr>
             {headers.map((head) => (
-              <th key={head} className="p-4">
-                {head}
-              </th>
+              <th key={head} className="p-4">{head}</th>
             ))}
           </tr>
         </thead>
@@ -661,17 +603,13 @@ function SimpleTable({ title, headers, rows }) {
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={headers.length} className="p-5 text-center">
-                No data found
-              </td>
+              <td colSpan={headers.length} className="p-5 text-center">No data found</td>
             </tr>
           ) : (
             rows.map((row, index) => (
               <tr key={index} className="border-b">
                 {row.map((cell, i) => (
-                  <td key={i} className="p-4">
-                    {cell}
-                  </td>
+                  <td key={i} className="p-4">{cell}</td>
                 ))}
               </tr>
             ))
