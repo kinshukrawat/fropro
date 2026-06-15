@@ -12,6 +12,7 @@ import {
   FaCheckCircle,
   FaCar,
   FaRegStar,
+  FaUserCircle,
 } from "react-icons/fa";
 
 import API from "../api/api";
@@ -20,8 +21,12 @@ export default function ViewDetail() {
   const { slug } = useParams();
 
   const [business, setBusiness] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [selectedRating, setSelectedRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
 
   const fetchBusinessDetail = async () => {
@@ -37,10 +42,28 @@ export default function ViewDetail() {
 
       setBusiness(res.data);
     } catch (error) {
-      console.log("Business Detail API Error:", error);
+      console.log("Business Detail API Error:", error.response?.data || error);
       setBusiness(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviews = async (listingId) => {
+    if (!listingId) return;
+
+    try {
+      setReviewsLoading(true);
+
+      const res = await API.get(`/reviews/listing/${listingId}`);
+
+      const reviewList = res.data?.items || res.data?.data || res.data || [];
+      setReviews(Array.isArray(reviewList) ? reviewList : []);
+    } catch (error) {
+      console.log("Reviews API Error:", error.response?.data || error);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
     }
   };
 
@@ -48,15 +71,43 @@ export default function ViewDetail() {
     fetchBusinessDetail();
   }, [slug]);
 
-  const handleSubmitReview = () => {
+  useEffect(() => {
+    if (business?.id) {
+      fetchReviews(business.id);
+    }
+  }, [business?.id]);
+
+  const handleSubmitReview = async () => {
     if (!selectedRating) {
       alert("Please select rating first");
       return;
     }
 
-    alert("Review feature backend integration next step me add karenge");
-    setSelectedRating(0);
-    setReviewText("");
+    try {
+      setSubmitting(true);
+
+      await API.post("/reviews", {
+        listingId: business.id,
+        rating: selectedRating,
+        comment: reviewText,
+      });
+
+      setSelectedRating(0);
+      setHoverRating(0);
+      setReviewText("");
+
+      await fetchReviews(business.id);
+
+      alert("Review submitted successfully");
+    } catch (error) {
+      console.log("Submit Review Error:", error.response?.data || error);
+      alert(
+        error.response?.data?.message ||
+          "Failed to submit review. Please login or try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const scrollToReviews = () => {
@@ -64,6 +115,21 @@ export default function ViewDetail() {
       .getElementById("reviews-section")
       ?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const averageRating = useMemo(() => {
+    if (reviews.length > 0) {
+      const total = reviews.reduce(
+        (sum, review) => sum + Number(review.rating || 0),
+        0
+      );
+
+      return (total / reviews.length).toFixed(1);
+    }
+
+    return business?.rating || "0.0";
+  }, [reviews, business?.rating]);
+
+  const totalReviews = reviews.length || business?.reviewCount || 0;
 
   if (loading) {
     return (
@@ -113,13 +179,9 @@ export default function ViewDetail() {
       )}&output=embed`
     : "";
 
-  const directionsDestination = hasCoordinates
-    ? `${business.latitude},${business.longitude}`
-    : fullAddress;
-
-  const directionsUrl = directionsDestination
+  const directionsUrl = mapDestination
     ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-        directionsDestination
+        mapDestination
       )}&travelmode=driving`
     : null;
 
@@ -145,11 +207,11 @@ export default function ViewDetail() {
             {business.name}
           </h1>
 
-          {/* Justdial style details */}
+
           <div className="mt-4 space-y-3">
             <div className="flex flex-wrap items-center gap-3">
               <span className="bg-green-600 text-white px-3 py-1 rounded-md font-bold flex items-center gap-1">
-                {business.rating || "4.4"} <FaStar className="text-xs" />
+                {averageRating} <FaStar className="text-xs" />
               </span>
 
               <button
@@ -157,7 +219,7 @@ export default function ViewDetail() {
                 onClick={scrollToReviews}
                 className="text-gray-600 hover:text-blue-600 font-medium"
               >
-                {business.reviewCount || 333} ratings
+                {totalReviews} ratings
               </button>
 
               <span className="flex items-center gap-1 text-blue-600 font-semibold">
@@ -169,10 +231,17 @@ export default function ViewDetail() {
             <div className="flex flex-wrap items-center gap-2 text-gray-700">
               <span>{business.city?.name || "Rohini, Delhi"}</span>
               <span>•</span>
-              <span className="flex items-center gap-1">
-                <FaCar />
-                {business.distanceKm || "2.6"} km
-              </span>
+              {business.distanceKm ? (
+                <span className="flex items-center gap-1">
+                  <FaCar />
+                  {business.distanceKm} km
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-gray-500">
+                  <FaCar />
+                  Distance not available
+                </span>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-2 text-gray-700">
@@ -248,8 +317,10 @@ export default function ViewDetail() {
                     key={star}
                     type="button"
                     onClick={() => setSelectedRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
                     className={
-                      star <= selectedRating
+                      star <= (hoverRating || selectedRating)
                         ? "text-yellow-400"
                         : "text-gray-300"
                     }
@@ -270,10 +341,71 @@ export default function ViewDetail() {
               <button
                 type="button"
                 onClick={handleSubmitReview}
-                className="mt-3 bg-blue-600 text-white px-5 py-2 rounded-xl font-semibold hover:bg-blue-700"
+                disabled={submitting}
+                className="mt-3 bg-blue-600 text-white px-5 py-2 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-60"
               >
-                Submit Review
+                {submitting ? "Submitting..." : "Submit Review"}
               </button>
+            </div>
+
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold mb-4">Customer Reviews</h2>
+
+              {reviewsLoading ? (
+                <p className="text-gray-500">Loading reviews...</p>
+              ) : reviews.length === 0 ? (
+                <div className="border rounded-2xl p-5 text-gray-500 bg-white">
+                  No reviews yet. Be the first to review this business.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {[...reviews]
+                    .sort(
+                      (a, b) =>
+                        new Date(b.createdAt || 0) -
+                        new Date(a.createdAt || 0)
+                    )
+                    .map((review) => (
+                      <div
+                        key={review.id}
+                        className="border rounded-2xl p-5 bg-white"
+                      >
+                        <div className="flex items-start gap-3">
+                          <FaUserCircle className="text-3xl text-gray-400" />
+
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="font-bold">
+                                {review.user?.name || review.name || "User"}
+                              </h4>
+
+                              <span className="bg-green-600 text-white px-2 py-1 rounded-md text-sm font-bold">
+                                {review.rating} ★
+                              </span>
+                            </div>
+
+                            <p className="text-gray-700 mt-2">
+                              {review.comment || "No comment added."}
+                            </p>
+
+                            {review.createdAt && (
+                              <p className="text-xs text-gray-400 mt-2">
+                                {new Date(review.createdAt).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  }
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
