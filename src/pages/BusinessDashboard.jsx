@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  FaEnvelopeOpenText,
+  FaTag,
+  FaCheckCircle,
   FaStore,
   FaClipboardList,
   FaStar,
@@ -41,6 +44,10 @@ export default function BusinessDashboard() {
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
 
+  // Messages state
+  const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -77,10 +84,24 @@ export default function BusinessDashboard() {
     }
   };
 
+  const fetchOwnerMessages = async () => {
+    setMessagesLoading(true);
+    try {
+      const res = await API.get("/messages/owner");
+      setMessages(res.data?.items || res.data?.data || res.data || []);
+    } catch (error) {
+      console.log("Messages Error:", error.response?.data || error);
+      setMessages([]);
+    } finally {
+      setMessagesLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchMyListings();
     fetchDropdownData();
     fetchOwnerFinance();
+    fetchOwnerMessages();
   }, []);
 
   const stats = useMemo(() => {
@@ -119,6 +140,13 @@ export default function BusinessDashboard() {
       return "bg-yellow-100 text-yellow-700 border-yellow-200";
 
     return "bg-gray-100 text-gray-700 border-gray-200";
+  };
+
+  const getMessageStatusStyle = (status = "new") => {
+    const s = status?.toLowerCase();
+    if (s === "contacted") return "bg-green-100 text-green-700";
+    if (s === "new") return "bg-blue-100 text-blue-700";
+    return "bg-gray-100 text-gray-600";
   };
 
   const handleChange = (e) => {
@@ -363,14 +391,9 @@ export default function BusinessDashboard() {
                       ["6 Months", "₹1799", "Recommended for growing business"],
                       ["12 Months", "₹2999", "Best value yearly plan"],
                     ].map(([plan, price, desc]) => (
-                      <div
-                        key={plan}
-                        className="border rounded-3xl p-6 hover:shadow-lg"
-                      >
+                      <div key={plan} className="border rounded-3xl p-6 hover:shadow-lg">
                         <h3 className="text-xl font-bold">{plan}</h3>
-                        <p className="text-3xl font-bold text-blue-600 my-4">
-                          {price}
-                        </p>
+                        <p className="text-3xl font-bold text-blue-600 my-4">{price}</p>
                         <p className="text-gray-500 mb-6">{desc}</p>
 
                         <button
@@ -385,11 +408,176 @@ export default function BusinessDashboard() {
                     ))}
                   </div>
                 </>
+              ) : activeTab === "messages" ? (
+                <>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h2 className="text-3xl font-bold">Customer Messages</h2>
+                      <p className="text-gray-500 mt-1">
+                        Enquiries received via{" "}
+                        <strong>Ask for Price</strong> on your business listings.
+                      </p>
+                    </div>
+                    <button
+                      onClick={fetchOwnerMessages}
+                      className="flex items-center gap-2 px-5 py-2.5 border border-blue-600 text-blue-600 rounded-2xl hover:bg-blue-50 font-semibold transition"
+                    >
+                      <FaEnvelopeOpenText />
+                      Refresh
+                    </button>
+                  </div>
+
+                  {messagesLoading ? (
+                    <div className="flex items-center justify-center py-20 text-gray-400 text-lg">
+                      <svg
+                        className="animate-spin h-6 w-6 mr-3 text-blue-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        />
+                      </svg>
+                      Loading messages...
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                      <FaComments className="text-5xl mb-4 text-gray-200" />
+                      <p className="text-lg font-medium">No customer messages yet.</p>
+                      <p className="text-sm mt-1">
+                        When customers enquire about your listings, they'll appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-5">
+                      {messages.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className="border rounded-2xl p-6 bg-white shadow-sm hover:shadow-md transition"
+                        >
+                          <div className="flex flex-col md:flex-row md:justify-between gap-4">
+                            <div className="flex-1">
+                              {/* Customer name + status badge row */}
+                              <div className="flex flex-wrap items-center gap-3 mb-1">
+                                <h3 className="text-xl font-bold text-gray-900">
+                                  {msg.name || "Unknown Customer"}
+                                </h3>
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${getMessageStatusStyle(
+                                    msg.status
+                                  )}`}
+                                >
+                                  {msg.status || "New"}
+                                </span>
+                              </div>
+
+                              {/* Contact info */}
+                              <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-500 mb-4">
+                                {msg.email && (
+                                  <span className="flex items-center gap-1.5">
+                                    <FaEnvelopeOpenText className="text-gray-400" />
+                                    {msg.email}
+                                  </span>
+                                )}
+                                {msg.phone && (
+                                  <span className="flex items-center gap-1.5">
+                                    <FaPhoneAlt className="text-gray-400" />
+                                    {msg.phone}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Listing & service */}
+                              <div className="space-y-2 text-sm">
+                                <p>
+                                  <span className="font-semibold text-gray-700">Business:</span>{" "}
+                                  <span className="text-gray-600">
+                                    {msg.listingName || msg.listing?.name || "—"}
+                                  </span>
+                                </p>
+
+                                {msg.serviceTitle && (
+                                  <p>
+                                    <span className="font-semibold text-gray-700">
+                                      Asked About:
+                                    </span>{" "}
+                                    <span className="text-gray-600">{msg.serviceTitle}</span>
+                                  </p>
+                                )}
+
+                                {msg.message && (
+                                  <div>
+                                    <p className="font-semibold text-gray-700 mb-1">Message:</p>
+                                    <div className="bg-gray-50 border rounded-xl p-3 text-gray-700 leading-relaxed">
+                                      {msg.message}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Right column: date + actions */}
+                            <div className="flex flex-col items-start md:items-end justify-between gap-4 md:min-w-[180px]">
+                              <span className="text-sm text-gray-400">
+                                {msg.createdAt
+                                  ? new Date(msg.createdAt).toLocaleDateString("en-IN", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })
+                                  : "—"}
+                              </span>
+
+                              <div className="flex flex-wrap gap-2">
+                                {msg.phone && (
+                                  <a
+                                    href={`tel:${msg.phone}`}
+                                    className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition"
+                                  >
+                                    <FaPhoneAlt className="text-xs" />
+                                    Call
+                                  </a>
+                                )}
+
+                                {msg.email && (
+                                  <a
+                                    href={`mailto:${msg.email}`}
+                                    className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition"
+                                  >
+                                    <FaEnvelopeOpenText className="text-xs" />
+                                    Email
+                                  </a>
+                                )}
+
+                                <button
+                                  type="button"
+                                  className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-100 text-sm font-medium text-gray-700 transition"
+                                >
+                                  <FaCheckCircle className="text-xs text-gray-400" />
+                                  Mark Contacted
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center">
-                  <h2 className="text-3xl font-bold mb-3">
-                    {tabTitle[activeTab]}
-                  </h2>
+                  <h2 className="text-3xl font-bold mb-3">{tabTitle[activeTab]}</h2>
                   <p className="text-gray-500">
                     This section is ready. Backend integration will be added next.
                   </p>
