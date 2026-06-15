@@ -6,6 +6,10 @@ const API_BASE_URL =
 
 const API = axios.create({
   baseURL: API_BASE_URL,
+  headers: {
+    "Cache-Control": "no-cache",
+    "Content-Type": "application/json",
+  },
 });
 
 API.interceptors.request.use((config) => {
