@@ -84,6 +84,7 @@ export default function Home() {
   const [listings, setListings] = useState([]);
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
+  const [featuredLimit, setFeaturedLimit] = useState(8);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -109,6 +110,21 @@ export default function Home() {
       .catch((err) => console.log("Listings API Error:", err));
   }, []);
 
+  useEffect(() => {
+    const updateFeaturedLimit = () => {
+      if (window.innerWidth < 640) {
+        setFeaturedLimit(4);
+      } else if (window.innerWidth < 1024) {
+        setFeaturedLimit(6);
+      } else {
+        setFeaturedLimit(8);
+      }
+    };
+    updateFeaturedLimit();
+    window.addEventListener("resize", updateFeaturedLimit);
+    return () => window.removeEventListener("resize", updateFeaturedLimit);
+  }, []);
+
   const handleSearch = () => {
     const query = new URLSearchParams();
 
@@ -129,12 +145,12 @@ export default function Home() {
     e.preventDefault();
 
     try {
-    await getContact({
-  name: formData.name,
-  email: "no-email@example.com",
-  phone: formData.mobile,
-  message: formData.message,
-});
+      await getContact({
+        name: formData.name,
+        email: "no-email@example.com",
+        phone: formData.mobile,
+        message: formData.message,
+      });
 
       alert("Query submitted successfully!");
       setFormData({
@@ -305,7 +321,7 @@ export default function Home() {
             <p className="text-gray-500">No featured listings found.</p>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {listings.map((item) => (
+              {listings.slice(0, featuredLimit).map((item) => (
                 <div
                   key={item.id}
                   className="relative bg-gray-50 rounded-3xl overflow-hidden shadow hover:shadow-2xl transition group"
@@ -345,7 +361,7 @@ export default function Home() {
                     </div>
 
                     <Link
-                     to={`/business/detail/${item.slug}`}
+                      to={`/business/detail/${item.slug}`}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition"
                     >
                       <FaPhoneAlt />
@@ -431,7 +447,7 @@ export default function Home() {
             </span>
 
             <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
-              Let’s Discuss <br />
+              Let's Discuss <br />
               Your Requirement
             </h2>
 
@@ -447,7 +463,7 @@ export default function Home() {
             </h3>
 
             <p className="text-gray-500 mb-10">
-              Fill out the form and we’ll contact you shortly.
+              Fill out the form and we'll contact you shortly.
             </p>
 
             <form onSubmit={handleQuerySubmit} className="space-y-6">
