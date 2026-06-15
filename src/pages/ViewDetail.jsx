@@ -24,6 +24,12 @@ export default function ViewDetail() {
       setLoading(true);
 
       const res = await API.get(`/listings/${slug}`);
+
+      console.log("Listing API Response:", res.data);
+      console.log("API addressLine1:", res.data?.addressLine1);
+      console.log("API latitude:", res.data?.latitude);
+      console.log("API longitude:", res.data?.longitude);
+
       setBusiness(res.data);
     } catch (error) {
       console.log("Business Detail API Error:", error);
@@ -59,17 +65,45 @@ export default function ViewDetail() {
 
   const phone = business.contactPhone || business.whatsappPhone || "";
 
-  const address =
+  const fullAddress =
     [
       business.addressLine1,
       business.addressLine2,
       business.city?.name,
+      "India",
     ]
       .filter(Boolean)
-      .join(", ") || "Address not available";
+      .join(", ") || "";
 
-  const mapAddress = encodeURIComponent(address);
-  const directionAddress = encodeURIComponent(`${business.name}, ${address}`);
+  const hasCoordinates =
+    business.latitude !== undefined &&
+    business.latitude !== null &&
+    business.longitude !== undefined &&
+    business.longitude !== null;
+
+  const mapDestination = hasCoordinates
+    ? `${business.latitude},${business.longitude}`
+    : fullAddress;
+
+  const mapUrl = mapDestination
+    ? `https://www.google.com/maps?q=${encodeURIComponent(
+        mapDestination
+      )}&output=embed`
+    : "";
+
+  const directionsDestination = hasCoordinates
+    ? `${business.latitude},${business.longitude}`
+    : fullAddress;
+
+  const directionsUrl = directionsDestination
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+        directionsDestination
+      )}&travelmode=driving`
+    : null;
+
+  console.log("Final fullAddress:", fullAddress);
+  console.log("Final mapDestination:", mapDestination);
+  console.log("Final directionsDestination:", directionsDestination);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -105,17 +139,23 @@ export default function ViewDetail() {
 
           <h2 className="text-2xl font-bold mt-8 mb-4">Location</h2>
 
-          <div className="overflow-hidden rounded-2xl border h-[350px]">
-            <iframe
-              title="Business Location"
-              src={`https://www.google.com/maps?q=${mapAddress}&output=embed`}
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              loading="lazy"
-              allowFullScreen
-            />
-          </div>
+          {mapUrl ? (
+            <div className="overflow-hidden rounded-2xl border h-[350px]">
+              <iframe
+                title="Business Location"
+                src={mapUrl}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                loading="lazy"
+                allowFullScreen
+              />
+            </div>
+          ) : (
+            <div className="rounded-2xl border h-[350px] flex items-center justify-center text-gray-500">
+              Location not available
+            </div>
+          )}
 
           <h2 className="text-2xl font-bold mt-8 mb-4">Gallery</h2>
 
@@ -140,7 +180,7 @@ export default function ViewDetail() {
           <div className="space-y-4 text-gray-700">
             <p className="flex items-center gap-3">
               <FaMapMarkerAlt className="text-blue-600" />
-              {address}
+              {fullAddress || "Location not available"}
             </p>
 
             <p className="flex items-center gap-3">
@@ -169,15 +209,26 @@ export default function ViewDetail() {
               Call Now
             </a>
 
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${directionAddress}&travelmode=driving`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition"
-            >
-              <FaDirections />
-              Get Directions
-            </a>
+            {directionsUrl ? (
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition"
+              >
+                <FaDirections />
+                Get Directions
+              </a>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="flex items-center justify-center gap-3 bg-gray-400 text-white py-3 rounded-xl font-semibold cursor-not-allowed w-full"
+              >
+                <FaDirections />
+                Location not available
+              </button>
+            )}
 
             <a
               href="https://www.instagram.com/oyerohini_?igsh=MXFlbzRvbndndmJ5Zw%3D%3D&utm_source=qr"
