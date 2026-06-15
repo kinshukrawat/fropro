@@ -85,7 +85,10 @@ export default function BusinessDetails() {
 
   const phone = business.contactPhone || business.phone || "";
   const website = business.website || "";
-  const timing = business.timing || business.openingHours || "Timing not available";
+  const timing =
+  business.opensAt && business.closesAt
+    ? `${business.opensAt} - ${business.closesAt}`
+    : "Timing not available";
   const description =
     business.description || "No description available for this business.";
 

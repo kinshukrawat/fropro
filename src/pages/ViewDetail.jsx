@@ -133,7 +133,9 @@ export default function ViewDetail() {
 
             <p className="flex items-center gap-3">
               <FaClock className="text-orange-500" />
-              {business.openingHours || "Timing not available"}
+              {business.opensAt && business.closesAt
+  ? `${business.opensAt} - ${business.closesAt}`
+  : "Timing not available"}
             </p>
           </div>
 
