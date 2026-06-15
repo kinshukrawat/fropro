@@ -17,6 +17,11 @@ import {
   FaSearch,
   FaBan,
   FaChartLine,
+  FaCar,
+  FaCoffee,
+  FaDumbbell,
+  FaSpa,
+  FaShoppingBasket,
 } from "react-icons/fa";
 import {
   AreaChart,
@@ -455,7 +460,7 @@ export default function Dashboard() {
             />
           </div>
         )}
-
+        
 
         {activeTab === "users" && (
           <SimpleTable
@@ -555,6 +560,40 @@ function getStatusClass(status) {
   return "bg-yellow-100 text-yellow-700";
 }
 
+function getCategoryIcon(category) {
+  const value = category?.toLowerCase();
+
+  if (value?.includes("car")) {
+    return <FaCar className="text-blue-600 text-2xl" />;
+  }
+
+  if (value?.includes("cafe") || value?.includes("coffee")) {
+    return <FaCoffee className="text-purple-600 text-2xl" />;
+  }
+
+  if (value?.includes("gym") || value?.includes("fitness")) {
+    return <FaDumbbell className="text-orange-500 text-2xl" />;
+  }
+
+  if (
+    value?.includes("spa") ||
+    value?.includes("salon") ||
+    value?.includes("beauty")
+  ) {
+    return <FaSpa className="text-pink-500 text-2xl" />;
+  }
+
+  if (
+    value?.includes("grocery") ||
+    value?.includes("store") ||
+    value?.includes("shop")
+  ) {
+    return <FaShoppingBasket className="text-green-600 text-2xl" />;
+  }
+
+  return <FaList className="text-blue-600 text-2xl" />;
+}
+
 function ListingTable({
   listings,
   approveListing,
@@ -602,8 +641,16 @@ function ListingTable({
                   className="border-b border-gray-100 hover:bg-gray-50 transition-all duration-200"
                 >
                   <td className="px-6 py-6">
-                    <div className="font-semibold text-gray-900 text-base">
-                      {item.name}
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl border border-gray-200 bg-white shadow-sm flex items-center justify-center">
+                        {getCategoryIcon(category)}
+                      </div>
+
+                      <div>
+                        <p className="font-semibold text-gray-900 text-base leading-6">
+                          {item.name}
+                        </p>
+                      </div>
                     </div>
                   </td>
 
