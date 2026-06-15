@@ -126,16 +126,20 @@ export default function Dashboard() {
     }
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  const adminLogin = localStorage.getItem("adminLogin");
 
-    if (!token) {
-      navigate("/admin/login");
-      return;
-    }
+  if (!token || adminLogin !== "true") {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("adminLogin");
+    navigate("/admin/login", { replace: true });
+    return;
+  }
 
-    fetchAdminData();
-  }, []);
+  fetchAdminData();
+}, []);
 
   useEffect(() => {
     if (activeTab === "users") fetchUsers();
