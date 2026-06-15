@@ -44,6 +44,7 @@ function AppContent() {
 
       <Routes>
 
+        {/* ✅ Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/listings" element={<Listing />} />
@@ -53,25 +54,58 @@ function AppContent() {
         <Route path="/categories" element={<Categories />} />
         <Route path="/all-categories" element={<AllCategories />} />
         <Route path="/popular-categories" element={<PopularCategories />} />
-        <Route path="/reviews" element={<Reviews />} />
-        <Route path="/payments" element={<Payments />} />
+        
         <Route path="/contact" element={<Contact />} />
         <Route path="/viewdetail/:id" element={<ViewDetail />} />
 
-        <Route path="/user-dashboard" element={<UserDashboard />} />
+        {/* ✅ Protected — any logged in user */}
         <Route
-  path="/business-dashboard"
-  element={
-    <ProtectedRoute>
-      <BusinessDashboard />
-    </ProtectedRoute>
-  }
-/>
+          path="/user-dashboard"
+          element={
+            <ProtectedRoute>
+              <UserDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/business-dashboard"
+          element={
+            <ProtectedRoute>
+              <BusinessDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payments"
+          element={
+            <ProtectedRoute>
+              <Payments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reviews"
+          element={
+            <ProtectedRoute>
+              <Reviews />
+            </ProtectedRoute>
+          }
+        />
 
-
+        {/* ✅ Admin Routes */}
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<Dashboard />} />
+
+        {/* ✅ Protected — ADMIN role only */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
       </Routes>
 
       {!hideLayout && <Footer />}

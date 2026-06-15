@@ -1,10 +1,17 @@
 import { Navigate } from "react-router-dom";
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, adminOnly = false }) => {
   const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+
+  const role = user?.role?.toUpperCase();
+
+  if (adminOnly && role !== "ADMIN") {
+    return <Navigate to="/" replace />;
   }
 
   return children;

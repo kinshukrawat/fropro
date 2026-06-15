@@ -43,18 +43,22 @@ export default function Login() {
           alert("Login failed: token not received");
           return;
         }
+
         const user = res.data.user || {};
 
         localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user || {}));
+        localStorage.setItem("user", JSON.stringify(user));
 
         alert("Login successful");
 
-        if (user?.role === "ADMIN") {
+        // ✅ Fixed: case-insensitive role check
+        const role = user?.role?.toUpperCase();
+        if (role === "ADMIN") {
           navigate("/admin/dashboard");
         } else {
-          navigate(user.role === "ADMIN" ? "/admin/dashboard" : "/business-dashboard");
+          navigate("/business-dashboard");
         }
+
       } else {
         await API.post("/auth/register", {
           name: formData.name,
@@ -77,14 +81,15 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-600 to-blue-400 flex items-center justify-center px-4 py-10">
       <div className="bg-white w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl grid md:grid-cols-2">
-        <div className="hidden md:flex flex-col justify-center bg-blue-600 text-white p-12">
-          <h1 className="text-5xl font-bold mb-6">Welcome to Oye Rohini</h1>
 
+        {/* Left Panel */}
+        <div className="hidden md:flex flex-col justify-center bg-blue-600 text-white p-12">
+          <h1 className="text-5xl font-bold mb-6">Welcome to FroPro</h1>
           <p className="text-lg leading-8 text-blue-100">
             Discover trusted local businesses, explore nearby services, and
             connect with the best salons, gyms, cafes, restaurants, and more.
           </p>
-
+          
           <div className="mt-10">
             <img
               src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop"
@@ -94,7 +99,9 @@ export default function Login() {
           </div>
         </div>
 
+        {/* Right Panel */}
         <div className="p-8 md:p-12">
+          {/* Toggle */}
           <div className="flex justify-center mb-10">
             <div className="bg-gray-100 rounded-xl p-1 flex">
               <button
@@ -120,6 +127,7 @@ export default function Login() {
             </div>
           </div>
 
+          {/* Heading */}
           <div className="mb-8">
             <h2 className="text-4xl font-bold mb-3">
               {isLogin ? "Login" : "Create Account"}
@@ -128,10 +136,11 @@ export default function Login() {
             <p className="text-gray-500">
               {isLogin
                 ? "Login to continue exploring businesses."
-                : "Create your account and join Oye Rohini."}
+                : "Create your account and join FroPro."}
             </p>
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <>
@@ -160,7 +169,7 @@ export default function Login() {
                     required={!isLogin}
                   />
                 </div>
-                </>
+              </>
             )}
 
             <div className="flex items-center border rounded-xl px-4 py-4">
@@ -202,11 +211,7 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white py-4 rounded-xl font-semibold text-lg transition"
             >
-              {loading
-                ? "Please wait..."
-                : isLogin
-                ? "Login"
-                : "Create Account"}
+              {loading ? "Please wait..." : isLogin ? "Login" : "Create Account"}
             </button>
           </form>
 
@@ -222,6 +227,7 @@ export default function Login() {
             </button>
           </div>
         </div>
+
       </div>
     </div>
   );
