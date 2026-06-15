@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   FaStar,
@@ -9,6 +9,9 @@ import {
   FaInstagram,
   FaGlobe,
   FaDirections,
+  FaCheckCircle,
+  FaCar,
+  FaRegStar,
 } from "react-icons/fa";
 
 import API from "../api/api";
@@ -18,6 +21,8 @@ export default function ViewDetail() {
 
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
 
   const fetchBusinessDetail = async () => {
     try {
@@ -42,6 +47,23 @@ export default function ViewDetail() {
   useEffect(() => {
     fetchBusinessDetail();
   }, [slug]);
+
+  const handleSubmitReview = () => {
+    if (!selectedRating) {
+      alert("Please select rating first");
+      return;
+    }
+
+    alert("Review feature backend integration next step me add karenge");
+    setSelectedRating(0);
+    setReviewText("");
+  };
+
+  const scrollToReviews = () => {
+    document
+      .getElementById("reviews-section")
+      ?.scrollIntoView({ behavior: "smooth" });
+  };
 
   if (loading) {
     return (
@@ -101,9 +123,7 @@ export default function ViewDetail() {
       )}&travelmode=driving`
     : null;
 
-  console.log("Final fullAddress:", fullAddress);
-  console.log("Final mapDestination:", mapDestination);
-  console.log("Final directionsDestination:", directionsDestination);
+  const isOpen = Boolean(business.opensAt && business.closesAt);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -125,12 +145,55 @@ export default function ViewDetail() {
             {business.name}
           </h1>
 
-          <div className="flex items-center gap-2 mt-3 text-yellow-500">
-            <FaStar />
-            <span className="font-semibold">{business.rating || "4.5"}</span>
-            <span className="text-gray-500">
-              ({business.reviewCount || 0} Reviews)
-            </span>
+          {/* Justdial style details */}
+          <div className="mt-4 space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="bg-green-600 text-white px-3 py-1 rounded-md font-bold flex items-center gap-1">
+                {business.rating || "4.4"} <FaStar className="text-xs" />
+              </span>
+
+              <button
+                type="button"
+                onClick={scrollToReviews}
+                className="text-gray-600 hover:text-blue-600 font-medium"
+              >
+                {business.reviewCount || 333} ratings
+              </button>
+
+              <span className="flex items-center gap-1 text-blue-600 font-semibold">
+                <FaCheckCircle />
+                Verified
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-gray-700">
+              <span>{business.city?.name || "Rohini, Delhi"}</span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <FaCar />
+                {business.distanceKm || "2.6"} km
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-gray-700">
+              <span>{business.category?.name || "Business"}</span>
+              <span>•</span>
+              <span>{business.yearsInBusiness || 0} Years in Business</span>
+            </div>
+
+            <div
+              className={`font-semibold ${
+                isOpen ? "text-green-600" : "text-gray-600"
+              }`}
+            >
+              {isOpen ? "Open Now" : "Timing not available"}
+              {business.closesAt && (
+                <span className="text-gray-700 font-normal">
+                  {" "}
+                  : until {business.closesAt}
+                </span>
+              )}
+            </div>
           </div>
 
           <p className="text-gray-600 mt-6 leading-7">
@@ -171,6 +234,47 @@ export default function ViewDetail() {
                 className="h-40 w-full object-cover rounded-xl"
               />
             ))}
+          </div>
+
+          <div id="reviews-section" className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">Rate this Business</h2>
+
+            <div className="bg-gray-50 border rounded-2xl p-5">
+              <p className="font-semibold mb-3">Tap to rate</p>
+
+              <div className="flex gap-2 text-3xl">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setSelectedRating(star)}
+                    className={
+                      star <= selectedRating
+                        ? "text-yellow-400"
+                        : "text-gray-300"
+                    }
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                className="w-full border rounded-xl p-3 mt-4 outline-none focus:border-blue-500"
+                rows="3"
+                placeholder="Write your review..."
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+              />
+
+              <button
+                type="button"
+                onClick={handleSubmitReview}
+                className="mt-3 bg-blue-600 text-white px-5 py-2 rounded-xl font-semibold hover:bg-blue-700"
+              >
+                Submit Review
+              </button>
+            </div>
           </div>
         </div>
 
@@ -229,6 +333,15 @@ export default function ViewDetail() {
                 Location not available
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={scrollToReviews}
+              className="flex items-center justify-center gap-3 border border-yellow-400 text-yellow-600 py-3 rounded-xl font-semibold hover:bg-yellow-50 transition w-full"
+            >
+              <FaRegStar />
+              Rate & Review
+            </button>
 
             <a
               href="https://www.instagram.com/oyerohini_?igsh=MXFlbzRvbndndmJ5Zw%3D%3D&utm_source=qr"
