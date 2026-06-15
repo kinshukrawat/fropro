@@ -8,13 +8,13 @@ import {
   FaClock,
   FaInstagram,
   FaGlobe,
+  FaDirections,
 } from "react-icons/fa";
 
 import API from "../api/api";
 
 export default function ViewDetail() {
-  const { id } = useParams();
-  const slug = id;
+  const { slug } = useParams();
 
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,7 +22,7 @@ export default function ViewDetail() {
   const fetchBusinessDetail = async () => {
     try {
       setLoading(true);
-
+      
       const res = await API.get(`/listings/${slug}`);
       setBusiness(res.data);
     } catch (error) {
@@ -58,11 +58,17 @@ export default function ViewDetail() {
     "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200";
 
   const phone = business.contactPhone || business.whatsappPhone || "";
+
   const address =
-    business.addressLine1 ||
-    business.addressLine2 ||
-    business.city?.name ||
-    "Address not available";
+    [
+      business.addressLine1,
+      business.addressLine2,
+      business.city?.name,
+    ]
+      .filter(Boolean)
+      .join(", ") || "Address not available";
+
+  const mapAddress = encodeURIComponent(address);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -96,19 +102,34 @@ export default function ViewDetail() {
             {business.description || "No description available."}
           </p>
 
+          <h2 className="text-2xl font-bold mt-8 mb-4">Location</h2>
+
+          <div className="overflow-hidden rounded-2xl border h-[350px]">
+            <iframe
+              title="Business Location"
+              src={`https://www.google.com/maps?q=${mapAddress}&output=embed`}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              allowFullScreen
+            />
+          </div>
+
           <h2 className="text-2xl font-bold mt-8 mb-4">Gallery</h2>
 
           <div className="grid sm:grid-cols-3 gap-4">
-            {(business.images?.length ? business.images : [{ url: mainImage }]).map(
-              (img, index) => (
-                <img
-                  key={index}
-                  src={img.url}
-                  alt="Gallery"
-                  className="h-40 w-full object-cover rounded-xl"
-                />
-              )
-            )}
+            {(business.images?.length
+              ? business.images
+              : [{ url: mainImage }]
+            ).map((img, index) => (
+              <img
+                key={index}
+                src={img.url}
+                alt="Gallery"
+                className="h-40 w-full object-cover rounded-xl"
+              />
+            ))}
           </div>
         </div>
 
@@ -134,8 +155,8 @@ export default function ViewDetail() {
             <p className="flex items-center gap-3">
               <FaClock className="text-orange-500" />
               {business.opensAt && business.closesAt
-  ? `${business.opensAt} - ${business.closesAt}`
-  : "Timing not available"}
+                ? `${business.opensAt} - ${business.closesAt}`
+                : "Timing not available"}
             </p>
           </div>
 
@@ -145,6 +166,16 @@ export default function ViewDetail() {
               className="block text-center bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition"
             >
               Call Now
+            </a>
+
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${mapAddress}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-3 bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition"
+            >
+              <FaDirections />
+              Get Directions
             </a>
 
             <a

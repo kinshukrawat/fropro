@@ -466,7 +466,7 @@ export default function BusinessDashboard() {
                       icon={<FaMapMarkerAlt />}
                       label="Business Address"
                       name="address"
-                      placeholder="Enter full address"
+                      placeholder="Shop No, Landmark, Sector, Rohini, Delhi, Pincode"
                       value={formData.address}
                       onChange={handleChange}
                     />
