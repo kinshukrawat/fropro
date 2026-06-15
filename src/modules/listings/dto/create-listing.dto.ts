@@ -45,4 +45,11 @@ export class CreateListingDto {
   @IsOptional()
   @IsString()
   pincode?: string;
+    @IsOptional()
+  @IsString()
+  opensAt?: string;
+
+  @IsOptional()
+  @IsString()
+  closesAt?: string;
 }
