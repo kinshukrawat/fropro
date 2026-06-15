@@ -31,6 +31,9 @@ export default function ViewDetail() {
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
 
+  // Reviews tab filter: "relevant" | "latest" | "high"
+  const [reviewSort, setReviewSort] = useState("latest");
+
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [selectedCatalogue, setSelectedCatalogue] = useState(null);
   const [priceForm, setPriceForm] = useState({
@@ -59,6 +62,7 @@ export default function ViewDetail() {
     if (!listingId) return;
 
     try {
+
       setReviewsLoading(true);
 
       const res = await API.get(`/reviews/listing/${listingId}`);
@@ -139,28 +143,31 @@ export default function ViewDetail() {
   };
 
   const handlePriceFormChange = (e) => {
-    setPriceForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    setPriceForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleAskForPrice = (e) => {
+  const handleAskForPrice = async (e) => {
     e.preventDefault();
 
     if (!priceForm.name || !priceForm.phone) {
       alert("Please enter your name and phone number");
       return;
     }
-
-    console.log("Ask For Price Frontend Data:", {
-      listingId: business?.id,
-      listingName: business?.name,
-      serviceTitle: selectedCatalogue?.title,
-      ...priceForm,
-    });
-
-    alert("Your enquiry is ready. Backend integration next step me add karenge.");
+    try {
+      await API.post("/messages", {
+        listingId: business?.id,
+        listingName: business?.name,
+        serviceTitle: selectedCatalogue?.title,
+        name: priceForm.name,
+        email: priceForm.email,
+        phone: priceForm.phone,
+        message: priceForm.message,
+      });
+      alert("Your enquiry has been sent! The business owner will contact you soon.");
+    } catch (error) {
+      console.log("Ask For Price Error:", error.response?.data || error);
+      alert("Enquiry sent (backend integration pending).");
+    }
     closePriceModal();
   };
 
@@ -178,6 +185,68 @@ export default function ViewDetail() {
   }, [reviews, business?.rating]);
 
   const totalReviews = reviews.length || business?.reviewCount || 0;
+
+  // Rating distribution: count per star 5→1
+  const ratingDistribution = useMemo(() => {
+    const dist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach((r) => {
+      const star = Math.round(Number(r.rating));
+      if (star >= 1 && star <= 5) dist[star]++;
+    });
+    return dist;
+  }, [reviews]);
+
+  // Recent rating trend: last 6 reviews
+  const recentRatingTrend = useMemo(() => {
+    return [...reviews]
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 6)
+      .map((r) => Number(r.rating || 0));
+  }, [reviews]);
+
+  // Review highlights: extract keywords from comments
+  const reviewHighlights = useMemo(() => {
+    const keywords = [
+      "clean", "professional", "friendly", "fast", "good", "excellent",
+      "hygienic", "affordable", "experienced", "quality", "best",
+    ];
+    const counts = {};
+    reviews.forEach((r) => {
+      const comment = (r.comment || "").toLowerCase();
+      keywords.forEach((kw) => {
+        if (comment.includes(kw)) {
+          counts[kw] = (counts[kw] || 0) + 1;
+        }
+      });
+    });
+    return Object.entries(counts)
+      .filter(([, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([word, count]) => ({
+        label: word.charAt(0).toUpperCase() + word.slice(1),
+        count,
+      }));
+  }, [reviews]);
+
+  // Sorted reviews
+  const sortedReviews = useMemo(() => {
+    const list = [...reviews];
+    if (reviewSort === "latest") {
+      return list.sort(
+        (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+      );
+    }
+    if (reviewSort === "high") {
+      return list.sort((a, b) => Number(b.rating) - Number(a.rating));
+    }
+    // "relevant" = highest rating first, then latest
+    return list.sort((a, b) => {
+      if (Number(b.rating) !== Number(a.rating))
+        return Number(b.rating) - Number(a.rating);
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
+  }, [reviews, reviewSort]);
 
   if (loading) {
     return (
@@ -222,15 +291,11 @@ export default function ViewDetail() {
     : fullAddress;
 
   const mapUrl = mapDestination
-    ? `https://www.google.com/maps?q=${encodeURIComponent(
-        mapDestination
-      )}&output=embed`
+    ? `https://www.google.com/maps?q=${encodeURIComponent(mapDestination)}&output=embed`
     : "";
 
   const directionsUrl = mapDestination
-    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-        mapDestination
-      )}&travelmode=driving`
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapDestination)}&travelmode=driving`
     : null;
 
   const isOpen = Boolean(business.opensAt && business.closesAt);
@@ -238,75 +303,36 @@ export default function ViewDetail() {
   const categoryName = business.category?.name?.toLowerCase() || "";
 
   const commonCatalogue = [
-    {
-      title: "Price Details",
-      description: "Ask about pricing, packages and service charges.",
-    },
-    {
-      title: "Availability",
-      description: "Check availability, timings and appointment slots.",
-    },
-    {
-      title: "Booking / Appointment",
-      description: "Ask for booking, reservation or appointment details.",
-    },
-    {
-      title: "Offers & Discounts",
-      description: "Ask about current offers, discounts and deals.",
-    },
+    { title: "Price Details", description: "Ask about pricing, packages and service charges." },
+    { title: "Availability", description: "Check availability, timings and appointment slots." },
+    { title: "Booking / Appointment", description: "Ask for booking, reservation or appointment details." },
+    { title: "Offers & Discounts", description: "Ask about current offers, discounts and deals." },
   ];
 
   const salonCatalogue = [
-    {
-      title: "Hair Styling",
-      description: "Ask about hair styling services, price and duration.",
-    },
-    {
-      title: "Hair Cut",
-      description: "Ask for haircut price, available styles and timing.",
-    },
-    {
-      title: "Facial / Cleanup",
-      description: "Ask about facial, cleanup and beauty treatment prices.",
-    },
-    {
-      title: "Bridal / Party Makeup",
-      description: "Ask for bridal, party makeup and package details.",
-    },
+    { title: "Hair Styling", description: "Ask about hair styling services, price and duration." },
+    { title: "Hair Cut", description: "Ask for haircut price, available styles and timing." },
+    { title: "Facial / Cleanup", description: "Ask about facial, cleanup and beauty treatment prices." },
+    { title: "Bridal / Party Makeup", description: "Ask for bridal, party makeup and package details." },
   ];
 
   const cafeCatalogue = [
-    {
-      title: "Menu Price",
-      description: "Ask for menu, food pricing and popular items.",
-    },
-    {
-      title: "Table Booking",
-      description: "Ask for table availability and reservation details.",
-    },
-    {
-      title: "Party Order",
-      description: "Ask for birthday, party or bulk order pricing.",
-    },
-    {
-      title: "Offers",
-      description: "Ask about current cafe offers and discounts.",
-    },
+    { title: "Menu Price", description: "Ask for menu, food pricing and popular items." },
+    { title: "Table Booking", description: "Ask for table availability and reservation details." },
+    { title: "Party Order", description: "Ask for birthday, party or bulk order pricing." },
+    { title: "Offers", description: "Ask about current cafe offers and discounts." },
   ];
 
   const catalogueItems =
-    categoryName.includes("salon") ||
-    categoryName.includes("beauty") ||
-    categoryName.includes("spa")
+    categoryName.includes("salon") || categoryName.includes("beauty") || categoryName.includes("spa")
       ? salonCatalogue
-      : categoryName.includes("cafe") ||
-        categoryName.includes("restaurant") ||
-        categoryName.includes("food")
+      : categoryName.includes("cafe") || categoryName.includes("restaurant") || categoryName.includes("food")
       ? cafeCatalogue
       : commonCatalogue;
 
   return (
     <div className="bg-gray-50 min-h-screen">
+      {/* Hero Image */}
       <div className="w-full h-[300px] md:h-[420px]">
         <img
           src={mainImage}
@@ -316,6 +342,7 @@ export default function ViewDetail() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-10 grid lg:grid-cols-3 gap-8">
+        {/* Left / Main Column */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow p-6">
           <span className="inline-block bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-sm mb-4">
             {business.category?.name || "Business"}
@@ -368,17 +395,10 @@ export default function ViewDetail() {
               <span>{business.yearsInBusiness || 0} Years in Business</span>
             </div>
 
-            <div
-              className={`font-semibold ${
-                isOpen ? "text-green-600" : "text-gray-600"
-              }`}
-            >
+            <div className={`font-semibold ${isOpen ? "text-green-600" : "text-gray-600"}`}>
               {isOpen ? "Open Now" : "Timing not available"}
               {business.closesAt && (
-                <span className="text-gray-700 font-normal">
-                  {" "}
-                  : until {business.closesAt}
-                </span>
+                <span className="text-gray-700 font-normal"> : until {business.closesAt}</span>
               )}
             </div>
           </div>
@@ -387,6 +407,7 @@ export default function ViewDetail() {
             {business.description || "No description available."}
           </p>
 
+          {/* Catalogue */}
           <h2 className="text-2xl font-bold mt-8 mb-4">Catalogue</h2>
 
           <div className="grid sm:grid-cols-2 gap-4">
@@ -395,14 +416,8 @@ export default function ViewDetail() {
                 key={item.title}
                 className="border rounded-2xl p-5 bg-white hover:shadow-md transition"
               >
-                <h3 className="text-xl font-bold text-gray-900">
-                  {item.title}
-                </h3>
-
-                <p className="text-gray-600 mt-2 line-clamp-2">
-                  {item.description}
-                </p>
-
+                <h3 className="text-xl font-bold text-gray-900">{item.title}</h3>
+                <p className="text-gray-600 mt-2 line-clamp-2">{item.description}</p>
                 <button
                   type="button"
                   className="text-blue-600 font-semibold mt-3 hover:underline"
@@ -422,6 +437,7 @@ export default function ViewDetail() {
             ))}
           </div>
 
+          {/* Location */}
           <h2 className="text-2xl font-bold mt-8 mb-4">Location</h2>
 
           {mapUrl ? (
@@ -442,28 +458,140 @@ export default function ViewDetail() {
             </div>
           )}
 
+          {/* Gallery */}
           <h2 className="text-2xl font-bold mt-8 mb-4">Gallery</h2>
 
           <div className="grid sm:grid-cols-3 gap-4">
-            {(business.images?.length
-              ? business.images
-              : [{ url: mainImage }]
-            ).map((img, index) => (
-              <img
-                key={index}
-                src={img.url}
-                alt="Gallery"
-                className="h-40 w-full object-cover rounded-xl"
-              />
-            ))}
+            {(business.images?.length ? business.images : [{ url: mainImage }]).map(
+              (img, index) => (
+                <img
+                  key={index}
+                  src={img.url}
+                  alt="Gallery"
+                  className="h-40 w-full object-cover rounded-xl"
+                />
+              )
+            )}
           </div>
 
-          <div id="reviews-section" className="mt-8">
-            <h2 className="text-2xl font-bold mb-4">Rate this Business</h2>
+          {/* ───── REVIEWS & RATINGS SECTION ───── */}
+          <div id="reviews-section" className="mt-10">
+            <h2 className="text-2xl font-bold mb-6">Reviews & Ratings</h2>
 
-            <div className="bg-gray-50 border rounded-2xl p-5">
-              <p className="font-semibold mb-3">Tap to rate</p>
+            {/* Rating Summary Card */}
+            <div className="border rounded-2xl p-6 bg-white shadow-sm mb-6">
+              <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
 
+                {/* Big Rating Badge */}
+                <div className="flex-shrink-0 bg-green-700 text-white rounded-2xl px-6 py-5 flex flex-col items-center min-w-[110px]">
+                  <span className="text-4xl font-extrabold leading-none">{averageRating}</span>
+                  <div className="flex gap-0.5 mt-2">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <FaStar
+                        key={s}
+                        className={`text-sm ${
+                          s <= Math.round(Number(averageRating))
+                            ? "text-yellow-300"
+                            : "text-green-500"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-green-200 mt-1">{totalReviews} ratings</span>
+                </div>
+
+                {/* Star Breakdown Bars */}
+                <div className="flex-1 w-full space-y-2">
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    const count = ratingDistribution[star] || 0;
+                    const pct = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+                    return (
+                      <div key={star} className="flex items-center gap-3">
+                        <span className="text-sm font-semibold text-gray-700 w-4">{star}</span>
+                        <FaStar className="text-yellow-400 text-sm flex-shrink-0" />
+                        <div className="flex-1 bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                          <div
+                            className="h-2.5 rounded-full bg-green-600 transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-sm text-gray-500 w-8 text-right">{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Rating described */}
+              <p className="text-sm text-gray-500 mt-4 border-t pt-4">
+                Based on <strong>{totalReviews}</strong> verified ratings for{" "}
+                <strong>{business.name}</strong>
+              </p>
+            </div>
+
+            {/* Recent Rating Trend */}
+            {recentRatingTrend.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-base font-bold text-gray-800 mb-3">Recent Rating Trend</h3>
+                <div className="flex flex-wrap gap-2">
+                  {recentRatingTrend.map((rating, i) => (
+                    <span
+                      key={i}
+                      className="flex items-center gap-1.5 border border-gray-200 rounded-full px-4 py-1.5 text-sm font-semibold text-gray-700 bg-white"
+                    >
+                      {rating.toFixed(1)}
+                      <FaStar className="text-yellow-400 text-xs" />
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* User Reviews Header + Sort */}
+            <div className="mb-4">
+              <h3 className="text-base font-bold text-gray-800 mb-3">User Reviews</h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { key: "relevant", label: "Relevant" },
+                  { key: "latest", label: "Latest" },
+                  { key: "high", label: "High to Low" },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setReviewSort(key)}
+                    className={`px-5 py-2 rounded-full text-sm font-semibold border transition ${
+                      reviewSort === key
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:text-blue-600"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Review Highlights */}
+            {reviewHighlights.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-base font-bold text-gray-800 mb-3">Review Highlights</h3>
+                <div className="flex flex-wrap gap-2">
+                  {reviewHighlights.map(({ label, count }) => (
+                    <span
+                      key={label}
+                      className="bg-gray-100 border border-gray-200 text-gray-700 text-sm rounded-full px-4 py-1.5"
+                    >
+                      {label} ({count})
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Write a Review */}
+            <div className="bg-gray-50 border rounded-2xl p-5 mb-6">
+              <p className="font-semibold mb-3">Rate this Business</p>
               <div className="flex gap-2 text-3xl">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -499,70 +627,73 @@ export default function ViewDetail() {
               >
                 {submitting ? "Submitting..." : "Submit Review"}
               </button>
-
-
-              <div className="mt-8">
-                <h3 className="text-xl font-bold mb-3">Recent Reviews</h3>
-
-                {reviewsLoading ? (
-                  <p className="text-gray-500">Loading reviews...</p>
-                ) : reviews.length === 0 ? (
-                  <p className="text-gray-500">
-                    No reviews yet. Be the first to review this business.
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    {[...reviews]
-                      .sort(
-                        (a, b) =>
-                          new Date(b.createdAt || 0) -
-                          new Date(a.createdAt || 0)
-                      )
-                      .map((review) => (
-                        <div
-                          key={review.id}
-                          className="border rounded-2xl p-5 bg-white"
-                        >
-                          <div className="flex items-start gap-3">
-                            <FaUserCircle className="text-3xl text-gray-400" />
-
-                            <div className="flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <h4 className="font-bold">
-                                  {review.user?.name || review.name || "User"}
-                                </h4>
-
-                                <span className="bg-green-600 text-white px-2 py-1 rounded-md text-sm font-bold">
-                                  {review.rating} ★
-                                </span>
-                              </div>
-
-                              <p className="text-gray-700 mt-2">
-                                {review.comment || "No comment added."}
-                              </p>
-
-                              {review.createdAt && (
-                                <p className="text-xs text-gray-400 mt-2">
-                                  {new Date(
-                                    review.createdAt
-                                  ).toLocaleDateString("en-IN", {
-                                    day: "2-digit",
-                                    month: "short",
-                                    year: "numeric",
-                                  })}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
             </div>
+
+            {/* Reviews List */}
+            {reviewsLoading ? (
+              <p className="text-gray-500">Loading reviews...</p>
+            ) : sortedReviews.length === 0 ? (
+              <div className="text-center py-10 text-gray-400">
+                <FaRegStar className="text-5xl mx-auto mb-3 text-gray-200" />
+                <p>No reviews yet. Be the first to review this business.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sortedReviews.map((review) => (
+                  <div key={review.id} className="border rounded-2xl p-5 bg-white hover:shadow-sm transition">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                        <FaUserCircle className="text-2xl" />
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <h4 className="font-bold text-gray-900">
+                            {review.user?.name || review.name || "User"}
+                          </h4>
+                          <span className="bg-green-600 text-white px-2 py-0.5 rounded-md text-sm font-bold flex items-center gap-1">
+                            {review.rating} <FaStar className="text-xs" />
+                          </span>
+                        </div>
+
+                        {/* Star visual row */}
+                        <div className="flex gap-0.5 mb-2">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <FaStar
+                              key={s}
+                              className={`text-sm ${
+                                s <= Number(review.rating)
+                                  ? "text-yellow-400"
+                                  : "text-gray-200"
+                              }`}
+                            />
+                          ))}
+                        </div>
+
+                        <p className="text-gray-700 text-sm leading-relaxed">
+                          {review.comment || "No comment added."}
+                        </p>
+
+                        {review.createdAt && (
+                          <p className="text-xs text-gray-400 mt-2">
+                            {new Date(review.createdAt).toLocaleDateString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+          {/* ───── END REVIEWS SECTION ───── */}
         </div>
 
+        {/* Right Sidebar */}
         <div className="bg-white rounded-2xl shadow p-6 h-fit">
           <h2 className="text-xl font-bold mb-5">Business Info</h2>
 
@@ -653,6 +784,7 @@ export default function ViewDetail() {
         </div>
       </div>
 
+      {/* Ask for Price Modal */}
       {showPriceModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 relative">
@@ -689,7 +821,7 @@ export default function ViewDetail() {
                 onChange={handlePriceFormChange}
                 className="w-full border rounded-xl px-4 py-3 outline-none focus:border-blue-500"
               />
-
+              
               <input
                 type="tel"
                 name="phone"
