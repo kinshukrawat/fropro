@@ -23,7 +23,9 @@ import {
   FaBuilding,
   FaListUl,
   FaImage,
+  FaClock,
 } from "react-icons/fa";
+
 import API, {
   getCategories,
   getCities,
@@ -46,6 +48,8 @@ export default function BusinessDashboard() {
     phone: "",
     categoryId: "",
     cityId: "",
+    opensAt: "",
+    closesAt: "",
   });
 
   const fetchMyListings = async () => {
@@ -146,6 +150,8 @@ export default function BusinessDashboard() {
       phone: "",
       categoryId: "",
       cityId: "",
+      opensAt: "",
+      closesAt: "",
     });
 
     setImageFile(null);
@@ -166,6 +172,8 @@ export default function BusinessDashboard() {
         whatsappPhone: formData.phone,
         addressLine1: formData.address,
         services: ["General Service"],
+        opensAt: formData.opensAt,
+        closesAt: formData.closesAt,
       };
 
       const listingRes = await API.post("/listings", payload);
@@ -440,6 +448,7 @@ export default function BusinessDashboard() {
                       value={formData.name}
                       onChange={handleChange}
                     />
+
                     <InputBox
                       icon={<FaPhoneAlt />}
                       label="Phone Number"
@@ -448,6 +457,7 @@ export default function BusinessDashboard() {
                       value={formData.phone}
                       onChange={handleChange}
                     />
+
                     <InputBox
                       icon={<FaMapMarkerAlt />}
                       label="Business Address"
@@ -476,6 +486,22 @@ export default function BusinessDashboard() {
                         ))}
                       </select>
                     </div>
+
+                    <TimeInputBox
+                      icon={<FaClock />}
+                      label="Opening Time"
+                      name="opensAt"
+                      value={formData.opensAt}
+                      onChange={handleChange}
+                    />
+
+                    <TimeInputBox
+                      icon={<FaClock />}
+                      label="Closing Time"
+                      name="closesAt"
+                      value={formData.closesAt}
+                      onChange={handleChange}
+                    />
 
                     <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
                       <label className="text-sm text-gray-500">
@@ -641,7 +667,7 @@ export default function BusinessDashboard() {
                           <tr key={item.id} className="border-t hover:bg-gray-50">
                             <td className="p-4">
                               <div className="flex items-center gap-3">
-                              <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 overflow-hidden">
+                                <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 overflow-hidden">
                                   {item.images?.[0]?.url ? (
                                     <img
                                       src={item.images[0].url}
@@ -659,6 +685,11 @@ export default function BusinessDashboard() {
                                       item.address ||
                                       "No address"}
                                   </p>
+                                  {item.opensAt && item.closesAt && (
+                                    <p className="text-xs text-gray-400 mt-1">
+                                      {item.opensAt} - {item.closesAt}
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                             </td>
@@ -760,6 +791,28 @@ function InputBox({ icon, label, name, placeholder, value, onChange }) {
           type="text"
           name={name}
           placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          className="w-full outline-none"
+          required
+        />
+      </div>
+    </div>
+  );
+}
+
+function TimeInputBox({ icon, label, name, value, onChange }) {
+  return (
+    <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
+      <label className="text-sm text-gray-500">
+        {label} <span className="text-red-500">*</span>
+      </label>
+
+      <div className="flex items-center gap-3 mt-2">
+        <span className="text-gray-400">{icon}</span>
+        <input
+          type="time"
+          name={name}
           value={value}
           onChange={onChange}
           className="w-full outline-none"
