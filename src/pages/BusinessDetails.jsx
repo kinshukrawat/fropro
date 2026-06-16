@@ -13,6 +13,7 @@ import {
   FaHeart,
   FaShareAlt,
   FaInstagram,
+  FaWhatsapp,
 } from "react-icons/fa";
 
 const fallbackImage =
@@ -97,6 +98,13 @@ export default function BusinessDetails() {
 
   const phone = business.contactPhone || business.phone || "";
   const website = business.website || "";
+
+  const whatsappPhone =
+    business.whatsappPhone || business.contactPhone || business.phone || "";
+
+  const whatsappLink = whatsappPhone
+    ? `https://wa.me/91${whatsappPhone.replace(/\D/g, "").slice(-10)}`
+    : "#";
 
   const timing =
     business.opensAt && business.closesAt
@@ -270,6 +278,16 @@ export default function BusinessDetails() {
                     <FaInstagram />
                     Instagram
                   </button>
+
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-green-50 transition flex items-center justify-center gap-2"
+                  >
+                    <FaWhatsapp className="text-green-500 text-xl" />
+                    WhatsApp
+                  </a>
                 </div>
               </div>
             </div>
