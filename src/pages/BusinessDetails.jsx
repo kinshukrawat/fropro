@@ -12,10 +12,30 @@ import {
   FaGlobe,
   FaHeart,
   FaShareAlt,
+  FaInstagram,
 } from "react-icons/fa";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?q=80&w=1200&auto=format&fit=crop";
+
+const catalogueItems = [
+  {
+    title: "Price Details",
+    desc: "Ask about pricing, packages and service charges.",
+  },
+  {
+    title: "Availability",
+    desc: "Check availability, timings and appointment slots.",
+  },
+  {
+    title: "Booking / Appointment",
+    desc: "Ask for booking, reservation or appointment details.",
+  },
+  {
+    title: "Offers & Discounts",
+    desc: "Ask about current offers, discounts and deals.",
+  },
+];
 
 export default function BusinessDetails() {
   const { slug } = useParams();
@@ -68,10 +88,11 @@ export default function BusinessDetails() {
   const rating = business.rating || "4.5";
   const reviews = business.reviews || business.reviewCount || 0;
 
-  const location =
-    business.city?.name ||
-    business.addressLine1 ||
+  const fullAddress =
     business.address ||
+    [business.addressLine1, business.addressLine2, business.city?.name]
+      .filter(Boolean)
+      .join(", ") ||
     "Location not available";
 
   const phone = business.contactPhone || business.phone || "";
@@ -89,10 +110,30 @@ export default function BusinessDetails() {
     ? website
     : `https://${website}`;
 
-  const mapUrl = `https://maps.google.com/?q=${encodeURIComponent(location)}`;
+  const mapUrl = `https://maps.google.com/?q=${encodeURIComponent(
+    fullAddress
+  )}`;
+
+  const isOpen = business.opensAt && business.closesAt;
+
+  const handleShare = async () => {
+    const shareData = {
+      title: business.name,
+      text: `Check out ${business.name}`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      await navigator.share(shareData);
+    } else {
+      await navigator.clipboard.writeText(window.location.href);
+      alert("Link copied!");
+    }
+  };
 
   return (
     <div className="bg-gray-100 min-h-screen">
+      {/* Hero Banner */}
       <div className="relative w-full h-[450px] overflow-hidden">
         <img
           src={image}
@@ -109,7 +150,9 @@ export default function BusinessDetails() {
                 {category}
               </p>
 
-              <h1 className="text-5xl font-bold mb-4">{business.name}</h1>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                {business.name}
+              </h1>
 
               <div className="flex flex-wrap items-center gap-5 text-lg">
                 <div className="flex items-center">
@@ -119,7 +162,7 @@ export default function BusinessDetails() {
 
                 <div className="flex items-center">
                   <FaMapMarkerAlt className="mr-2" />
-                  {location}
+                  {fullAddress}
                 </div>
               </div>
             </div>
@@ -130,7 +173,10 @@ export default function BusinessDetails() {
                 Save
               </button>
 
-              <button className="bg-blue-600 hover:bg-blue-700 px-5 py-3 rounded-2xl font-semibold flex items-center gap-2 transition">
+              <button
+                onClick={handleShare}
+                className="bg-blue-600 hover:bg-blue-700 px-5 py-3 rounded-2xl font-semibold flex items-center gap-2 transition"
+              >
                 <FaShareAlt />
                 Share
               </button>
@@ -139,35 +185,59 @@ export default function BusinessDetails() {
         </div>
       </div>
 
+      {/* Main Content */}
       <section className="max-w-7xl mx-auto px-4 py-10">
         <div className="grid lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-3xl shadow p-8 mb-8">
-              <h2 className="text-3xl font-bold mb-6">About Business</h2>
+          {/* LEFT */}
+          <div className="lg:col-span-2 space-y-8">
+            <div className="bg-white rounded-3xl shadow p-8">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-green-600 font-semibold text-sm flex items-center gap-1">
+                  ✔ Verified
+                </span>
+
+                {isOpen && (
+                  <span className="text-green-500 text-sm font-medium">
+                    Open Now · until {business.closesAt}
+                  </span>
+                )}
+              </div>
+
+              <h2 className="text-2xl font-bold mb-3">About Business</h2>
 
               <p className="text-gray-600 leading-8 mb-8">{description}</p>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-gray-100 rounded-2xl p-6">
-                  <div className="flex items-center mb-3">
-                    <FaMapMarkerAlt className="text-blue-600 mr-3 text-xl" />
-                    <h3 className="font-bold text-lg">Address</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                  <div className="flex items-center mb-2">
+                    <FaMapMarkerAlt className="text-blue-600 mr-3" />
+                    <h3 className="font-bold">Address</h3>
                   </div>
-                  <p className="text-gray-600">{location}</p>
+                  <p className="text-gray-600 text-sm">{fullAddress}</p>
                 </div>
 
-                <div className="bg-gray-100 rounded-2xl p-6">
-                  <div className="flex items-center mb-3">
-                    <FaClock className="text-blue-600 mr-3 text-xl" />
-                    <h3 className="font-bold text-lg">Opening Hours</h3>
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                  <div className="flex items-center mb-2">
+                    <FaPhoneAlt className="text-blue-600 mr-3" />
+                    <h3 className="font-bold">Phone</h3>
                   </div>
-                  <p className="text-gray-600">{timing}</p>
+                  <p className="text-gray-600 text-sm">
+                    {phone || "Phone not available"}
+                  </p>
                 </div>
 
-                <div className="bg-gray-100 rounded-2xl p-6">
-                  <div className="flex items-center mb-3">
-                    <FaGlobe className="text-blue-600 mr-3 text-xl" />
-                    <h3 className="font-bold text-lg">Website</h3>
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                  <div className="flex items-center mb-2">
+                    <FaClock className="text-blue-600 mr-3" />
+                    <h3 className="font-bold">Working Hours</h3>
+                  </div>
+                  <p className="text-gray-600 text-sm">{timing}</p>
+                </div>
+
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                  <div className="flex items-center mb-2">
+                    <FaGlobe className="text-blue-600 mr-3" />
+                    <h3 className="font-bold">Website</h3>
                   </div>
 
                   {website ? (
@@ -175,38 +245,60 @@ export default function BusinessDetails() {
                       href={websiteUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-blue-600 hover:underline"
+                      className="text-blue-600 hover:underline text-sm break-all"
                     >
                       {website}
                     </a>
                   ) : (
-                    <p className="text-gray-600">Website not available</p>
+                    <p className="text-gray-600 text-sm">Not available</p>
                   )}
                 </div>
+              </div>
 
-                <div className="bg-gray-100 rounded-2xl p-6">
-                  <div className="flex items-center mb-3">
-                    <FaPhoneAlt className="text-blue-600 mr-3 text-xl" />
-                    <h3 className="font-bold text-lg">Phone Number</h3>
-                  </div>
-                  <p className="text-gray-600">
-                    {phone || "Phone not available"}
-                  </p>
-                </div>
+              <div className="flex flex-wrap gap-3 mt-6">
+                {phone && (
+                  <a
+                    href={`tel:${phone}`}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 transition"
+                  >
+                    <FaPhoneAlt />
+                    Call Now
+                  </a>
+                )}
+
+                <a
+                  href={mapUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 transition"
+                >
+                  <FaDirections />
+                  Get Directions
+                </a>
+
+                <button className="border border-yellow-500 text-yellow-600 px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 hover:bg-yellow-50 transition">
+                  ☆ Rate & Review
+                </button>
+
+                <button className="border border-gray-300 text-gray-700 px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 hover:bg-gray-50 transition">
+                  <FaInstagram />
+                  Instagram
+                </button>
               </div>
             </div>
 
-            <div className="bg-white rounded-3xl shadow p-8 mb-8">
-              <h2 className="text-3xl font-bold mb-6">Gallery</h2>
+            {/* Gallery */}
+            <div className="bg-white rounded-3xl shadow p-8">
+              <h2 className="text-2xl font-bold mb-6">Gallery</h2>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {gallery.map((img, index) => (
                   <img
                     key={index}
                     src={img}
                     alt={`${business.name} ${index + 1}`}
                     onClick={() => setSelectedImage(img)}
-                    className="rounded-2xl h-56 object-cover w-full hover:scale-105 transition duration-300 cursor-pointer"
+                    className="rounded-2xl h-40 object-cover w-full hover:scale-105 transition duration-300 cursor-pointer"
                   />
                 ))}
               </div>
@@ -215,70 +307,30 @@ export default function BusinessDetails() {
             <MapSection />
           </div>
 
+          {/* RIGHT */}
           <div>
-            <div className="bg-white rounded-3xl shadow p-8 sticky top-24">
-              <h2 className="text-3xl font-bold mb-6">Contact Business</h2>
+            <div className="sticky top-24 space-y-4">
+              <h2 className="text-2xl font-bold mb-2">Catalogue</h2>
 
-              <div className="space-y-4 mb-8">
-                <a
-                  href={`tel:${phone}`}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-3 transition"
+              {catalogueItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-2xl shadow p-5 border border-gray-100"
                 >
-                  <FaPhoneAlt />
-                  Call Now
-                </a>
+                  <h3 className="font-bold text-base mb-1">{item.title}</h3>
+                  <p className="text-gray-500 text-sm mb-3">{item.desc}</p>
 
-                <a
-                  href={mapUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-3 transition"
-                >
-                  <FaDirections />
-                  Get Directions
-                </a>
-              </div>
-
-              <div className="space-y-6">
-                <div className="border-b pb-4">
-                  <p className="font-semibold text-black mb-2">Phone Number</p>
-                  <p className="text-gray-600">
-                    {phone || "Phone not available"}
-                  </p>
+                  <button className="w-full border border-blue-500 text-blue-600 py-2 rounded-xl text-sm font-semibold hover:bg-blue-50 transition">
+                    Ask for Price
+                  </button>
                 </div>
-
-                <div className="border-b pb-4">
-                  <p className="font-semibold text-black mb-2">Address</p>
-                  <p className="text-gray-600">{location}</p>
-                </div>
-
-                <div className="border-b pb-4">
-                  <p className="font-semibold text-black mb-2">Working Hours</p>
-                  <p className="text-gray-600">{timing}</p>
-                </div>
-
-                <div>
-                  <p className="font-semibold text-black mb-2">Website</p>
-
-                  {website ? (
-                    <a
-                      href={websiteUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      {website}
-                    </a>
-                  ) : (
-                    <p className="text-gray-600">Website not available</p>
-                  )}
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
+      {/* Image Lightbox */}
       {selectedImage && (
         <div
           onClick={() => setSelectedImage(null)}
