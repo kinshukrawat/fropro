@@ -187,9 +187,9 @@ export default function BusinessDetails() {
 
       {/* Main Content */}
       <section className="max-w-7xl mx-auto px-4 py-10">
-        <div className="grid lg:grid-cols-3 gap-10">
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
           {/* LEFT */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="space-y-8">
             <div className="bg-white rounded-3xl shadow p-8">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-green-600 font-semibold text-sm flex items-center gap-1">
@@ -205,85 +205,72 @@ export default function BusinessDetails() {
 
               <h2 className="text-2xl font-bold mb-3">About Business</h2>
 
-              <p className="text-gray-600 leading-8 mb-8">{description}</p>
+              <p className="text-gray-600 leading-8 mb-6">{description}</p>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
-                  <div className="flex items-center mb-2">
-                    <FaMapMarkerAlt className="text-blue-600 mr-3" />
-                    <h3 className="font-bold">Address</h3>
-                  </div>
-                  <p className="text-gray-600 text-sm">{fullAddress}</p>
-                </div>
+              {/* Business Info */}
+              <div className="border border-gray-200 rounded-2xl p-6 mt-6">
+                <h3 className="text-2xl font-bold mb-5">Business Info</h3>
 
-                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
-                  <div className="flex items-center mb-2">
-                    <FaPhoneAlt className="text-blue-600 mr-3" />
-                    <h3 className="font-bold">Phone</h3>
-                  </div>
-                  <p className="text-gray-600 text-sm">
+                <div className="space-y-4 text-gray-700">
+                  <p className="flex items-center gap-3">
+                    <FaMapMarkerAlt className="text-blue-600" />
+                    {fullAddress}
+                  </p>
+
+                  <p className="flex items-center gap-3">
+                    <FaPhoneAlt className="text-green-600" />
                     {phone || "Phone not available"}
                   </p>
-                </div>
+                  
 
-                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
-                  <div className="flex items-center mb-2">
-                    <FaClock className="text-blue-600 mr-3" />
-                    <h3 className="font-bold">Working Hours</h3>
-                  </div>
-                  <p className="text-gray-600 text-sm">{timing}</p>
-                </div>
+                  <p className="flex items-center gap-3">
+                    <FaClock className="text-orange-500" />
+                    {timing}
+                  </p>
 
-                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
-                  <div className="flex items-center mb-2">
-                    <FaGlobe className="text-blue-600 mr-3" />
-                    <h3 className="font-bold">Website</h3>
-                  </div>
-
-                  {website ? (
-                    <a
-                      href={websiteUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-600 hover:underline text-sm break-all"
-                    >
-                      {website}
-                    </a>
-                  ) : (
-                    <p className="text-gray-600 text-sm">Not available</p>
+                  {website && (
+                    <p className="flex items-center gap-3">
+                      <FaGlobe className="text-blue-500" />
+                      <a
+                        href={websiteUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 hover:underline break-all"
+                      >
+                        {website}
+                      </a>
+                    </p>
                   )}
                 </div>
-              </div>
 
-              <div className="flex flex-wrap gap-3 mt-6">
-                {phone && (
+                <div className="space-y-3 mt-6">
+                  {phone && (
+                    <a
+                      href={`tel:${phone}`}
+                      className="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-3 rounded-xl font-semibold transition"
+                    >
+                      Call Now
+                    </a>
+                  )}
+
                   <a
-                    href={`tel:${phone}`}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 transition"
+                    href={mapUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-3 rounded-xl font-semibold transition"
                   >
-                    <FaPhoneAlt />
-                    Call Now
+                    Get Directions
                   </a>
-                )}
 
-                <a
-                  href={mapUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 transition"
-                >
-                  <FaDirections />
-                  Get Directions
-                </a>
+                  <button className="w-full border border-yellow-500 text-yellow-600 py-3 rounded-xl font-semibold hover:bg-yellow-50 transition">
+                    Rate & Review
+                  </button>
 
-                <button className="border border-yellow-500 text-yellow-600 px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 hover:bg-yellow-50 transition">
-                  ☆ Rate & Review
-                </button>
-
-                <button className="border border-gray-300 text-gray-700 px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 hover:bg-gray-50 transition">
-                  <FaInstagram />
-                  Instagram
-                </button>
+                  <button className="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-2">
+                    <FaInstagram />
+                    Instagram
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -291,7 +278,7 @@ export default function BusinessDetails() {
             <div className="bg-white rounded-3xl shadow p-8">
               <h2 className="text-2xl font-bold mb-6">Gallery</h2>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {gallery.map((img, index) => (
                   <img
                     key={index}
@@ -308,23 +295,32 @@ export default function BusinessDetails() {
           </div>
 
           {/* RIGHT */}
-          <div>
-            <div className="sticky top-24 space-y-4">
-              <h2 className="text-2xl font-bold mb-2">Catalogue</h2>
+          <div className="sticky top-24">
+            <div className="bg-white rounded-3xl shadow p-6">
+              <h2 className="text-2xl font-bold mb-5">Catalogue</h2>
 
-              {catalogueItems.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-2xl shadow p-5 border border-gray-100"
-                >
-                  <h3 className="font-bold text-base mb-1">{item.title}</h3>
-                  <p className="text-gray-500 text-sm mb-3">{item.desc}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {catalogueItems.map((item, index) => (
+                  <div
+                    key={index}
+                    className="bg-white border border-gray-300 rounded-xl p-4 min-h-[180px] hover:shadow-md transition"
+                  >
+                    <h3 className="font-bold text-lg mb-2">{item.title}</h3>
 
-                  <button className="w-full border border-blue-500 text-blue-600 py-2 rounded-xl text-sm font-semibold hover:bg-blue-50 transition">
-                    Ask for Price
-                  </button>
-                </div>
-              ))}
+                    <p className="text-gray-500 text-sm leading-6 mb-3">
+                      {item.desc}
+                    </p>
+
+                    <button className="text-blue-600 font-semibold text-sm mb-4 hover:underline">
+                      View More
+                    </button>
+
+                    <button className="w-full border border-blue-500 text-blue-600 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition">
+                      Ask for Price
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
