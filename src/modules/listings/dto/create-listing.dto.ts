@@ -31,6 +31,10 @@ export class CreateListingDto {
   @IsPhoneNumber('IN')
   whatsappPhone: string;
 
+  @IsOptional()
+  @IsString()
+  instagramUrl?: string;
+
   @IsString()
   addressLine1: string;
 
@@ -45,7 +49,8 @@ export class CreateListingDto {
   @IsOptional()
   @IsString()
   pincode?: string;
-    @IsOptional()
+
+  @IsOptional()
   @IsString()
   opensAt?: string;
 

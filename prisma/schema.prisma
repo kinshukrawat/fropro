@@ -111,6 +111,7 @@ model BusinessListing {
   services         String[]
   contactPhone     String
   whatsappPhone    String
+  instagramUrl     String?
   addressLine1     String
   addressLine2     String?
   landmark         String?
