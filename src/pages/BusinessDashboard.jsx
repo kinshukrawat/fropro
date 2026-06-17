@@ -35,6 +35,7 @@ import API, {
   getCategories,
   getCities,
   getMyListings,
+  removeListingImage,
 } from "../api/api";
 
 export default function BusinessDashboard() {
@@ -50,18 +51,24 @@ export default function BusinessDashboard() {
   // Messages state
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [existingImages, setExistingImages] = useState([]);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    address: "",
-    phone: "",
-    instagramUrl: "",
-    categoryId: "",
-    cityId: "",
-    opensAt: "",
-    closesAt: "",
-  });
+const [formData, setFormData] = useState({
+  name: "",
+  description: "",
+  addressLine1: "",
+  addressLine2: "",
+  landmark: "",
+  pincode: "",
+  phone: "",
+  whatsappPhone: "",
+  instagramUrl: "",
+  categoryId: "",
+  cityId: "",
+  opensAt: "",
+  closesAt: "",
+  servicesText: "",
+});
 
   const fetchMyListings = async () => {
     try {
@@ -176,37 +183,49 @@ export default function BusinessDashboard() {
     setImagePreviews(validFiles.map((file) => URL.createObjectURL(file)));
   };
 
-  const clearForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      address: "",
-      phone: "",
-      instagramUrl: "",
-      categoryId: "",
-      cityId: "",
-      opensAt: "",
-      closesAt: "",
-    });
+const clearForm = () => {
+  setFormData({
+    name: "",
+    description: "",
+    addressLine1: "",
+    addressLine2: "",
+    landmark: "",
+    pincode: "",
+    phone: "",
+    whatsappPhone: "",
+    instagramUrl: "",
+    categoryId: "",
+    cityId: "",
+    opensAt: "",
+    closesAt: "",
+    servicesText: "",
+  });
 
-    setEditingId(null);
-    setImageFiles([]);
-    setImagePreviews([]);
-  };
+  setEditingId(null);
+  setExistingImages([]);
+  setImageFiles([]);
+  setImagePreviews([]);
+};
 
   const getPayload = () => ({
-    name: formData.name,
-    description: formData.description,
-    categoryId: formData.categoryId,
-    cityId: formData.cityId,
-    contactPhone: formData.phone,
-    whatsappPhone: formData.phone,
-    instagramUrl: formData.instagramUrl,
-    addressLine1: formData.address,
-    services: ["General Service"],
-    opensAt: formData.opensAt,
-    closesAt: formData.closesAt,
-  });
+  name: formData.name,
+  description: formData.description,
+  categoryId: formData.categoryId,
+  cityId: formData.cityId,
+  contactPhone: formData.phone,
+  whatsappPhone: formData.whatsappPhone || formData.phone,
+  instagramUrl: formData.instagramUrl,
+  addressLine1: formData.addressLine1,
+  addressLine2: formData.addressLine2,
+  landmark: formData.landmark,
+  pincode: formData.pincode,
+  opensAt: formData.opensAt,
+  closesAt: formData.closesAt,
+  services: formData.servicesText
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean),
+});
 
   const uploadImagesForListing = async (listingId) => {
     if (!imageFiles.length || !listingId) return;
@@ -256,28 +275,33 @@ export default function BusinessDashboard() {
   };
 
   const handleEditListing = (listing) => {
-    setEditingId(listing.id);
+  setEditingId(listing.id);
 
-    setFormData({
-      name: listing.name || "",
-      description: listing.description || "",
-      address: listing.addressLine1 || listing.address || "",
-      phone: listing.contactPhone || listing.phone || "",
-      instagramUrl: listing.instagramUrl || "",
-      categoryId: listing.categoryId || listing.category?.id || "",
-      cityId: listing.cityId || listing.city?.id || "",
-      opensAt: listing.opensAt || "",
-      closesAt: listing.closesAt || "",
-    });
+  setFormData({
+    name: listing.name || "",
+    description: listing.description || "",
+    addressLine1: listing.addressLine1 || "",
+    addressLine2: listing.addressLine2 || "",
+    landmark: listing.landmark || "",
+    pincode: listing.pincode || "",
+    phone: listing.contactPhone || "",
+    whatsappPhone: listing.whatsappPhone || "",
+    instagramUrl: listing.instagramUrl || "",
+    categoryId: listing.categoryId || listing.category?.id || "",
+    cityId: listing.cityId || listing.city?.id || "",
+    opensAt: listing.opensAt || "",
+    closesAt: listing.closesAt || "",
+    servicesText: Array.isArray(listing.services)
+      ? listing.services.join(", ")
+      : "",
+  });
 
-    setImageFiles([]);
-    setImagePreviews([]);
+  setExistingImages(listing.images || []);
+  setImageFiles([]);
+  setImagePreviews([]);
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
 
   const handleUpdateListing = async (e) => {
     e.preventDefault();
@@ -309,6 +333,19 @@ export default function BusinessDashboard() {
       alert("Failed to submit listing");
     }
   };
+
+  const handleRemoveExistingImage = async (imageId) => {
+  if (!window.confirm("Are you sure you want to remove this image?")) return;
+
+  try {
+    await removeListingImage(imageId);
+    setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
+    fetchMyListings();
+  } catch (error) {
+    console.log("Remove Image Error:", error.response?.data || error);
+    alert("Failed to remove image");
+  }
+};
 
   const tabTitle = {
     myBusiness: "My Business",
@@ -713,41 +750,81 @@ export default function BusinessDashboard() {
                     className="grid md:grid-cols-2 gap-4"
                   >
                     <InputBox
-                      icon={<FaBuilding />}
-                      label="Business Name"
-                      name="name"
-                      placeholder="Enter business name"
-                      value={formData.name}
-                      onChange={handleChange}
-                    />
+  icon={<FaBuilding />}
+  label="Business Name"
+  name="name"
+  placeholder="Enter business name"
+  value={formData.name}
+  onChange={handleChange}
+/>
 
-                    <InputBox
-                      icon={<FaPhoneAlt />}
-                      label="Phone Number"
-                      name="phone"
-                      placeholder="Enter phone number"
-                      value={formData.phone}
-                      onChange={handleChange}
-                    />
+<InputBox
+  icon={<FaPhoneAlt />}
+  label="Phone Number"
+  name="phone"
+  placeholder="Enter phone number"
+  value={formData.phone}
+  onChange={handleChange}
+/>
 
-                    <InputBox
-                      icon={<FaInstagram />}
-                      label="Instagram Handle / URL"
-                      name="instagramUrl"
-                      placeholder="@businessname or https://instagram.com/businessname"
-                      value={formData.instagramUrl}
-                      onChange={handleChange}
-                      required={false}
-                    />
+<InputBox
+  icon={<FaInstagram />}
+  label="Instagram Handle / URL"
+  name="instagramUrl"
+  placeholder="@businessname or https://instagram.com/businessname"
+  value={formData.instagramUrl}
+  onChange={handleChange}
+  required={false}
+/>
 
-                    <InputBox
-                      icon={<FaMapMarkerAlt />}
-                      label="Business Address"
-                      name="address"
-                      placeholder="Shop No, Landmark, Sector, Rohini, Delhi, Pincode"
-                      value={formData.address}
-                      onChange={handleChange}
-                    />
+<InputBox
+  icon={<FaMapMarkerAlt />}
+  label="Address Line 1"
+  name="addressLine1"
+  placeholder="Shop no, building, market"
+  value={formData.addressLine1}
+  onChange={handleChange}
+/>
+
+<InputBox
+  icon={<FaMapMarkerAlt />}
+  label="Address Line 2"
+  name="addressLine2"
+  placeholder="Sector, area, nearby place"
+  value={formData.addressLine2}
+  onChange={handleChange}
+  required={false}
+/>
+
+<InputBox
+  icon={<FaMapMarkerAlt />}
+  label="Landmark"
+  name="landmark"
+  placeholder="Near metro, mall, school etc."
+  value={formData.landmark}
+  onChange={handleChange}
+  required={false}
+/>
+
+<InputBox
+  icon={<FaMapMarkerAlt />}
+  label="Pincode"
+  name="pincode"
+  placeholder="110085"
+  value={formData.pincode}
+  onChange={handleChange}
+  required={false}
+/>
+
+<InputBox
+  icon={<FaPhoneAlt />}
+  label="WhatsApp Number"
+  name="whatsappPhone"
+  placeholder="Enter WhatsApp number"
+  value={formData.whatsappPhone}
+  onChange={handleChange}
+  required={false}
+/>
 
                     <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
                       <label className="text-sm text-gray-500">
@@ -804,6 +881,51 @@ export default function BusinessDashboard() {
                         ))}
                       </select>
                     </div>
+
+                    <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
+  <label className="text-sm text-gray-500">
+    Services / Catalogue Items
+  </label>
+  <textarea
+    name="servicesText"
+    placeholder="Haircut, Spa, Facial, Bridal Makeup"
+    value={formData.servicesText}
+    onChange={handleChange}
+    className="w-full mt-2 outline-none resize-none"
+    rows="3"
+  />
+  <p className="text-xs text-gray-400 mt-1">
+    Separate services using comma.
+  </p>
+</div>
+
+{existingImages.length > 0 && (
+  <div className="mt-4 md:col-span-2">
+    <p className="text-sm font-semibold text-gray-700 mb-3">
+      Existing Gallery
+    </p>
+
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      {existingImages.map((img) => (
+        <div key={img.id} className="relative group">
+          <img
+            src={img.url}
+            alt={img.altText || "Business image"}
+            className="w-full h-32 object-cover rounded-xl border"
+          />
+
+          <button
+            type="button"
+            onClick={() => handleRemoveExistingImage(img.id)}
+            className="absolute top-2 right-2 bg-red-600 text-white text-xs px-3 py-1 rounded-full"
+          >
+            Remove
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
                     <div className="border rounded-2xl px-4 py-3 md:col-span-2">
                       <label className="text-sm text-gray-500">
