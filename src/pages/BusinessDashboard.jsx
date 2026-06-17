@@ -27,6 +27,7 @@ import {
   FaListUl,
   FaImage,
   FaClock,
+  FaInstagram,
 } from "react-icons/fa";
 
 import API, {
@@ -49,15 +50,16 @@ export default function BusinessDashboard() {
   const [messagesLoading, setMessagesLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    address: "",
-    phone: "",
-    categoryId: "",
-    cityId: "",
-    opensAt: "",
-    closesAt: "",
-  });
+  name: "",
+  description: "",
+  address: "",
+  phone: "",
+  instagramUrl: "",
+  categoryId: "",
+  cityId: "",
+  opensAt: "",
+  closesAt: "",
+});
 
   const fetchMyListings = async () => {
     try {
@@ -174,15 +176,16 @@ export default function BusinessDashboard() {
 
   const clearForm = () => {
     setFormData({
-      name: "",
-      description: "",
-      address: "",
-      phone: "",
-      categoryId: "",
-      cityId: "",
-      opensAt: "",
-      closesAt: "",
-    });
+  name: "",
+  description: "",
+  address: "",
+  phone: "",
+  instagramUrl: "",
+  categoryId: "",
+  cityId: "",
+  opensAt: "",
+  closesAt: "",
+ });
 
     setImageFiles([]);
     setImagePreviews([]);
@@ -193,18 +196,19 @@ export default function BusinessDashboard() {
     setLoading(true);
 
     try {
-      const payload = {
-        name: formData.name,
-        description: formData.description,
-        categoryId: formData.categoryId,
-        cityId: formData.cityId,
-        contactPhone: formData.phone,
-        whatsappPhone: formData.phone,
-        addressLine1: formData.address,
-        services: ["General Service"],
-        opensAt: formData.opensAt,
-        closesAt: formData.closesAt,
-      };
+const payload = {
+  name: formData.name,
+  description: formData.description,
+  categoryId: formData.categoryId,
+  cityId: formData.cityId,
+  contactPhone: formData.phone,
+  whatsappPhone: formData.phone,
+  instagramUrl: formData.instagramUrl,
+  addressLine1: formData.address,
+  services: ["General Service"],
+  opensAt: formData.opensAt,
+  closesAt: formData.closesAt,
+};
 
       const listingRes = await API.post("/listings", payload);
 
@@ -649,6 +653,15 @@ export default function BusinessDashboard() {
                       value={formData.phone}
                       onChange={handleChange}
                     />
+
+                    <InputBox
+  icon={<FaInstagram />}
+  label="Instagram Handle / URL"
+  name="instagramUrl"
+  placeholder="@businessname or https://instagram.com/businessname"
+  value={formData.instagramUrl}
+  onChange={handleChange}
+/>
 
                     <InputBox
                       icon={<FaMapMarkerAlt />}

@@ -8,7 +8,7 @@ import {
   FaMapMarkerAlt,
   FaPhoneAlt,
   FaClock,
-  FaDirections,
+  
   FaGlobe,
   FaHeart,
   FaShareAlt,
@@ -37,6 +37,22 @@ const catalogueItems = [
     desc: "Ask about current offers, discounts and deals.",
   },
 ];
+
+const getInstagramUrl = (value) => {
+  if (!value) return "";
+
+  const cleanValue = value.trim();
+
+  if (
+    cleanValue.startsWith("http://") ||
+    cleanValue.startsWith("https://")
+  ) {
+    return cleanValue;
+  }
+
+  const handle = cleanValue.replace("@", "");
+  return `https://www.instagram.com/${handle}`;
+};
 
 export default function BusinessDetails() {
   const { slug } = useParams();
@@ -98,6 +114,7 @@ export default function BusinessDetails() {
 
   const phone = business.contactPhone || business.phone || "";
   const website = business.website || "";
+  const instagramUrl = business.instagramUrl || "";
 
   const whatsappPhone =
     business.whatsappPhone || business.contactPhone || business.phone || "";
@@ -141,7 +158,7 @@ export default function BusinessDetails() {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      {/* Hero Banner */}
+
       <div className="relative w-full h-[450px] overflow-hidden">
         <img
           src={image}
@@ -193,10 +210,10 @@ export default function BusinessDetails() {
         </div>
       </div>
 
-      {/* Main Content */}
+
       <section className="max-w-7xl mx-auto px-4 py-10">
         <div className="grid lg:grid-cols-2 gap-8 items-start">
-          {/* LEFT */}
+
           <div className="space-y-8">
             <div className="bg-white rounded-3xl shadow p-8">
               <div className="flex items-center gap-3 mb-3">
@@ -215,7 +232,7 @@ export default function BusinessDetails() {
 
               <p className="text-gray-600 leading-8 mb-6">{description}</p>
 
-              {/* Business Info */}
+
               <div className="border border-gray-200 rounded-2xl p-6 mt-6">
                 <h3 className="text-2xl font-bold mb-5">Business Info</h3>
 
@@ -229,7 +246,7 @@ export default function BusinessDetails() {
                     <FaPhoneAlt className="text-green-600" />
                     {phone || "Phone not available"}
                   </p>
-                  
+
 
                   <p className="flex items-center gap-3">
                     <FaClock className="text-orange-500" />
@@ -274,25 +291,34 @@ export default function BusinessDetails() {
                     Rate & Review
                   </button>
 
-                  <button className="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-2">
-                    <FaInstagram />
-                    Instagram
-                  </button>
+                  {instagramUrl && (
+                    <a
+                      href={getInstagramUrl(instagramUrl)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-pink-50 transition flex items-center justify-center gap-2"
+                    >
+                      <FaInstagram className="text-pink-600 text-xl" />
+                      Instagram
+                    </a>
+                  )}
 
-                  <a
-                    href={whatsappLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-green-50 transition flex items-center justify-center gap-2"
-                  >
-                    <FaWhatsapp className="text-green-500 text-xl" />
-                    WhatsApp
-                  </a>
+                  {whatsappPhone && (
+                    <a
+                      href={whatsappLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-green-50 transition flex items-center justify-center gap-2"
+                    >
+                      <FaWhatsapp className="text-green-500 text-xl" />
+                      WhatsApp
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Gallery */}
+
             <div className="bg-white rounded-3xl shadow p-8">
               <h2 className="text-2xl font-bold mb-6">Gallery</h2>
 
@@ -312,7 +338,7 @@ export default function BusinessDetails() {
             <MapSection />
           </div>
 
-          {/* RIGHT */}
+
           <div className="sticky top-24">
             <div className="bg-white rounded-3xl shadow p-6">
               <h2 className="text-2xl font-bold mb-5">Catalogue</h2>
@@ -344,7 +370,7 @@ export default function BusinessDetails() {
         </div>
       </section>
 
-      {/* Image Lightbox */}
+
       {selectedImage && (
         <div
           onClick={() => setSelectedImage(null)}
