@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import MapSection from "../components/MapSection";
 import API from "../api/api";
@@ -43,10 +43,7 @@ const getInstagramUrl = (value) => {
 
   const cleanValue = value.trim();
 
-  if (
-    cleanValue.startsWith("http://") ||
-    cleanValue.startsWith("https://")
-  ) {
+  if (cleanValue.startsWith("http://") || cleanValue.startsWith("https://")) {
     return cleanValue;
   }
 
@@ -60,6 +57,15 @@ export default function BusinessDetails() {
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
+
+  const reviewSectionRef = useRef(null);
+
+  const scrollToReviews = () => {
+    reviewSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
 
   const fetchBusinessDetails = async () => {
     try {
@@ -287,7 +293,10 @@ export default function BusinessDetails() {
                     Get Directions
                   </a>
 
-                  <button className="w-full border border-yellow-500 text-yellow-600 py-3 rounded-xl font-semibold hover:bg-yellow-50 transition">
+                  <button
+                    onClick={scrollToReviews}
+                    className="w-full border border-yellow-500 text-yellow-600 py-3 rounded-xl font-semibold hover:bg-yellow-50 transition"
+                  >
                     Rate & Review
                   </button>
 
@@ -333,6 +342,36 @@ export default function BusinessDetails() {
                   />
                 ))}
               </div>
+            </div>
+
+            <div
+              ref={reviewSectionRef}
+              className="bg-white rounded-3xl shadow p-8 scroll-mt-28"
+            >
+              <h2 className="text-2xl font-bold mb-4">Rate & Review</h2>
+
+              <p className="text-gray-500 mb-5">
+                Share your experience with {business.name}.
+              </p>
+
+              <div className="flex gap-2 mb-5 text-yellow-400 text-3xl">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <FaStar key={star} />
+                ))}
+              </div>
+
+              <textarea
+                placeholder="Write your review here..."
+                className="w-full border rounded-2xl p-4 outline-none focus:border-blue-500 resize-none"
+                rows="5"
+              />
+
+              <button
+                type="button"
+                className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold"
+              >
+                Submit Review
+              </button>
             </div>
 
             <MapSection />

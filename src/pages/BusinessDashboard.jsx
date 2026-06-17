@@ -28,6 +28,7 @@ import {
   FaImage,
   FaClock,
   FaInstagram,
+  FaEdit,
 } from "react-icons/fa";
 
 import API, {
@@ -44,22 +45,23 @@ export default function BusinessDashboard() {
   const [loading, setLoading] = useState(false);
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [editingId, setEditingId] = useState(null);
 
   // Messages state
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-  name: "",
-  description: "",
-  address: "",
-  phone: "",
-  instagramUrl: "",
-  categoryId: "",
-  cityId: "",
-  opensAt: "",
-  closesAt: "",
-});
+    name: "",
+    description: "",
+    address: "",
+    phone: "",
+    instagramUrl: "",
+    categoryId: "",
+    cityId: "",
+    opensAt: "",
+    closesAt: "",
+  });
 
   const fetchMyListings = async () => {
     try {
@@ -176,19 +178,56 @@ export default function BusinessDashboard() {
 
   const clearForm = () => {
     setFormData({
-  name: "",
-  description: "",
-  address: "",
-  phone: "",
-  instagramUrl: "",
-  categoryId: "",
-  cityId: "",
-  opensAt: "",
-  closesAt: "",
- });
+      name: "",
+      description: "",
+      address: "",
+      phone: "",
+      instagramUrl: "",
+      categoryId: "",
+      cityId: "",
+      opensAt: "",
+      closesAt: "",
+    });
 
+    setEditingId(null);
     setImageFiles([]);
     setImagePreviews([]);
+  };
+
+  const getPayload = () => ({
+    name: formData.name,
+    description: formData.description,
+    categoryId: formData.categoryId,
+    cityId: formData.cityId,
+    contactPhone: formData.phone,
+    whatsappPhone: formData.phone,
+    instagramUrl: formData.instagramUrl,
+    addressLine1: formData.address,
+    services: ["General Service"],
+    opensAt: formData.opensAt,
+    closesAt: formData.closesAt,
+  });
+
+  const uploadImagesForListing = async (listingId) => {
+    if (!imageFiles.length || !listingId) return;
+
+    for (const file of imageFiles) {
+      const uploadForm = new FormData();
+      uploadForm.append("file", file);
+
+      const uploadRes = await API.post("/uploads/image", uploadForm, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      await API.post("/uploads/listing-images", {
+        listingId,
+        url: uploadRes.data.url,
+        cloudinaryId: uploadRes.data.cloudinaryId,
+        altText: formData.name,
+      });
+    }
   };
 
   const handleAddListing = async (e) => {
@@ -196,46 +235,14 @@ export default function BusinessDashboard() {
     setLoading(true);
 
     try {
-const payload = {
-  name: formData.name,
-  description: formData.description,
-  categoryId: formData.categoryId,
-  cityId: formData.cityId,
-  contactPhone: formData.phone,
-  whatsappPhone: formData.phone,
-  instagramUrl: formData.instagramUrl,
-  addressLine1: formData.address,
-  services: ["General Service"],
-  opensAt: formData.opensAt,
-  closesAt: formData.closesAt,
-};
-
-      const listingRes = await API.post("/listings", payload);
+      const listingRes = await API.post("/listings", getPayload());
 
       const createdListing =
         listingRes.data?.data || listingRes.data?.item || listingRes.data;
 
       const listingId = createdListing?.id;
 
-      if (imageFiles.length && listingId) {
-        for (const file of imageFiles) {
-          const uploadForm = new FormData();
-          uploadForm.append("file", file);
-
-          const uploadRes = await API.post("/uploads/image", uploadForm, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          });
-
-          await API.post("/uploads/listing-images", {
-            listingId,
-            url: uploadRes.data.url,
-            cloudinaryId: uploadRes.data.cloudinaryId,
-            altText: formData.name,
-          });
-        }
-      }
+      await uploadImagesForListing(listingId);
 
       alert("Business listing created successfully");
       clearForm();
@@ -243,6 +250,50 @@ const payload = {
     } catch (error) {
       console.log("FULL ERROR:", error.response?.data || error);
       alert(JSON.stringify(error.response?.data || "Failed to add listing"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditListing = (listing) => {
+    setEditingId(listing.id);
+
+    setFormData({
+      name: listing.name || "",
+      description: listing.description || "",
+      address: listing.addressLine1 || listing.address || "",
+      phone: listing.contactPhone || listing.phone || "",
+      instagramUrl: listing.instagramUrl || "",
+      categoryId: listing.categoryId || listing.category?.id || "",
+      cityId: listing.cityId || listing.city?.id || "",
+      opensAt: listing.opensAt || "",
+      closesAt: listing.closesAt || "",
+    });
+
+    setImageFiles([]);
+    setImagePreviews([]);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  const handleUpdateListing = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      await API.patch(`/listings/${editingId}`, getPayload());
+
+      await uploadImagesForListing(editingId);
+
+      alert("Listing updated successfully");
+      clearForm();
+      fetchMyListings();
+    } catch (error) {
+      console.log("Update Error:", error.response?.data || error);
+      alert(JSON.stringify(error.response?.data || "Failed to update listing"));
     } finally {
       setLoading(false);
     }
@@ -395,9 +446,14 @@ const payload = {
                       ["6 Months", "₹1799", "Recommended for growing business"],
                       ["12 Months", "₹2999", "Best value yearly plan"],
                     ].map(([plan, price, desc]) => (
-                      <div key={plan} className="border rounded-3xl p-6 hover:shadow-lg">
+                      <div
+                        key={plan}
+                        className="border rounded-3xl p-6 hover:shadow-lg"
+                      >
                         <h3 className="text-xl font-bold">{plan}</h3>
-                        <p className="text-3xl font-bold text-blue-600 my-4">{price}</p>
+                        <p className="text-3xl font-bold text-blue-600 my-4">
+                          {price}
+                        </p>
                         <p className="text-gray-500 mb-6">{desc}</p>
 
                         <button
@@ -472,7 +528,7 @@ const payload = {
                         >
                           <div className="flex flex-col md:flex-row md:justify-between gap-4">
                             <div className="flex-1">
-                              {/* Customer name + status badge row */}
+                              
                               <div className="flex flex-wrap items-center gap-3 mb-1">
                                 <h3 className="text-xl font-bold text-gray-900">
                                   {msg.name || "Unknown Customer"}
@@ -486,7 +542,7 @@ const payload = {
                                 </span>
                               </div>
 
-                              {/* Contact info */}
+
                               <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-500 mb-4">
                                 {msg.email && (
                                   <span className="flex items-center gap-1.5">
@@ -502,10 +558,12 @@ const payload = {
                                 )}
                               </div>
 
-                              {/* Listing & service */}
+
                               <div className="space-y-2 text-sm">
                                 <p>
-                                  <span className="font-semibold text-gray-700">Business:</span>{" "}
+                                  <span className="font-semibold text-gray-700">
+                                    Business:
+                                  </span>{" "}
                                   <span className="text-gray-600">
                                     {msg.listingName || msg.listing?.name || "—"}
                                   </span>
@@ -516,13 +574,17 @@ const payload = {
                                     <span className="font-semibold text-gray-700">
                                       Asked About:
                                     </span>{" "}
-                                    <span className="text-gray-600">{msg.serviceTitle}</span>
+                                    <span className="text-gray-600">
+                                      {msg.serviceTitle}
+                                    </span>
                                   </p>
                                 )}
 
                                 {msg.message && (
                                   <div>
-                                    <p className="font-semibold text-gray-700 mb-1">Message:</p>
+                                    <p className="font-semibold text-gray-700 mb-1">
+                                      Message:
+                                    </p>
                                     <div className="bg-gray-50 border rounded-xl p-3 text-gray-700 leading-relaxed">
                                       {msg.message}
                                     </div>
@@ -531,15 +593,18 @@ const payload = {
                               </div>
                             </div>
 
-                            {/* Right column: date + actions */}
+
                             <div className="flex flex-col items-start md:items-end justify-between gap-4 md:min-w-[180px]">
                               <span className="text-sm text-gray-400">
                                 {msg.createdAt
-                                  ? new Date(msg.createdAt).toLocaleDateString("en-IN", {
-                                      day: "numeric",
-                                      month: "short",
-                                      year: "numeric",
-                                    })
+                                  ? new Date(msg.createdAt).toLocaleDateString(
+                                      "en-IN",
+                                      {
+                                        day: "numeric",
+                                        month: "short",
+                                        year: "numeric",
+                                      }
+                                    )
                                   : "—"}
                               </span>
 
@@ -581,7 +646,9 @@ const payload = {
                 </>
               ) : (
                 <div className="text-center">
-                  <h2 className="text-3xl font-bold mb-3">{tabTitle[activeTab]}</h2>
+                  <h2 className="text-3xl font-bold mb-3">
+                    {tabTitle[activeTab]}
+                  </h2>
                   <p className="text-gray-500">
                     This section is ready. Backend integration will be added next.
                   </p>
@@ -627,13 +694,22 @@ const payload = {
                 <div className="bg-white rounded-3xl shadow-sm border p-6">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-xl">
-                      <FaPlusCircle />
+                      {editingId ? <FaEdit /> : <FaPlusCircle />}
                     </div>
-                    <h2 className="text-2xl font-bold">Add Business Listing</h2>
+                    <div>
+                      <h2 className="text-2xl font-bold">
+                        {editingId ? "Edit Business Listing" : "Add Business Listing"}
+                      </h2>
+                      {editingId && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          Update your business details and save changes.
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <form
-                    onSubmit={handleAddListing}
+                    onSubmit={editingId ? handleUpdateListing : handleAddListing}
                     className="grid md:grid-cols-2 gap-4"
                   >
                     <InputBox
@@ -655,13 +731,14 @@ const payload = {
                     />
 
                     <InputBox
-  icon={<FaInstagram />}
-  label="Instagram Handle / URL"
-  name="instagramUrl"
-  placeholder="@businessname or https://instagram.com/businessname"
-  value={formData.instagramUrl}
-  onChange={handleChange}
-/>
+                      icon={<FaInstagram />}
+                      label="Instagram Handle / URL"
+                      name="instagramUrl"
+                      placeholder="@businessname or https://instagram.com/businessname"
+                      value={formData.instagramUrl}
+                      onChange={handleChange}
+                      required={false}
+                    />
 
                     <InputBox
                       icon={<FaMapMarkerAlt />}
@@ -730,7 +807,9 @@ const payload = {
 
                     <div className="border rounded-2xl px-4 py-3 md:col-span-2">
                       <label className="text-sm text-gray-500">
-                        Business Images / Gallery
+                        {editingId
+                          ? "Add More Business Images / Gallery"
+                          : "Business Images / Gallery"}
                       </label>
 
                       <div className="flex items-center gap-3 mt-3">
@@ -782,14 +861,20 @@ const payload = {
                       onClick={clearForm}
                       className="border hover:bg-gray-50 py-3 rounded-2xl font-semibold"
                     >
-                      Clear Form
+                      {editingId ? "Cancel Edit" : "Clear Form"}
                     </button>
 
                     <button
                       disabled={loading}
                       className="bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl font-semibold disabled:opacity-60"
                     >
-                      {loading ? "Adding..." : "Add Listing"}
+                      {loading
+                        ? editingId
+                          ? "Saving..."
+                          : "Adding..."
+                        : editingId
+                        ? "Save Changes"
+                        : "Add Listing"}
                     </button>
                   </form>
                 </div>
@@ -851,8 +936,14 @@ const payload = {
                     <h2 className="text-2xl font-bold">My Listings</h2>
                   </div>
 
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl font-semibold">
-                    View All Listings
+                  <button
+                    onClick={() => {
+                      clearForm();
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl font-semibold"
+                  >
+                    Add New Listing
                   </button>
                 </div>
 
@@ -862,7 +953,7 @@ const payload = {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[850px] border rounded-2xl overflow-hidden">
+                    <table className="w-full min-w-[900px] border rounded-2xl overflow-hidden">
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="text-left p-4">Business Name</th>
@@ -899,6 +990,13 @@ const payload = {
                                       item.address ||
                                       "No address"}
                                   </p>
+
+                                  {item.instagramUrl && (
+                                    <p className="text-xs text-pink-600 mt-1">
+                                      Instagram added
+                                    </p>
+                                  )}
+
                                   {item.opensAt && item.closesAt && (
                                     <p className="text-xs text-gray-400 mt-1">
                                       {item.opensAt} - {item.closesAt}
@@ -932,9 +1030,17 @@ const payload = {
                             </td>
 
                             <td className="p-4">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <button className="border p-3 rounded-xl hover:bg-gray-100">
                                   <FaEye />
+                                </button>
+
+                                <button
+                                  onClick={() => handleEditListing(item)}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl flex items-center gap-2"
+                                >
+                                  <FaEdit />
+                                  Edit
                                 </button>
 
                                 {item.status?.toLowerCase() !== "approved" && (
@@ -992,11 +1098,19 @@ function StatCard({ icon, title, value, subtitle, color }) {
   );
 }
 
-function InputBox({ icon, label, name, placeholder, value, onChange }) {
+function InputBox({
+  icon,
+  label,
+  name,
+  placeholder,
+  value,
+  onChange,
+  required = true,
+}) {
   return (
     <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
       <label className="text-sm text-gray-500">
-        {label} <span className="text-red-500">*</span>
+        {label} {required && <span className="text-red-500">*</span>}
       </label>
 
       <div className="flex items-center gap-3 mt-2">
@@ -1008,7 +1122,7 @@ function InputBox({ icon, label, name, placeholder, value, onChange }) {
           value={value}
           onChange={onChange}
           className="w-full outline-none"
-          required
+          required={required}
         />
       </div>
     </div>
