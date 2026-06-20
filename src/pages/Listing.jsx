@@ -29,12 +29,29 @@ export default function Listing() {
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
   const [minRating, setMinRating] = useState("");
+  const [priceRange, setPriceRange] = useState("");
+  const [openNow, setOpenNow] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const buildFetchParams = ({
+    q = search,
+    cityValue = city,
+    categoryValue = category,
+    ratingValue = minRating,
+    priceValue = priceRange,
+    openNowValue = openNow,
+  } = {}) => ({
+    ...(q ? { q } : {}),
+    ...(cityValue ? { city: cityValue } : {}),
+    ...(categoryValue ? { category: categoryValue } : {}),
+    ...(ratingValue ? { minRating: ratingValue } : {}),
+    ...(priceValue ? { priceRange: priceValue } : {}),
+    ...(openNowValue ? { openNow: "true" } : {}),
+  });
 
   const fetchListings = async (params = {}) => {
     try {
       setLoading(true);
-
       const res = await searchListings(params);
       const data = res.data?.items || res.data?.data || [];
       setListings(Array.isArray(data) ? data : []);
@@ -51,21 +68,27 @@ export default function Listing() {
     const cityParam = searchParams.get("city") || "";
     const categoryParam = searchParams.get("category") || "";
     const ratingParam = searchParams.get("minRating") || "";
+    const priceParam = searchParams.get("priceRange") || "";
+    const openNowParam = searchParams.get("openNow") === "true";
 
     setSearch(q);
     setCity(cityParam);
     setCategory(categoryParam);
     setMinRating(ratingParam);
+    setPriceRange(priceParam);
+    setOpenNow(openNowParam);
+
+    const params = buildFetchParams({
+      q,
+      cityValue: cityParam,
+      categoryValue: categoryParam,
+      ratingValue: ratingParam,
+      priceValue: priceParam,
+      openNowValue: openNowParam,
+    });
 
     fetchListings(
-      [q, cityParam, categoryParam, ratingParam].some(Boolean)
-        ? {
-            ...(q ? { q } : {}),
-            ...(cityParam ? { city: cityParam } : {}),
-            ...(categoryParam ? { category: categoryParam } : {}),
-            ...(ratingParam ? { minRating: ratingParam } : {}),
-          }
-        : {}
+      Object.keys(params).length > 0 ? params : {}
     );
   }, [location.search]);
 
@@ -73,30 +96,29 @@ export default function Listing() {
     nextSearch = search,
     nextCity = city,
     nextCategory = category,
+    nextRating = minRating,
     nextPriceRange = priceRange,
-    nextRating = rating,
     nextOpenNow = openNow,
   } = {}) => {
     const params = new URLSearchParams();
-    if (search) params.set("q", search);
-    if (city) params.set("city", city);
-    if (category) params.set("category", category);
-    if (minRating) params.set("minRating", minRating);
+    if (nextSearch) params.set("q", nextSearch);
+    if (nextCity) params.set("city", nextCity);
+    if (nextCategory) params.set("category", nextCategory);
+    if (nextRating) params.set("minRating", nextRating);
+    if (nextPriceRange) params.set("priceRange", nextPriceRange);
+    if (nextOpenNow) params.set("openNow", "true");
 
     navigate(`/listings?${params.toString()}`);
+  };
+
+  const handleSearch = () => {
+    updateUrl();
   };
 
   const handleCategoryChange = (value) => {
     const nextCategory = value === "All" ? "" : value;
     setCategory(nextCategory);
-
-    const params = new URLSearchParams();
-    if (search) params.set("q", search);
-    if (city) params.set("city", city);
-    if (nextCategory) params.set("category", nextCategory);
-    if (minRating) params.set("minRating", minRating);
-
-    navigate(`/listings?${params.toString()}`);
+    updateUrl({ nextCategory });
   };
 
   const handleResetFilters = () => {
@@ -104,6 +126,8 @@ export default function Listing() {
     setCity("");
     setCategory("");
     setMinRating("");
+    setPriceRange("");
+    setOpenNow(false);
     navigate("/listings");
   };
 
@@ -156,13 +180,12 @@ export default function Listing() {
           <FilterSidebar
             selectedCategory={category || "All"}
             selectedPrice={priceRange}
-            selectedRating={rating}
-            openNow={openNow}
-            onRatingChange={handleRatingChange}
-            onOpenNowChange={handleOpenNowChange}
-            onCategoryChange={handleCategoryChange}
             selectedRating={minRating}
+            openNow={openNow}
+            onCategoryChange={handleCategoryChange}
+            onPriceChange={setPriceRange}
             onRatingChange={setMinRating}
+            onOpenNowChange={setOpenNow}
             onApply={handleSearch}
             onReset={handleResetFilters}
           />
@@ -178,9 +201,9 @@ export default function Listing() {
                   </p>
                 )}
 
-                {rating && (
+                {minRating && (
                   <p className="text-sm text-yellow-600 mt-2">
-                    Showing: {rating} star & above
+                    Showing: {minRating} star & above
                   </p>
                 )}
 

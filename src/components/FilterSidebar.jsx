@@ -1,5 +1,4 @@
 import { FaFilter, FaStar } from "react-icons/fa";
-import { useState } from "react";
 
 const categories = [
   "All",
@@ -24,17 +23,13 @@ export default function FilterSidebar({
   selectedPrice = "",
   selectedRating = "",
   openNow = false,
-  onOpenNowChange = () => {},
-  onRatingChange = () => {},
   onCategoryChange = () => {},
-  selectedRating = "",
+  onPriceChange = () => {},
   onRatingChange = () => {},
+  onOpenNowChange = () => {},
   onApply = () => {},
   onReset = () => {},
 }) {
-  const [openNow, setOpenNow] = useState(false);
-  const [selectedPrice, setSelectedPrice] = useState("");
-
   return (
     <aside className="bg-white rounded-2xl shadow p-6 w-full lg:w-72">
       <div className="flex items-center gap-3 mb-6">
@@ -121,9 +116,9 @@ export default function FilterSidebar({
         <h3 className="font-semibold mb-4">Price Range</h3>
 
         <div className="space-y-3">
-          {["Budget", "Mid Range", "Premium"].map((priceValue) => (
+          {priceRanges.map((price) => (
             <label
-              key={priceValue}
+              key={price.value}
               className="flex items-center gap-3 cursor-pointer text-gray-600"
             >
               <input
@@ -158,7 +153,7 @@ export default function FilterSidebar({
         </button>
 
         <button
-          onClick={handleReset}
+          onClick={onReset}
           className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold transition"
         >
           Reset
