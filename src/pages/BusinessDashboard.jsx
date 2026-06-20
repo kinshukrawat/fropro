@@ -412,7 +412,7 @@ const [formData, setFormData] = useState({
           <div className="space-y-2">
             {[
               [FaHome, "Dashboard", "dashboard"],
-              [FaStore, "My Business", "dashboard"],
+              [FaStore, "My Business", "myBusiness"],
               [FaCalendarAlt, "Bookings", "bookings"],
               [FaRegStar, "Reviews", "reviews"],
               [FaChartLine, "Analytics", "analytics"],
@@ -862,7 +862,7 @@ const [formData, setFormData] = useState({
                     </div>
                     <h2 className="text-2xl font-bold">My Listings</h2>
                   </div>
-                  
+
                 </div>
 
                 {listings.length === 0 ? (
