@@ -1,6 +1,8 @@
 import {
   IsArray,
   IsEmail,
+  IsLatitude,
+  IsLongitude,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -95,8 +97,19 @@ export class CreateListingDto {
   pincode?: string;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsLatitude()
+  latitude?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsLongitude()
+  longitude?: number;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ListingCatalogueItemDto)
   catalogueItems?: ListingCatalogueItemDto[];
 }
+

@@ -150,10 +150,12 @@ export class ListingsService {
 
   async createOwnerListing(ownerId: string, dto: CreateListingDto) {
     const { catalogueItems, ...listingData } = dto;
+    const coordinates = this.coordinateData(dto);
 
     return this.prisma.businessListing.create({
       data: {
         ...listingData,
+        ...coordinates,
         ownerId,
         slug: await this.uniqueSlug(dto.name),
         status: ListingStatus.DRAFT,
@@ -182,9 +184,11 @@ export class ListingsService {
     await this.assertOwnerListing(ownerId, id);
 
     const { catalogueItems, ...listingData } = dto;
+    const coordinates = this.coordinateData(dto);
 
     const updateData: Prisma.BusinessListingUpdateInput = {
       ...listingData,
+      ...coordinates,
       status: ListingStatus.DRAFT,
       rejectionReason: null,
     };
@@ -381,6 +385,19 @@ export class ListingsService {
     };
   }
 
+  private coordinateData(dto: Pick<CreateListingDto, 'latitude' | 'longitude'>) {
+    return {
+      latitude:
+        dto.latitude !== undefined && dto.latitude !== null
+          ? dto.latitude.toString()
+          : undefined,
+      longitude:
+        dto.longitude !== undefined && dto.longitude !== null
+          ? dto.longitude.toString()
+          : undefined,
+    };
+  }
+
   private async assertOwnerListing(ownerId: string, id: string) {
     const listing = await this.prisma.businessListing.findUnique({
       where: { id },
@@ -409,6 +426,7 @@ export class ListingsService {
     return slug;
   }
 }
+
 
 
 
