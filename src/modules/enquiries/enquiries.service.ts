@@ -48,6 +48,26 @@ export class EnquiriesService {
       orderBy: { createdAt: 'desc' },
     });
   }
+  findOwnerEnquiries(ownerId: string) {
+    return this.prisma.enquiry.findMany({
+      where: {
+        listing: {
+          ownerId,
+          isDeleted: false,
+        },
+      },
+      include: {
+        listing: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 
   async updateStatus(id: string, status: EnquiryStatus) {
     const enquiry = await this.prisma.enquiry.findUnique({ where: { id } });
@@ -62,3 +82,4 @@ export class EnquiriesService {
     });
   }
 }
+

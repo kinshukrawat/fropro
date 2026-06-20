@@ -11,6 +11,7 @@ import { EnquiriesModule } from './modules/enquiries/enquiries.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { ListingsModule } from './modules/listings/listings.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
@@ -40,6 +41,7 @@ import { UsersModule } from './modules/users/users.module';
     ListingsModule,
     SubscriptionsModule,
     PaymentsModule,
+    ReviewsModule,
     UploadsModule,
     AnalyticsModule,
     AdminModule,
@@ -47,3 +49,4 @@ import { UsersModule } from './modules/users/users.module';
   ],
 })
 export class AppModule {}
+

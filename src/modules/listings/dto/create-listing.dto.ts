@@ -1,10 +1,33 @@
 import {
   IsArray,
+  IsEmail,
   IsOptional,
   IsPhoneNumber,
   IsString,
+  IsUrl,
+  Matches,
   MaxLength,
+  MinLength,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class ListingCatalogueItemDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(120)
+  title: string;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(500)
+  description: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  buttonLabel?: string;
+}
 
 export class CreateListingDto {
   @IsString()
@@ -31,6 +54,31 @@ export class CreateListingDto {
   @IsPhoneNumber('IN')
   whatsappPhone: string;
 
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsUrl({ require_protocol: false })
+  website?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  instagramUrl?: string;
+
+  @IsOptional()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
+    message: 'opensAt must use HH:mm 24-hour format, for example 09:00.',
+  })
+  opensAt?: string;
+
+  @IsOptional()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
+    message: 'closesAt must use HH:mm 24-hour format, for example 21:00.',
+  })
+  closesAt?: string;
+
   @IsString()
   addressLine1: string;
 
@@ -45,4 +93,10 @@ export class CreateListingDto {
   @IsOptional()
   @IsString()
   pincode?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ListingCatalogueItemDto)
+  catalogueItems?: ListingCatalogueItemDto[];
 }

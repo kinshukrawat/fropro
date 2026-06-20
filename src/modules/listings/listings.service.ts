@@ -22,15 +22,18 @@ export class ListingsService {
     const searchFilters: Prisma.BusinessListingWhereInput[] = [];
 
     if (query.q) {
-      searchFilters.push(
-        { name: { contains: query.q, mode: 'insensitive' } },
-        { description: { contains: query.q, mode: 'insensitive' } },
-        { addressLine1: { contains: query.q, mode: 'insensitive' } },
-        { addressLine2: { contains: query.q, mode: 'insensitive' } },
-        { landmark: { contains: query.q, mode: 'insensitive' } },
-        { pincode: { contains: query.q, mode: 'insensitive' } },
-        { services: { hasSome: [query.q] } },
-      );
+      searchFilters.push({
+        OR: [
+          { name: { contains: query.q, mode: 'insensitive' } },
+          { description: { contains: query.q, mode: 'insensitive' } },
+          { addressLine1: { contains: query.q, mode: 'insensitive' } },
+          { addressLine2: { contains: query.q, mode: 'insensitive' } },
+          { landmark: { contains: query.q, mode: 'insensitive' } },
+          { pincode: { contains: query.q, mode: 'insensitive' } },
+          { email: { contains: query.q, mode: 'insensitive' } },
+          { services: { hasSome: [query.q] } },
+        ],
+      });
     }
 
     if (query.category) {
@@ -67,24 +70,23 @@ export class ListingsService {
       where.AND = searchFilters;
     }
 
+    if (query.minRating) {
+      const qualifyingIds = await this.listingIdsMeetingMinRating(query.minRating);
+      where.id = { in: qualifyingIds };
+    }
+
     const items = await this.prisma.businessListing.findMany({
       where,
       skip: (page - 1) * limit,
       take: limit,
       orderBy: [{ isFeatured: 'desc' }, { updatedAt: 'desc' }],
-      include: {
-        category: true,
-        city: true,
-        images: {
-          orderBy: { sortOrder: 'asc' },
-          take: 1,
-        },
-      },
+      include: this.listingInclude({ imageLimit: 1, catalogueActiveOnly: true }),
     });
 
     const total = await this.prisma.businessListing.count({ where });
+    const itemsWithReviews = await this.attachReviewSummaries(items);
 
-    return { items, page, limit, total };
+    return { items: itemsWithReviews, page, limit, total };
   }
 
   async findPublicBySlug(slug: string) {
@@ -94,13 +96,8 @@ export class ListingsService {
         status: ListingStatus.APPROVED,
         isDeleted: false,
       },
-      include: {
-        category: true,
-        city: true,
-        images: { orderBy: { sortOrder: 'asc' } },
-      },
+      include: this.listingInclude({ catalogueActiveOnly: true }),
     });
-    
 
     if (!listing) {
       throw new NotFoundException('Listing not found.');
@@ -111,17 +108,23 @@ export class ListingsService {
       data: { viewCount: { increment: 1 } },
     });
 
-    return listing;
+    const reviewSummary = await this.reviewSummary(listing.id);
+
+    return { ...listing, ...reviewSummary };
   }
 
   async createOwnerListing(ownerId: string, dto: CreateListingDto) {
+    const { catalogueItems, ...listingData } = dto;
+
     return this.prisma.businessListing.create({
       data: {
-        ...dto,
+        ...listingData,
         ownerId,
         slug: await this.uniqueSlug(dto.name),
         status: ListingStatus.DRAFT,
+        catalogueItems: this.catalogueCreateInput(catalogueItems),
       },
+      include: this.listingInclude(),
     });
   }
 
@@ -129,9 +132,7 @@ export class ListingsService {
     return this.prisma.businessListing.findMany({
       where: { ownerId, isDeleted: false },
       include: {
-        category: true,
-        city: true,
-        images: { orderBy: { sortOrder: 'asc' } },
+        ...this.listingInclude(),
         subscriptions: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -145,13 +146,30 @@ export class ListingsService {
   async updateOwnerListing(ownerId: string, id: string, dto: UpdateListingDto) {
     await this.assertOwnerListing(ownerId, id);
 
+    const { catalogueItems, ...listingData } = dto;
+
+    const updateData: Prisma.BusinessListingUpdateInput = {
+      ...listingData,
+      status: ListingStatus.DRAFT,
+      rejectionReason: null,
+    };
+
+    if (catalogueItems) {
+      updateData.catalogueItems = {
+        deleteMany: {},
+        create: catalogueItems.map((item, index) => ({
+          title: item.title,
+          description: item.description,
+          buttonLabel: item.buttonLabel ?? 'Ask for Price',
+          sortOrder: index,
+        })),
+      };
+    }
+
     return this.prisma.businessListing.update({
       where: { id },
-      data: {
-        ...dto,
-        status: ListingStatus.DRAFT,
-        rejectionReason: null,
-      },
+      data: updateData,
+      include: this.listingInclude(),
     });
   }
 
@@ -167,19 +185,17 @@ export class ListingsService {
     });
   }
 
-  findPublicListings() {
-    return this.prisma.businessListing.findMany({
+  async findPublicListings() {
+    const items = await this.prisma.businessListing.findMany({
       where: {
         status: ListingStatus.APPROVED,
         isDeleted: false,
       },
       orderBy: [{ isFeatured: 'desc' }, { updatedAt: 'desc' }],
-      include: {
-        category: true,
-        city: true,
-        images: { orderBy: { sortOrder: 'asc' }, take: 1 },
-      },
+      include: this.listingInclude({ imageLimit: 1, catalogueActiveOnly: true }),
     });
+
+    return this.attachReviewSummaries(items);
   }
 
   async incrementWhatsappTap(id: string) {
@@ -190,6 +206,100 @@ export class ListingsService {
     });
   }
 
+  private async reviewSummary(listingId: string) {
+    const aggregate = await this.prisma.review.aggregate({
+      where: { listingId, isApproved: true },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    return {
+      rating: aggregate._avg.rating ? Number(aggregate._avg.rating.toFixed(1)) : 0,
+      reviewCount: aggregate._count.rating,
+    };
+  }
+
+  private async attachReviewSummaries<T extends { id: string }>(items: T[]) {
+    if (!items.length) {
+      return items;
+    }
+
+    const aggregates = await this.prisma.review.groupBy({
+      by: ['listingId'],
+      where: {
+        listingId: { in: items.map((item) => item.id) },
+        isApproved: true,
+      },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    const summaryByListingId = new Map(
+      aggregates.map((aggregate) => [
+        aggregate.listingId,
+        {
+          rating: aggregate._avg.rating ? Number(aggregate._avg.rating.toFixed(1)) : 0,
+          reviewCount: aggregate._count.rating,
+        },
+      ]),
+    );
+
+    return items.map((item) => {
+      const summary = summaryByListingId.get(item.id);
+      return {
+        ...item,
+        rating: summary?.rating ?? 0,
+        reviewCount: summary?.reviewCount ?? 0,
+      };
+    });
+  }
+
+  private async listingIdsMeetingMinRating(minRating: number) {
+    const qualifying = await this.prisma.review.groupBy({
+      by: ['listingId'],
+      where: { isApproved: true },
+      _avg: { rating: true },
+      having: {
+        rating: {
+          _avg: {
+            gte: minRating,
+          },
+        },
+      },
+    });
+
+    return qualifying.map((entry) => entry.listingId);
+  }
+
+  private listingInclude(options?: { imageLimit?: number; catalogueActiveOnly?: boolean }) {
+    return {
+      category: true,
+      city: true,
+      images: {
+        orderBy: { sortOrder: 'asc' as const },
+        ...(options?.imageLimit ? { take: options.imageLimit } : {}),
+      },
+      catalogueItems: {
+        where: options?.catalogueActiveOnly ? { isActive: true } : undefined,
+        orderBy: { sortOrder: 'asc' as const },
+      },
+    };
+  }
+
+  private catalogueCreateInput(catalogueItems?: CreateListingDto['catalogueItems']) {
+    if (!catalogueItems?.length) {
+      return undefined;
+    }
+
+    return {
+      create: catalogueItems.map((item, index) => ({
+        title: item.title,
+        description: item.description,
+        buttonLabel: item.buttonLabel ?? 'Ask for Price',
+        sortOrder: index,
+      })),
+    };
+  }
 
   private async assertOwnerListing(ownerId: string, id: string) {
     const listing = await this.prisma.businessListing.findUnique({
@@ -219,3 +329,4 @@ export class ListingsService {
     return slug;
   }
 }
+
