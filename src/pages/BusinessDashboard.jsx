@@ -787,7 +787,7 @@ const [formData, setFormData] = useState({
             </div>
           )}
 
-          {activeTab === "dashboard" && (
+          {(activeTab === "dashboard" || activeTab === "myBusiness") && (
             <>
             
 
