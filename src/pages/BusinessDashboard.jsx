@@ -508,6 +508,7 @@ const [formData, setFormData] = useState({
           </div>
 
           {activeTab !== "dashboard" && (
+            
             <div className="bg-white rounded-3xl border shadow-sm p-10">
               {activeTab === "payments" ? (
                 <>
@@ -787,7 +788,7 @@ const [formData, setFormData] = useState({
             </div>
           )}
 
-          {(activeTab === "dashboard" || activeTab === "myBusiness") && (
+          {activeTab === "dashboard" && (
             <>
             
 
