@@ -30,7 +30,6 @@ export class ListingsService {
           { addressLine2: { contains: query.q, mode: 'insensitive' } },
           { landmark: { contains: query.q, mode: 'insensitive' } },
           { pincode: { contains: query.q, mode: 'insensitive' } },
-          { email: { contains: query.q, mode: 'insensitive' } },
           { services: { hasSome: [query.q] } },
         ],
       });
@@ -116,7 +115,7 @@ export class ListingsService {
       skip: (page - 1) * limit,
       take: limit,
       orderBy: [{ isFeatured: 'desc' }, { updatedAt: 'desc' }],
-      include: this.listingListInclude(),
+      select: this.listingListSelect(),
     });
 
     const total = await this.prisma.businessListing.count({ where });
@@ -228,7 +227,7 @@ export class ListingsService {
         isDeleted: false,
       },
       orderBy: [{ isFeatured: 'desc' }, { updatedAt: 'desc' }],
-      include: this.listingListInclude(),
+      select: this.listingListSelect(),
     });
 
     return this.attachReviewSummaries(items);
@@ -317,8 +316,32 @@ export class ListingsService {
     return qualifying.map((entry) => entry.listingId);
   }
 
-  private listingListInclude() {
+  private listingListSelect() {
     return {
+      id: true,
+      categoryId: true,
+      cityId: true,
+      name: true,
+      slug: true,
+      description: true,
+      services: true,
+      contactPhone: true,
+      whatsappPhone: true,
+      addressLine1: true,
+      addressLine2: true,
+      landmark: true,
+      pincode: true,
+      latitude: true,
+      longitude: true,
+      status: true,
+      isFeatured: true,
+      isDeleted: true,
+      viewCount: true,
+      whatsappTapCount: true,
+      submittedAt: true,
+      approvedAt: true,
+      createdAt: true,
+      updatedAt: true,
       category: true,
       city: true,
       images: {
@@ -386,5 +409,6 @@ export class ListingsService {
     return slug;
   }
 }
+
 
 
