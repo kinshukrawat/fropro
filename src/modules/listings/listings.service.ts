@@ -138,7 +138,7 @@ export class ListingsService {
         images: { orderBy: { sortOrder: 'asc' } },
       },
     });
-    
+
 
     if (!listing) {
       throw new NotFoundException('Listing not found.');

@@ -26,4 +26,8 @@ export class SearchListingsDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   openNow?: string;
+
+  @IsOptional()
+  @IsString()
+  minRating?: string;
 }

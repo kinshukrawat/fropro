@@ -130,11 +130,12 @@ model BusinessListing {
   isDeleted        Boolean       @default(false)
   viewCount        Int           @default(0)
   whatsappTapCount Int           @default(0)
+  rating           Float         @default(0)
   submittedAt      DateTime?
   approvedAt       DateTime?
   opensAt          String?
   closesAt         String?
-  priceRange PriceRange?
+  priceRange       PriceRange?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
@@ -150,6 +151,7 @@ model BusinessListing {
   @@index([categoryId, status])
   @@index([cityId, status])
   @@index([isFeatured, status])
+  @@index([rating])
 }
 
 model Enquiry {
