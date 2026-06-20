@@ -412,7 +412,7 @@ const [formData, setFormData] = useState({
           <div className="space-y-2">
             {[
               [FaHome, "Dashboard", "dashboard"],
-              [FaStore, "My Business", "myBusiness"],
+              [FaStore, "My Business", "dashboard"],
               [FaCalendarAlt, "Bookings", "bookings"],
               [FaRegStar, "Reviews", "reviews"],
               [FaChartLine, "Analytics", "analytics"],
