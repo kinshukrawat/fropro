@@ -28,6 +28,7 @@ export default function Listing() {
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
   const [priceRange, setPriceRange] = useState("");
+  const [openNow, setOpenNow] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchListings = async (params = {}) => {
@@ -54,17 +55,20 @@ export default function Listing() {
     const cityParam = searchParams.get("city") || "";
     const categoryParam = searchParams.get("category") || "";
     const priceRangeParam = searchParams.get("priceRange") || "";
+    const openNowParam = searchParams.get("openNow") === "true";
 
     setSearch(q);
     setCity(cityParam);
     setCategory(categoryParam);
     setPriceRange(priceRangeParam);
+    setOpenNow(openNowParam);
 
     fetchListings({
       ...(q ? { q } : {}),
       ...(cityParam ? { city: cityParam } : {}),
       ...(categoryParam ? { category: categoryParam } : {}),
       ...(priceRangeParam ? { priceRange: priceRangeParam } : {}),
+      ...(openNowParam ? { openNow: "true" } : {}),
     });
   }, [location.search]);
 
@@ -73,6 +77,7 @@ export default function Listing() {
     nextCity = city,
     nextCategory = category,
     nextPriceRange = priceRange,
+    nextOpenNow = openNow,
   } = {}) => {
     const params = new URLSearchParams();
 
@@ -80,6 +85,7 @@ export default function Listing() {
     if (nextCity) params.set("city", nextCity);
     if (nextCategory) params.set("category", nextCategory);
     if (nextPriceRange) params.set("priceRange", nextPriceRange);
+    if (nextOpenNow) params.set("openNow", "true");
 
     const queryString = params.toString();
     navigate(queryString ? `/listings?${queryString}` : "/listings");
@@ -106,11 +112,20 @@ export default function Listing() {
     });
   };
 
+  const handleOpenNowChange = (value) => {
+    setOpenNow(value);
+
+    updateUrl({
+      nextOpenNow: value,
+    });
+  };
+
   const handleResetFilters = () => {
     setSearch("");
     setCity("");
     setCategory("");
     setPriceRange("");
+    setOpenNow(false);
     navigate("/listings");
   };
 
@@ -163,6 +178,8 @@ export default function Listing() {
           <FilterSidebar
             selectedCategory={category || "All"}
             selectedPrice={priceRange}
+            openNow={openNow}
+            onOpenNowChange={handleOpenNowChange}
             onCategoryChange={handleCategoryChange}
             onPriceChange={handlePriceChange}
             onApply={handleSearch}
@@ -177,6 +194,12 @@ export default function Listing() {
                 {priceRange && (
                   <p className="text-sm text-gray-500 mt-2">
                     Showing: {formatPriceRange(priceRange)}
+                  </p>
+                )}
+
+                {openNow && (
+                  <p className="text-sm text-green-600 mt-2">
+                    Showing: Open Now
                   </p>
                 )}
               </div>

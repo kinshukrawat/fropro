@@ -1,6 +1,6 @@
 import { FaFilter, FaStar } from "react-icons/fa";
 
-import { useState } from "react";
+
 
 const categories = [
   "All",
@@ -23,17 +23,17 @@ const priceRanges = [
 export default function FilterSidebar({
   selectedCategory = "All",
   selectedPrice = "",
+  openNow = false,
+  onOpenNowChange = () => {},
   onCategoryChange = () => {},
   onPriceChange = () => {},
   onApply = () => {},
   onReset = () => {},
 }) {
-  const [selectedRating, setSelectedRating] = useState("");
-  const [openNow, setOpenNow] = useState(false);
+
 
   const handleReset = () => {
-    setSelectedRating("");
-    setOpenNow(false);
+
     onReset();
   };
 
@@ -78,8 +78,7 @@ export default function FilterSidebar({
               <input
                 type="radio"
                 name="rating"
-                checked={selectedRating === String(ratingValue)}
-                onChange={() => setSelectedRating(String(ratingValue))}
+                onChange={() => {}}
                 className="accent-blue-600"
               />
 
@@ -103,7 +102,7 @@ export default function FilterSidebar({
           <input
             type="checkbox"
             checked={openNow}
-            onChange={(e) => setOpenNow(e.target.checked)}
+            onChange={(e) => onOpenNowChange(e.target.checked)}
             className="w-5 h-5 accent-blue-600"
           />
         </label>
