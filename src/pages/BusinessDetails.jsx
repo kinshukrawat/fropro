@@ -118,6 +118,12 @@ export default function BusinessDetails() {
       .join(", ") ||
     "Location not available";
 
+  const shortLocation =
+  business.city?.name ||
+  business.addressLine2 ||
+  business.addressLine1 ||
+  "Location";
+
   const phone = business.contactPhone || business.phone || "";
   const website = business.website || "";
   const instagramUrl = business.instagramUrl || "";
@@ -192,9 +198,9 @@ export default function BusinessDetails() {
                 </div>
 
                 <div className="flex items-center">
-                  <FaMapMarkerAlt className="mr-2" />
-                  {fullAddress}
-                </div>
+  <FaMapMarkerAlt className="mr-2" />
+  {shortLocation}
+</div>
               </div>
             </div>
 

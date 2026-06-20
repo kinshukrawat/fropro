@@ -23,8 +23,10 @@ const priceRanges = [
 export default function FilterSidebar({
   selectedCategory = "All",
   selectedPrice = "",
+  selectedRating = "",
   openNow = false,
   onOpenNowChange = () => {},
+  onRatingChange = () => {},
   onCategoryChange = () => {},
   onPriceChange = () => {},
   onApply = () => {},
@@ -78,7 +80,8 @@ export default function FilterSidebar({
               <input
                 type="radio"
                 name="rating"
-                onChange={() => {}}
+                checked={selectedRating === String(ratingValue)}
+                onChange={() => onRatingChange(String(ratingValue))}
                 className="accent-blue-600"
               />
 
@@ -92,6 +95,16 @@ export default function FilterSidebar({
             </label>
           ))}
         </div>
+
+        {selectedRating && (
+          <button
+            type="button"
+            onClick={() => onRatingChange("")}
+            className="text-sm text-blue-600 hover:underline mt-3"
+          >
+            Clear rating
+          </button>
+        )}
       </div>
 
       <div className="mb-8">

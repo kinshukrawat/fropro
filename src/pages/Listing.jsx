@@ -28,6 +28,7 @@ export default function Listing() {
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
   const [priceRange, setPriceRange] = useState("");
+  const [rating, setRating] = useState("");
   const [openNow, setOpenNow] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -35,10 +36,7 @@ export default function Listing() {
     try {
       setLoading(true);
 
-      const res = await API.get("/listings", {
-        params,
-      });
-      
+      const res = await API.get("/listings", { params });
 
       const data = res.data?.items || res.data?.data || [];
       setListings(Array.isArray(data) ? data : []);
@@ -55,12 +53,14 @@ export default function Listing() {
     const cityParam = searchParams.get("city") || "";
     const categoryParam = searchParams.get("category") || "";
     const priceRangeParam = searchParams.get("priceRange") || "";
+    const ratingParam = searchParams.get("minRating") || "";
     const openNowParam = searchParams.get("openNow") === "true";
 
     setSearch(q);
     setCity(cityParam);
     setCategory(categoryParam);
     setPriceRange(priceRangeParam);
+    setRating(ratingParam);
     setOpenNow(openNowParam);
 
     fetchListings({
@@ -68,6 +68,7 @@ export default function Listing() {
       ...(cityParam ? { city: cityParam } : {}),
       ...(categoryParam ? { category: categoryParam } : {}),
       ...(priceRangeParam ? { priceRange: priceRangeParam } : {}),
+      ...(ratingParam ? { minRating: ratingParam } : {}),
       ...(openNowParam ? { openNow: "true" } : {}),
     });
   }, [location.search]);
@@ -77,6 +78,7 @@ export default function Listing() {
     nextCity = city,
     nextCategory = category,
     nextPriceRange = priceRange,
+    nextRating = rating,
     nextOpenNow = openNow,
   } = {}) => {
     const params = new URLSearchParams();
@@ -85,6 +87,7 @@ export default function Listing() {
     if (nextCity) params.set("city", nextCity);
     if (nextCategory) params.set("category", nextCategory);
     if (nextPriceRange) params.set("priceRange", nextPriceRange);
+    if (nextRating) params.set("minRating", nextRating);
     if (nextOpenNow) params.set("openNow", "true");
 
     const queryString = params.toString();
@@ -98,26 +101,22 @@ export default function Listing() {
   const handleCategoryChange = (value) => {
     const nextCategory = value === "All" ? "" : value;
     setCategory(nextCategory);
-
-    updateUrl({
-      nextCategory,
-    });
+    updateUrl({ nextCategory });
   };
 
   const handlePriceChange = (value) => {
     setPriceRange(value);
+    updateUrl({ nextPriceRange: value });
+  };
 
-    updateUrl({
-      nextPriceRange: value,
-    });
+  const handleRatingChange = (value) => {
+    setRating(value);
+    updateUrl({ nextRating: value });
   };
 
   const handleOpenNowChange = (value) => {
     setOpenNow(value);
-
-    updateUrl({
-      nextOpenNow: value,
-    });
+    updateUrl({ nextOpenNow: value });
   };
 
   const handleResetFilters = () => {
@@ -125,6 +124,7 @@ export default function Listing() {
     setCity("");
     setCategory("");
     setPriceRange("");
+    setRating("");
     setOpenNow(false);
     navigate("/listings");
   };
@@ -178,7 +178,9 @@ export default function Listing() {
           <FilterSidebar
             selectedCategory={category || "All"}
             selectedPrice={priceRange}
+            selectedRating={rating}
             openNow={openNow}
+            onRatingChange={handleRatingChange}
             onOpenNowChange={handleOpenNowChange}
             onCategoryChange={handleCategoryChange}
             onPriceChange={handlePriceChange}
@@ -194,6 +196,12 @@ export default function Listing() {
                 {priceRange && (
                   <p className="text-sm text-gray-500 mt-2">
                     Showing: {formatPriceRange(priceRange)}
+                  </p>
+                )}
+
+                {rating && (
+                  <p className="text-sm text-yellow-600 mt-2">
+                    Showing: {rating} star & above
                   </p>
                 )}
 
