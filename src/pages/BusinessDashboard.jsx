@@ -792,22 +792,67 @@ const [formData, setFormData] = useState({
             
 
           <div className="bg-white rounded-3xl shadow-sm border p-6 mb-8">
-  <div className="flex items-center justify-between">
-    <div>
-      <h2 className="text-2xl font-bold">Quick Actions</h2>
-      <p className="text-gray-500 mt-1">
-        Manage your business listings.
-      </p>
-    </div>
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl font-bold">Quick Actions</h2>
+                <p className="text-gray-500 mt-1">
+                  Manage and grow your business listings.
+                </p>
+              </div>
 
-    <button
-      onClick={() => navigate("/business-dashboard/add-listing")}
-      className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl font-semibold"
-    >
-      Add New Listing
-    </button>
-  </div>
-</div>
+              <button
+                onClick={() => navigate("/business-dashboard/add-listing")}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-semibold flex items-center gap-2"
+              >
+                <FaPlusCircle />
+                Add New Listing
+              </button>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-5">
+              <button
+                onClick={() => navigate("/business-dashboard/add-listing")}
+                className="border rounded-2xl p-5 flex items-center gap-4 hover:bg-gray-50 transition text-left"
+              >
+                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl">
+                  <FaPlusCircle />
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg">Add New Listing</h3>
+                  <p className="text-gray-500 text-sm">List a new business</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => window.scrollTo({ top: 700, behavior: "smooth" })}
+                className="border rounded-2xl p-5 flex items-center gap-4 hover:bg-gray-50 transition text-left"
+              >
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl">
+                  <FaStore />
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg">View My Listings</h3>
+                  <p className="text-gray-500 text-sm">Manage your listings</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("messages")}
+                className="border rounded-2xl p-5 flex items-center gap-4 hover:bg-gray-50 transition text-left"
+              >
+                <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl">
+                  <FaComments />
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg">Messages</h3>
+                  <p className="text-gray-500 text-sm">View customer enquiries</p>
+                </div>
+              </button>
+            </div>
+          </div>
           
                         <div className="bg-white rounded-3xl shadow-sm border p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -817,13 +862,7 @@ const [formData, setFormData] = useState({
                     </div>
                     <h2 className="text-2xl font-bold">My Listings</h2>
                   </div>
-
-                  <button
-                    onClick={() => navigate("/business-dashboard/add-listing")}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl font-semibold"
-                  >
-                    Add New Listing
-                  </button>
+                  
                 </div>
 
                 {listings.length === 0 ? (
