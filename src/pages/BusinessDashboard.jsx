@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   FaEnvelopeOpenText,
-  FaTag,
+
   FaCheckCircle,
   FaStore,
   FaClipboardList,
@@ -29,6 +29,7 @@ import {
   FaClock,
   FaInstagram,
   FaEdit,
+  FaRupeeSign,
 } from "react-icons/fa";
 
 import API, {
@@ -48,27 +49,28 @@ export default function BusinessDashboard() {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
-  // Messages state
+
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [existingImages, setExistingImages] = useState([]);
 
-const [formData, setFormData] = useState({
-  name: "",
-  description: "",
-  addressLine1: "",
-  addressLine2: "",
-  landmark: "",
-  pincode: "",
-  phone: "",
-  whatsappPhone: "",
-  instagramUrl: "",
-  categoryId: "",
-  cityId: "",
-  opensAt: "",
-  closesAt: "",
-  servicesText: "",
-});
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    addressLine1: "",
+    addressLine2: "",
+    landmark: "",
+    pincode: "",
+    phone: "",
+    whatsappPhone: "",
+    instagramUrl: "",
+    categoryId: "",
+    cityId: "",
+    priceRange: "",
+    opensAt: "",
+    closesAt: "",
+    servicesText: "",
+  });
 
   const fetchMyListings = async () => {
     try {
@@ -79,9 +81,7 @@ const [formData, setFormData] = useState({
     }
   };
 
-  const fetchOwnerFinance = async () => {
-    return Promise.resolve();
-  };
+  const fetchOwnerFinance = async () => Promise.resolve();
 
   const fetchDropdownData = async () => {
     try {
@@ -142,6 +142,13 @@ const [formData, setFormData] = useState({
     return cities.find((city) => String(city.id) === String(id))?.name || "—";
   };
 
+  const formatPriceRange = (value) => {
+    if (value === "BUDGET") return "Budget";
+    if (value === "MID_RANGE") return "Mid Range";
+    if (value === "PREMIUM") return "Premium";
+    return "Not selected";
+  };
+
   const getStatusStyle = (status = "Draft") => {
     const s = status.toLowerCase();
 
@@ -183,49 +190,51 @@ const [formData, setFormData] = useState({
     setImagePreviews(validFiles.map((file) => URL.createObjectURL(file)));
   };
 
-const clearForm = () => {
-  setFormData({
-    name: "",
-    description: "",
-    addressLine1: "",
-    addressLine2: "",
-    landmark: "",
-    pincode: "",
-    phone: "",
-    whatsappPhone: "",
-    instagramUrl: "",
-    categoryId: "",
-    cityId: "",
-    opensAt: "",
-    closesAt: "",
-    servicesText: "",
-  });
+  const clearForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      addressLine1: "",
+      addressLine2: "",
+      landmark: "",
+      pincode: "",
+      phone: "",
+      whatsappPhone: "",
+      instagramUrl: "",
+      categoryId: "",
+      cityId: "",
+      priceRange: "",
+      opensAt: "",
+      closesAt: "",
+      servicesText: "",
+    });
 
-  setEditingId(null);
-  setExistingImages([]);
-  setImageFiles([]);
-  setImagePreviews([]);
-};
+    setEditingId(null);
+    setExistingImages([]);
+    setImageFiles([]);
+    setImagePreviews([]);
+  };
 
   const getPayload = () => ({
-  name: formData.name,
-  description: formData.description,
-  categoryId: formData.categoryId,
-  cityId: formData.cityId,
-  contactPhone: formData.phone,
-  whatsappPhone: formData.whatsappPhone || formData.phone,
-  instagramUrl: formData.instagramUrl,
-  addressLine1: formData.addressLine1,
-  addressLine2: formData.addressLine2,
-  landmark: formData.landmark,
-  pincode: formData.pincode,
-  opensAt: formData.opensAt,
-  closesAt: formData.closesAt,
-  services: formData.servicesText
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean),
-});
+    name: formData.name,
+    description: formData.description,
+    categoryId: formData.categoryId,
+    cityId: formData.cityId,
+    priceRange: formData.priceRange,
+    contactPhone: formData.phone,
+    whatsappPhone: formData.whatsappPhone || formData.phone,
+    instagramUrl: formData.instagramUrl,
+    addressLine1: formData.addressLine1,
+    addressLine2: formData.addressLine2,
+    landmark: formData.landmark,
+    pincode: formData.pincode,
+    opensAt: formData.opensAt,
+    closesAt: formData.closesAt,
+    services: formData.servicesText
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean),
+  });
 
   const uploadImagesForListing = async (listingId) => {
     if (!imageFiles.length || !listingId) return;
@@ -275,33 +284,34 @@ const clearForm = () => {
   };
 
   const handleEditListing = (listing) => {
-  setEditingId(listing.id);
+    setEditingId(listing.id);
 
-  setFormData({
-    name: listing.name || "",
-    description: listing.description || "",
-    addressLine1: listing.addressLine1 || "",
-    addressLine2: listing.addressLine2 || "",
-    landmark: listing.landmark || "",
-    pincode: listing.pincode || "",
-    phone: listing.contactPhone || "",
-    whatsappPhone: listing.whatsappPhone || "",
-    instagramUrl: listing.instagramUrl || "",
-    categoryId: listing.categoryId || listing.category?.id || "",
-    cityId: listing.cityId || listing.city?.id || "",
-    opensAt: listing.opensAt || "",
-    closesAt: listing.closesAt || "",
-    servicesText: Array.isArray(listing.services)
-      ? listing.services.join(", ")
-      : "",
-  });
+    setFormData({
+      name: listing.name || "",
+      description: listing.description || "",
+      addressLine1: listing.addressLine1 || "",
+      addressLine2: listing.addressLine2 || "",
+      landmark: listing.landmark || "",
+      pincode: listing.pincode || "",
+      phone: listing.contactPhone || "",
+      whatsappPhone: listing.whatsappPhone || "",
+      instagramUrl: listing.instagramUrl || "",
+      categoryId: listing.categoryId || listing.category?.id || "",
+      cityId: listing.cityId || listing.city?.id || "",
+      priceRange: listing.priceRange || "",
+      opensAt: listing.opensAt || "",
+      closesAt: listing.closesAt || "",
+      servicesText: Array.isArray(listing.services)
+        ? listing.services.join(", ")
+        : "",
+    });
 
-  setExistingImages(listing.images || []);
-  setImageFiles([]);
-  setImagePreviews([]);
+    setExistingImages(listing.images || []);
+    setImageFiles([]);
+    setImagePreviews([]);
 
-  window.scrollTo({ top: 0, behavior: "smooth" });
-};
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleUpdateListing = async (e) => {
     e.preventDefault();
@@ -335,17 +345,17 @@ const clearForm = () => {
   };
 
   const handleRemoveExistingImage = async (imageId) => {
-  if (!window.confirm("Are you sure you want to remove this image?")) return;
+    if (!window.confirm("Are you sure you want to remove this image?")) return;
 
-  try {
-    await removeListingImage(imageId);
-    setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
-    fetchMyListings();
-  } catch (error) {
-    console.log("Remove Image Error:", error.response?.data || error);
-    alert("Failed to remove image");
-  }
-};
+    try {
+      await removeListingImage(imageId);
+      setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
+      fetchMyListings();
+    } catch (error) {
+      console.log("Remove Image Error:", error.response?.data || error);
+      alert("Failed to remove image");
+    }
+  };
 
   const tabTitle = {
     myBusiness: "My Business",
@@ -373,7 +383,7 @@ const clearForm = () => {
           <div className="space-y-2">
             {[
               [FaHome, "Dashboard", "dashboard"],
-              [FaStore, "My Business", "myBusiness"],
+              [FaStore, "My Business", "dashboard"],
               [FaCalendarAlt, "Bookings", "bookings"],
               [FaRegStar, "Reviews", "reviews"],
               [FaChartLine, "Analytics", "analytics"],
@@ -384,9 +394,7 @@ const clearForm = () => {
             ].map(([Icon, label, tab]) => (
               <button
                 key={label}
-                onClick={() =>
-  setActiveTab(tab === "myBusiness" ? "dashboard" : tab)
-}
+                onClick={() => setActiveTab(tab)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
                   activeTab === tab
                     ? "bg-blue-600 shadow-lg"
@@ -528,35 +536,14 @@ const clearForm = () => {
 
                   {messagesLoading ? (
                     <div className="flex items-center justify-center py-20 text-gray-400 text-lg">
-                      <svg
-                        className="animate-spin h-6 w-6 mr-3 text-blue-500"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8v8z"
-                        />
-                      </svg>
+
                       Loading messages...
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                       <FaComments className="text-5xl mb-4 text-gray-200" />
                       <p className="text-lg font-medium">No customer messages yet.</p>
-                      <p className="text-sm mt-1">
-                        When customers enquire about your listings, they'll appear here.
-                      </p>
+
                     </div>
                   ) : (
                     <div className="space-y-5">
@@ -567,7 +554,7 @@ const clearForm = () => {
                         >
                           <div className="flex flex-col md:flex-row md:justify-between gap-4">
                             <div className="flex-1">
-                              
+
                               <div className="flex flex-wrap items-center gap-3 mb-1">
                                 <h3 className="text-xl font-bold text-gray-900">
                                   {msg.name || "Unknown Customer"}
@@ -752,81 +739,81 @@ const clearForm = () => {
                     className="grid md:grid-cols-2 gap-4"
                   >
                     <InputBox
-  icon={<FaBuilding />}
-  label="Business Name"
-  name="name"
-  placeholder="Enter business name"
-  value={formData.name}
-  onChange={handleChange}
-/>
+                      icon={<FaBuilding />}
+                      label="Business Name"
+                      name="name"
+                      placeholder="Enter business name"
+                      value={formData.name}
+                      onChange={handleChange}
+                    />
 
-<InputBox
-  icon={<FaPhoneAlt />}
-  label="Phone Number"
-  name="phone"
-  placeholder="Enter phone number"
-  value={formData.phone}
-  onChange={handleChange}
-/>
+                    <InputBox
+                      icon={<FaPhoneAlt />}
+                      label="Phone Number"
+                      name="phone"
+                      placeholder="Enter phone number"
+                      value={formData.phone}
+                      onChange={handleChange}
+                    />
 
-<InputBox
-  icon={<FaInstagram />}
-  label="Instagram Handle / URL"
-  name="instagramUrl"
-  placeholder="@businessname or https://instagram.com/businessname"
-  value={formData.instagramUrl}
-  onChange={handleChange}
-  required={false}
-/>
+                    <InputBox
+                      icon={<FaInstagram />}
+                      label="Instagram Handle / URL"
+                      name="instagramUrl"
+                      placeholder="@businessname or https://instagram.com/businessname"
+                      value={formData.instagramUrl}
+                      onChange={handleChange}
+                      required={false}
+                    />
 
-<InputBox
-  icon={<FaMapMarkerAlt />}
-  label="Address Line 1"
-  name="addressLine1"
-  placeholder="Shop no, building, market"
-  value={formData.addressLine1}
-  onChange={handleChange}
-/>
+                    <InputBox
+                      icon={<FaMapMarkerAlt />}
+                      label="Address Line 1"
+                      name="addressLine1"
+                      placeholder="Shop no, building, market"
+                      value={formData.addressLine1}
+                      onChange={handleChange}
+                    />
 
-<InputBox
-  icon={<FaMapMarkerAlt />}
-  label="Address Line 2"
-  name="addressLine2"
-  placeholder="Sector, area, nearby place"
-  value={formData.addressLine2}
-  onChange={handleChange}
-  required={false}
-/>
+                    <InputBox
+                      icon={<FaMapMarkerAlt />}
+                      label="Address Line 2"
+                      name="addressLine2"
+                      placeholder="Sector, area, nearby place"
+                      value={formData.addressLine2}
+                      onChange={handleChange}
+                      required={false}
+                    />
 
-<InputBox
-  icon={<FaMapMarkerAlt />}
-  label="Landmark"
-  name="landmark"
-  placeholder="Near metro, mall, school etc."
-  value={formData.landmark}
-  onChange={handleChange}
-  required={false}
-/>
+                    <InputBox
+                      icon={<FaMapMarkerAlt />}
+                      label="Landmark"
+                      name="landmark"
+                      placeholder="Near metro, mall, school etc."
+                      value={formData.landmark}
+                      onChange={handleChange}
+                      required={false}
+                    />
 
-<InputBox
-  icon={<FaMapMarkerAlt />}
-  label="Pincode"
-  name="pincode"
-  placeholder="110085"
-  value={formData.pincode}
-  onChange={handleChange}
-  required={false}
-/>
+                    <InputBox
+                      icon={<FaMapMarkerAlt />}
+                      label="Pincode"
+                      name="pincode"
+                      placeholder="110085"
+                      value={formData.pincode}
+                      onChange={handleChange}
+                      required={false}
+                    />
 
-<InputBox
-  icon={<FaPhoneAlt />}
-  label="WhatsApp Number"
-  name="whatsappPhone"
-  placeholder="Enter WhatsApp number"
-  value={formData.whatsappPhone}
-  onChange={handleChange}
-  required={false}
-/>
+                    <InputBox
+                      icon={<FaPhoneAlt />}
+                      label="WhatsApp Number"
+                      name="whatsappPhone"
+                      placeholder="Enter WhatsApp number"
+                      value={formData.whatsappPhone}
+                      onChange={handleChange}
+                      required={false}
+                    />
 
                     <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
                       <label className="text-sm text-gray-500">
@@ -846,6 +833,31 @@ const clearForm = () => {
                           </option>
                         ))}
                       </select>
+                    </div>
+
+                    <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
+                      <label className="text-sm text-gray-500">
+                        Price Range <span className="text-red-500">*</span>
+                      </label>
+                      
+                      <div className="flex items-center gap-3 mt-2">
+                        <FaRupeeSign className="text-gray-400" />
+                        <select
+                          name="priceRange"
+                          value={formData.priceRange}
+                          onChange={handleChange}
+                          className="w-full outline-none bg-transparent"
+                          required
+                        >
+                          <option value="">Select Price Range</option>
+                          <option value="BUDGET">Budget</option>
+                          <option value="MID_RANGE">Mid Range</option>
+                          <option value="PREMIUM">Premium</option>
+                        </select>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Choose your business price segment.
+                      </p>
                     </div>
 
                     <TimeInputBox
@@ -885,49 +897,49 @@ const clearForm = () => {
                     </div>
 
                     <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
-  <label className="text-sm text-gray-500">
-    Services / Catalogue Items
-  </label>
-  <textarea
-    name="servicesText"
-    placeholder="Haircut, Spa, Facial, Bridal Makeup"
-    value={formData.servicesText}
-    onChange={handleChange}
-    className="w-full mt-2 outline-none resize-none"
-    rows="3"
-  />
-  <p className="text-xs text-gray-400 mt-1">
-    Separate services using comma.
-  </p>
-</div>
+                      <label className="text-sm text-gray-500">
+                        Services / Catalogue Items
+                      </label>
+                      <textarea
+                        name="servicesText"
+                        placeholder="Haircut, Spa, Facial, Bridal Makeup"
+                        value={formData.servicesText}
+                        onChange={handleChange}
+                        className="w-full mt-2 outline-none resize-none"
+                        rows="3"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Separate services using comma.
+                      </p>
+                    </div>
 
-{existingImages.length > 0 && (
-  <div className="mt-4 md:col-span-2">
-    <p className="text-sm font-semibold text-gray-700 mb-3">
-      Existing Gallery
-    </p>
+                    {existingImages.length > 0 && (
+                      <div className="mt-4 md:col-span-2">
+                        <p className="text-sm font-semibold text-gray-700 mb-3">
+                          Existing Gallery
+                        </p>
 
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-      {existingImages.map((img) => (
-        <div key={img.id} className="relative group">
-          <img
-            src={img.url}
-            alt={img.altText || "Business image"}
-            className="w-full h-32 object-cover rounded-xl border"
-          />
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {existingImages.map((img) => (
+                            <div key={img.id} className="relative group">
+                              <img
+                                src={img.url}
+                                alt={img.altText || "Business image"}
+                                className="w-full h-32 object-cover rounded-xl border"
+                              />
 
-          <button
-            type="button"
-            onClick={() => handleRemoveExistingImage(img.id)}
-            className="absolute top-2 right-2 bg-red-600 text-white text-xs px-3 py-1 rounded-full"
-          >
-            Remove
-          </button>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveExistingImage(img.id)}
+                                className="absolute top-2 right-2 bg-red-600 text-white text-xs px-3 py-1 rounded-full"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="border rounded-2xl px-4 py-3 md:col-span-2">
                       <label className="text-sm text-gray-500">
@@ -1077,12 +1089,13 @@ const clearForm = () => {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[900px] border rounded-2xl overflow-hidden">
+                    <table className="w-full min-w-[1000px] border rounded-2xl overflow-hidden">
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="text-left p-4">Business Name</th>
                           <th className="text-left p-4">Category</th>
                           <th className="text-left p-4">City</th>
+                          <th className="text-left p-4">Price Range</th>
                           <th className="text-left p-4">Status</th>
                           <th className="text-left p-4">Actions</th>
                         </tr>
@@ -1140,6 +1153,12 @@ const clearForm = () => {
                             <td className="p-4">
                               <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
                                 {item.city?.name || getCityName(item.cityId)}
+                              </span>
+                            </td>
+
+                            <td className="p-4">
+                              <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-sm">
+                                {formatPriceRange(item.priceRange)}
                               </span>
                             </td>
 

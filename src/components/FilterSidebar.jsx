@@ -14,15 +14,28 @@ const categories = [
   "Repair",
 ];
 
+const priceRanges = [
+  { label: "Budget", value: "BUDGET" },
+  { label: "Mid Range", value: "MID_RANGE" },
+  { label: "Premium", value: "PREMIUM" },
+];
+
 export default function FilterSidebar({
   selectedCategory = "All",
+  selectedPrice = "",
   onCategoryChange = () => {},
+  onPriceChange = () => {},
   onApply = () => {},
   onReset = () => {},
 }) {
   const [selectedRating, setSelectedRating] = useState("");
   const [openNow, setOpenNow] = useState(false);
-  const [selectedPrice, setSelectedPrice] = useState("");
+
+  const handleReset = () => {
+    setSelectedRating("");
+    setOpenNow(false);
+    onReset();
+  };
 
   return (
     <aside className="bg-white rounded-2xl shadow p-6 w-full lg:w-72">
@@ -35,8 +48,11 @@ export default function FilterSidebar({
         <h3 className="font-semibold mb-4">Category</h3>
 
         <div className="space-y-3">
-          {categories.map((category, index) => (
-            <label key={index} className="flex items-center gap-3 cursor-pointer text-gray-600">
+          {categories.map((category) => (
+            <label
+              key={category}
+              className="flex items-center gap-3 cursor-pointer text-gray-600"
+            >
               <input
                 type="radio"
                 name="category"
@@ -55,7 +71,10 @@ export default function FilterSidebar({
 
         <div className="space-y-3">
           {[5, 4, 3].map((ratingValue) => (
-            <label key={ratingValue} className="flex items-center gap-3 cursor-pointer text-gray-600">
+            <label
+              key={ratingValue}
+              className="flex items-center gap-3 cursor-pointer text-gray-600"
+            >
               <input
                 type="radio"
                 name="rating"
@@ -94,19 +113,32 @@ export default function FilterSidebar({
         <h3 className="font-semibold mb-4">Price Range</h3>
 
         <div className="space-y-3">
-          {["Budget", "Mid Range", "Premium"].map((priceValue, index) => (
-            <label key={index} className="flex items-center gap-3 cursor-pointer text-gray-600">
+          {priceRanges.map((price) => (
+            <label
+              key={price.value}
+              className="flex items-center gap-3 cursor-pointer text-gray-600"
+            >
               <input
                 type="radio"
                 name="price"
-                checked={selectedPrice === priceValue}
-                onChange={() => setSelectedPrice(priceValue)}
+                checked={selectedPrice === price.value}
+                onChange={() => onPriceChange(price.value)}
                 className="accent-blue-600"
               />
-              {priceValue}
+              {price.label}
             </label>
           ))}
         </div>
+
+        {selectedPrice && (
+          <button
+            type="button"
+            onClick={() => onPriceChange("")}
+            className="text-sm text-blue-600 hover:underline mt-3"
+          >
+            Clear price range
+          </button>
+        )}
       </div>
 
       <div className="flex gap-3">
@@ -118,7 +150,7 @@ export default function FilterSidebar({
         </button>
 
         <button
-          onClick={onReset}
+          onClick={handleReset}
           className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold transition"
         >
           Reset
