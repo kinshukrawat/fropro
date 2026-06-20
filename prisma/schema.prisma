@@ -45,6 +45,12 @@ enum EnquiryStatus {
   SPAM
 }
 
+enum PriceRange {
+  BUDGET
+  MID_RANGE
+  PREMIUM
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -128,6 +134,7 @@ model BusinessListing {
   approvedAt       DateTime?
   opensAt          String?
   closesAt         String?
+  priceRange PriceRange?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 

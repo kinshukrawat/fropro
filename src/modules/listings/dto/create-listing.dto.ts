@@ -1,10 +1,12 @@
 import {
   IsArray,
+  IsEnum,
   IsOptional,
   IsPhoneNumber,
   IsString,
   MaxLength,
 } from 'class-validator';
+import { PriceRange } from '@prisma/client';
 
 export class CreateListingDto {
   @IsString()
@@ -57,4 +59,8 @@ export class CreateListingDto {
   @IsOptional()
   @IsString()
   closesAt?: string;
+
+  @IsOptional()
+  @IsEnum(PriceRange)
+  priceRange?: PriceRange;
 }

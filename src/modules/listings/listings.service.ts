@@ -22,22 +22,28 @@ export class ListingsService {
     const searchFilters: Prisma.BusinessListingWhereInput[] = [];
 
     if (query.q) {
-      searchFilters.push(
-        { name: { contains: query.q, mode: 'insensitive' } },
-        { description: { contains: query.q, mode: 'insensitive' } },
-        { addressLine1: { contains: query.q, mode: 'insensitive' } },
-        { addressLine2: { contains: query.q, mode: 'insensitive' } },
-        { landmark: { contains: query.q, mode: 'insensitive' } },
-        { pincode: { contains: query.q, mode: 'insensitive' } },
-        { services: { hasSome: [query.q] } },
-      );
+      searchFilters.push({
+        OR: [
+          { name: { contains: query.q, mode: 'insensitive' } },
+          { description: { contains: query.q, mode: 'insensitive' } },
+          { addressLine1: { contains: query.q, mode: 'insensitive' } },
+          { addressLine2: { contains: query.q, mode: 'insensitive' } },
+          { landmark: { contains: query.q, mode: 'insensitive' } },
+          { pincode: { contains: query.q, mode: 'insensitive' } },
+          { services: { hasSome: [query.q] } },
+        ],
+      });
     }
 
     if (query.category) {
       searchFilters.push({
         OR: [
           { category: { slug: query.category } },
-          { category: { name: { contains: query.category, mode: 'insensitive' } } },
+          {
+            category: {
+              name: { contains: query.category, mode: 'insensitive' },
+            },
+          },
         ],
       });
     }
@@ -46,7 +52,11 @@ export class ListingsService {
       searchFilters.push({
         OR: [
           { city: { slug: query.city } },
-          { city: { name: { contains: query.city, mode: 'insensitive' } } },
+          {
+            city: {
+              name: { contains: query.city, mode: 'insensitive' },
+            },
+          },
         ],
       });
     }
@@ -60,6 +70,12 @@ export class ListingsService {
           { landmark: { contains: query.location, mode: 'insensitive' } },
           { pincode: { contains: query.location, mode: 'insensitive' } },
         ],
+      });
+    }
+
+    if (query.priceRange) {
+      searchFilters.push({
+        priceRange: query.priceRange,
       });
     }
 
