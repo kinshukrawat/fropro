@@ -116,7 +116,7 @@ export class ListingsService {
       skip: (page - 1) * limit,
       take: limit,
       orderBy: [{ isFeatured: 'desc' }, { updatedAt: 'desc' }],
-      include: this.listingInclude({ imageLimit: 1, catalogueActiveOnly: true }),
+      include: this.listingListInclude(),
     });
 
     const total = await this.prisma.businessListing.count({ where });
@@ -228,7 +228,7 @@ export class ListingsService {
         isDeleted: false,
       },
       orderBy: [{ isFeatured: 'desc' }, { updatedAt: 'desc' }],
-      include: this.listingInclude({ imageLimit: 1, catalogueActiveOnly: true }),
+      include: this.listingListInclude(),
     });
 
     return this.attachReviewSummaries(items);
@@ -260,34 +260,44 @@ export class ListingsService {
       return items;
     }
 
-    const aggregates = await this.prisma.review.groupBy({
-      by: ['listingId'],
-      where: {
-        listingId: { in: items.map((item) => item.id) },
-        isApproved: true,
-      },
-      _avg: { rating: true },
-      _count: { rating: true },
-    });
-
-    const summaryByListingId = new Map(
-      aggregates.map((aggregate) => [
-        aggregate.listingId,
-        {
-          rating: aggregate._avg.rating ? Number(aggregate._avg.rating.toFixed(1)) : 0,
-          reviewCount: aggregate._count.rating,
+    try {
+      const aggregates = await this.prisma.review.groupBy({
+        by: ['listingId'],
+        where: {
+          listingId: { in: items.map((item) => item.id) },
+          isApproved: true,
         },
-      ]),
-    );
+        _avg: { rating: true },
+        _count: { rating: true },
+      });
 
-    return items.map((item) => {
-      const summary = summaryByListingId.get(item.id);
-      return {
+      const summaryByListingId = new Map(
+        aggregates.map((aggregate) => [
+          aggregate.listingId,
+          {
+            rating: aggregate._avg.rating
+              ? Number(aggregate._avg.rating.toFixed(1))
+              : 0,
+            reviewCount: aggregate._count.rating,
+          },
+        ]),
+      );
+
+      return items.map((item) => {
+        const summary = summaryByListingId.get(item.id);
+        return {
+          ...item,
+          rating: summary?.rating ?? 0,
+          reviewCount: summary?.reviewCount ?? 0,
+        };
+      });
+    } catch {
+      return items.map((item) => ({
         ...item,
-        rating: summary?.rating ?? 0,
-        reviewCount: summary?.reviewCount ?? 0,
-      };
-    });
+        rating: 0,
+        reviewCount: 0,
+      }));
+    }
   }
 
   private async listingIdsMeetingMinRating(minRating: number) {
@@ -305,6 +315,17 @@ export class ListingsService {
     });
 
     return qualifying.map((entry) => entry.listingId);
+  }
+
+  private listingListInclude() {
+    return {
+      category: true,
+      city: true,
+      images: {
+        orderBy: { sortOrder: 'asc' as const },
+        take: 1,
+      },
+    };
   }
 
   private listingInclude(options?: { imageLimit?: number; catalogueActiveOnly?: boolean }) {
@@ -365,4 +386,5 @@ export class ListingsService {
     return slug;
   }
 }
+
 
