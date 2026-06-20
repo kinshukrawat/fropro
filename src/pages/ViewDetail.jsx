@@ -16,7 +16,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 
-import API from "../api/api";
+import API, { trackWhatsappTap } from "../api/api";
 
 export default function ViewDetail() {
   const { slug } = useParams();
@@ -154,10 +154,8 @@ export default function ViewDetail() {
       return;
     }
     try {
-      await API.post("/messages", {
+      await API.post("/enquiries", {
         listingId: business?.id,
-        listingName: business?.name,
-        serviceTitle: selectedCatalogue?.title,
         name: priceForm.name,
         email: priceForm.email,
         phone: priceForm.phone,
@@ -166,7 +164,7 @@ export default function ViewDetail() {
       alert("Your enquiry has been sent! The business owner will contact you soon.");
     } catch (error) {
       console.log("Ask For Price Error:", error.response?.data || error);
-      alert("Enquiry sent (backend integration pending).");
+      alert(error.response?.data?.message || "Failed to send enquiry.");
     }
     closePriceModal();
   };
@@ -269,6 +267,30 @@ export default function ViewDetail() {
     "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200";
 
   const phone = business.contactPhone || business.whatsappPhone || "";
+  const whatsappPhone = business.whatsappPhone || business.contactPhone || "";
+  const whatsappUrl = whatsappPhone
+    ? `https://wa.me/91${whatsappPhone.replace(/\D/g, "").slice(-10)}`
+    : null;
+  const websiteUrl = business.websiteUrl || business.website
+    ? (business.websiteUrl || business.website).startsWith("http")
+      ? business.websiteUrl || business.website
+      : `https://${business.websiteUrl || business.website}`
+    : null;
+  const instagramUrl = business.instagramUrl
+    ? business.instagramUrl.startsWith("http")
+      ? business.instagramUrl
+      : `https://instagram.com/${business.instagramUrl.replace("@", "")}`
+    : null;
+
+  const handleWhatsappClick = async () => {
+    if (!whatsappUrl) return;
+    try {
+      await trackWhatsappTap(business.id);
+    } catch (error) {
+      console.log("WhatsApp tracking failed:", error.response?.data || error);
+    }
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+  };
 
   const fullAddress =
     [
@@ -367,10 +389,12 @@ export default function ViewDetail() {
                 {totalReviews} ratings
               </button>
 
-              <span className="flex items-center gap-1 text-blue-600 font-semibold">
-                <FaCheckCircle />
-                Verified
-              </span>
+              {business.isVerified && (
+                <span className="flex items-center gap-1 text-blue-600 font-semibold">
+                  <FaCheckCircle />
+                  Verified
+                </span>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-2 text-gray-700">
@@ -431,7 +455,7 @@ export default function ViewDetail() {
                   onClick={() => openPriceModal(item)}
                   className="mt-5 w-full border border-blue-600 text-blue-600 py-3 rounded-xl font-bold hover:bg-blue-50 transition"
                 >
-                  Ask for Price
+                  {item.buttonLabel || "Ask for Price"}
                 </button>
               </div>
             ))}
@@ -759,8 +783,9 @@ export default function ViewDetail() {
               Rate & Review
             </button>
 
-            <a
-              href="https://www.instagram.com/oyerohini_?igsh=MXFlbzRvbndndmJ5Zw%3D%3D&utm_source=qr"
+            {instagramUrl && (
+              <a
+                href={instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-3 border py-3 rounded-xl font-semibold hover:bg-pink-50 transition"
@@ -768,10 +793,21 @@ export default function ViewDetail() {
               <FaInstagram className="text-pink-500 text-xl" />
               Instagram
             </a>
+            )}
 
-            {business.websiteUrl && (
+            {whatsappUrl && (
+              <button
+                type="button"
+                onClick={handleWhatsappClick}
+                className="flex items-center justify-center gap-3 border py-3 rounded-xl font-semibold hover:bg-green-50 transition w-full"
+              >
+                WhatsApp
+              </button>
+            )}
+
+            {websiteUrl && (
               <a
-                href={business.websiteUrl}
+                href={websiteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-3 border py-3 rounded-xl font-semibold hover:bg-gray-50 transition"
@@ -854,3 +890,5 @@ export default function ViewDetail() {
     </div>
   );
 }
+
+

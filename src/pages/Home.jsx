@@ -21,6 +21,7 @@ import {
 
 import SearchSuggestions from "../components/SearchSuggestions";
 import Testimonials from "../components/Testimonials";
+import { formatListingRating } from "../components/ReviewSection";
 import API, { getCategories, searchListings, getContact } from "../api/api";
 
 const defaultCategories = [
@@ -348,7 +349,7 @@ export default function Home() {
 
                       <div className="flex items-center bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
                         <FaStar className="mr-1" />
-                        {item.rating || "4.5"}
+                        {formatListingRating(item.rating, item.reviewCount)}
                       </div>
                     </div>
 

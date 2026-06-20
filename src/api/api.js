@@ -48,5 +48,20 @@ export const updateAdminEnquiryStatus = (id, status) =>
   API.patch(`/admin/enquiries/${id}/status`, { status });
 export const toggleAdminFeatured = (id, isFeatured) =>
   API.patch(`/admin/listings/${id}/featured`, { isFeatured });
+export const toggleAdminVerified = (id, isVerified) =>
+  API.patch(`/admin/listings/${id}/verified`, { isVerified });
 export const removeListingImage = (id) =>
   API.delete(`/uploads/listing-images/${id}`);
+
+export const getListingReviews = (listingId) =>
+  API.get(`/reviews/listing/${listingId}`);
+
+export const getListingReviewSummary = (listingId) =>
+  API.get(`/reviews/listing/${listingId}/summary`);
+
+export const submitReview = (data) => API.post("/reviews", data);
+
+export const getRecentReviews = (limit = 20) =>
+  API.get("/reviews/recent", { params: { limit } });
+
+export const getOwnerReviews = () => API.get("/reviews/owner/mine");

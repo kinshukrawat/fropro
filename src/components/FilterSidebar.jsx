@@ -1,5 +1,4 @@
 import { FaFilter, FaStar } from "react-icons/fa";
-
 import { useState } from "react";
 
 const categories = [
@@ -17,10 +16,11 @@ const categories = [
 export default function FilterSidebar({
   selectedCategory = "All",
   onCategoryChange = () => {},
+  selectedRating = "",
+  onRatingChange = () => {},
   onApply = () => {},
   onReset = () => {},
 }) {
-  const [selectedRating, setSelectedRating] = useState("");
   const [openNow, setOpenNow] = useState(false);
   const [selectedPrice, setSelectedPrice] = useState("");
 
@@ -35,8 +35,11 @@ export default function FilterSidebar({
         <h3 className="font-semibold mb-4">Category</h3>
 
         <div className="space-y-3">
-          {categories.map((category, index) => (
-            <label key={index} className="flex items-center gap-3 cursor-pointer text-gray-600">
+          {categories.map((category) => (
+            <label
+              key={category}
+              className="flex items-center gap-3 cursor-pointer text-gray-600"
+            >
               <input
                 type="radio"
                 name="category"
@@ -55,12 +58,15 @@ export default function FilterSidebar({
 
         <div className="space-y-3">
           {[5, 4, 3].map((ratingValue) => (
-            <label key={ratingValue} className="flex items-center gap-3 cursor-pointer text-gray-600">
+            <label
+              key={ratingValue}
+              className="flex items-center gap-3 cursor-pointer text-gray-600"
+            >
               <input
                 type="radio"
                 name="rating"
                 checked={selectedRating === String(ratingValue)}
-                onChange={() => setSelectedRating(String(ratingValue))}
+                onChange={() => onRatingChange(String(ratingValue))}
                 className="accent-blue-600"
               />
 
@@ -94,8 +100,11 @@ export default function FilterSidebar({
         <h3 className="font-semibold mb-4">Price Range</h3>
 
         <div className="space-y-3">
-          {["Budget", "Mid Range", "Premium"].map((priceValue, index) => (
-            <label key={index} className="flex items-center gap-3 cursor-pointer text-gray-600">
+          {["Budget", "Mid Range", "Premium"].map((priceValue) => (
+            <label
+              key={priceValue}
+              className="flex items-center gap-3 cursor-pointer text-gray-600"
+            >
               <input
                 type="radio"
                 name="price"

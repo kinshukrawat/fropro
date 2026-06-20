@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import MapSection from "../components/MapSection";
-import API from "../api/api";
+import ReviewSection, { formatListingRating } from "../components/ReviewSection";
+import { getListingBySlug } from "../api/api";
 
 import {
   FaStar,
   FaMapMarkerAlt,
   FaPhoneAlt,
   FaClock,
-  
   FaGlobe,
   FaHeart,
   FaShareAlt,
@@ -57,6 +57,7 @@ export default function BusinessDetails() {
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [reviewSummary, setReviewSummary] = useState({ rating: 0, reviewCount: 0 });
 
   const reviewSectionRef = useRef(null);
 
@@ -70,8 +71,12 @@ export default function BusinessDetails() {
   const fetchBusinessDetails = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`/listings/${slug}`);
+      const res = await getListingBySlug(slug);
       setBusiness(res.data);
+      setReviewSummary({
+        rating: res.data?.rating ?? 0,
+        reviewCount: res.data?.reviewCount ?? 0,
+      });
     } catch (error) {
       console.log("Business Details API Error:", error);
       setBusiness(null);
@@ -108,8 +113,11 @@ export default function BusinessDetails() {
       : [image];
 
   const category = business.category?.name || business.category || "Business";
-  const rating = business.rating || "4.5";
-  const reviews = business.reviews || business.reviewCount || 0;
+  const ratingLabel = formatListingRating(
+    reviewSummary.rating,
+    reviewSummary.reviewCount
+  );
+  const reviewCountLabel = reviewSummary.reviewCount || 0;
 
   const fullAddress =
     business.address ||
@@ -164,7 +172,6 @@ export default function BusinessDetails() {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-
       <div className="relative w-full h-[450px] overflow-hidden">
         <img
           src={image}
@@ -188,7 +195,8 @@ export default function BusinessDetails() {
               <div className="flex flex-wrap items-center gap-5 text-lg">
                 <div className="flex items-center">
                   <FaStar className="text-yellow-400 mr-2" />
-                  {rating} ({reviews} Reviews)
+                  {ratingLabel}
+                  {reviewCountLabel > 0 && ` (${reviewCountLabel} Reviews)`}
                 </div>
 
                 <div className="flex items-center">
@@ -216,10 +224,8 @@ export default function BusinessDetails() {
         </div>
       </div>
 
-
       <section className="max-w-7xl mx-auto px-4 py-10">
         <div className="grid lg:grid-cols-2 gap-8 items-start">
-
           <div className="space-y-8">
             <div className="bg-white rounded-3xl shadow p-8">
               <div className="flex items-center gap-3 mb-3">
@@ -238,7 +244,6 @@ export default function BusinessDetails() {
 
               <p className="text-gray-600 leading-8 mb-6">{description}</p>
 
-
               <div className="border border-gray-200 rounded-2xl p-6 mt-6">
                 <h3 className="text-2xl font-bold mb-5">Business Info</h3>
 
@@ -252,7 +257,6 @@ export default function BusinessDetails() {
                     <FaPhoneAlt className="text-green-600" />
                     {phone || "Phone not available"}
                   </p>
-
 
                   <p className="flex items-center gap-3">
                     <FaClock className="text-orange-500" />
@@ -327,7 +331,6 @@ export default function BusinessDetails() {
               </div>
             </div>
 
-
             <div className="bg-white rounded-3xl shadow p-8">
               <h2 className="text-2xl font-bold mb-6">Gallery</h2>
 
@@ -344,39 +347,17 @@ export default function BusinessDetails() {
               </div>
             </div>
 
-            <div
-              ref={reviewSectionRef}
-              className="bg-white rounded-3xl shadow p-8 scroll-mt-28"
-            >
-              <h2 className="text-2xl font-bold mb-4">Rate & Review</h2>
-
-              <p className="text-gray-500 mb-5">
-                Share your experience with {business.name}.
-              </p>
-
-              <div className="flex gap-2 mb-5 text-yellow-400 text-3xl">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <FaStar key={star} />
-                ))}
-              </div>
-
-              <textarea
-                placeholder="Write your review here..."
-                className="w-full border rounded-2xl p-4 outline-none focus:border-blue-500 resize-none"
-                rows="5"
-              />
-
-              <button
-                type="button"
-                className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold"
-              >
-                Submit Review
-              </button>
-            </div>
+            <ReviewSection
+              listingId={business.id}
+              businessName={business.name}
+              summaryRating={reviewSummary.rating}
+              summaryReviewCount={reviewSummary.reviewCount}
+              sectionRef={reviewSectionRef}
+              onSummaryUpdate={setReviewSummary}
+            />
 
             <MapSection />
           </div>
-
 
           <div className="sticky top-24">
             <div className="bg-white rounded-3xl shadow p-6">
@@ -408,7 +389,6 @@ export default function BusinessDetails() {
           </div>
         </div>
       </section>
-
 
       {selectedImage && (
         <div

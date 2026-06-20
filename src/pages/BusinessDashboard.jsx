@@ -35,6 +35,7 @@ import API, {
   getCategories,
   getCities,
   getMyListings,
+  getOwnerReviews,
   removeListingImage,
 } from "../api/api";
 
@@ -51,6 +52,8 @@ export default function BusinessDashboard() {
   // Messages state
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [ownerReviews, setOwnerReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [existingImages, setExistingImages] = useState([]);
 
 const [formData, setFormData] = useState({
@@ -61,6 +64,7 @@ const [formData, setFormData] = useState({
   landmark: "",
   pincode: "",
   phone: "",
+  email: "",
   whatsappPhone: "",
   instagramUrl: "",
   categoryId: "",
@@ -108,11 +112,25 @@ const [formData, setFormData] = useState({
     }
   };
 
+  const fetchOwnerReviews = async () => {
+    setReviewsLoading(true);
+    try {
+      const res = await getOwnerReviews();
+      setOwnerReviews(res.data?.items || res.data?.data || res.data || []);
+    } catch (error) {
+      console.log("Owner Reviews Error:", error.response?.data || error);
+      setOwnerReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchMyListings();
     fetchDropdownData();
     fetchOwnerFinance();
     fetchOwnerMessages();
+    fetchOwnerReviews();
   }, []);
 
   const stats = useMemo(() => {
@@ -126,13 +144,23 @@ const [formData, setFormData] = useState({
         item.status?.toLowerCase() === "submitted"
     ).length;
 
+    const avgRating = ownerReviews.length
+      ? (
+          ownerReviews.reduce(
+            (sum, review) => sum + Number(review.rating || 0),
+            0
+          ) / ownerReviews.length
+        ).toFixed(1)
+      : "0.0";
+
     return {
       total: listings.length,
       approved,
       pending,
-      rating: 0,
+      rating: avgRating,
+      reviewTotal: ownerReviews.length,
     };
-  }, [listings]);
+  }, [listings, ownerReviews]);
 
   const getCategoryName = (id) => {
     return categories.find((cat) => String(cat.id) === String(id))?.name || "—";
@@ -213,6 +241,7 @@ const clearForm = () => {
   categoryId: formData.categoryId,
   cityId: formData.cityId,
   contactPhone: formData.phone,
+  email: formData.email,
   whatsappPhone: formData.whatsappPhone || formData.phone,
   instagramUrl: formData.instagramUrl,
   addressLine1: formData.addressLine1,
@@ -285,6 +314,7 @@ const clearForm = () => {
     landmark: listing.landmark || "",
     pincode: listing.pincode || "",
     phone: listing.contactPhone || "",
+    email: listing.email || "",
     whatsappPhone: listing.whatsappPhone || "",
     instagramUrl: listing.instagramUrl || "",
     categoryId: listing.categoryId || listing.category?.id || "",
@@ -507,6 +537,81 @@ const clearForm = () => {
                     ))}
                   </div>
                 </>
+              ) : activeTab === "reviews" ? (
+                <>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h2 className="text-3xl font-bold">Customer Reviews</h2>
+                      <p className="text-gray-500 mt-1">
+                        Reviews left on your approved business listings.
+                      </p>
+                    </div>
+                    <button
+                      onClick={fetchOwnerReviews}
+                      className="flex items-center gap-2 px-5 py-2.5 border border-blue-600 text-blue-600 rounded-2xl hover:bg-blue-50 font-semibold transition"
+                    >
+                      <FaRegStar />
+                      Refresh
+                    </button>
+                  </div>
+
+                  {reviewsLoading ? (
+                    <p className="text-center text-gray-500 py-16">
+                      Loading reviews...
+                    </p>
+                  ) : ownerReviews.length === 0 ? (
+                    <p className="text-center text-gray-500 py-16">
+                      No reviews yet. Reviews will appear here once customers
+                      rate your businesses.
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {ownerReviews.map((review) => (
+                        <div
+                          key={review.id}
+                          className="border rounded-2xl p-5 bg-gray-50"
+                        >
+                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="text-lg font-bold text-gray-900">
+                                  {review.name || "Guest"}
+                                </h3>
+                                <span className="inline-flex items-center gap-1 bg-green-600 text-white px-2 py-0.5 rounded-md text-sm font-bold">
+                                  {review.rating}
+                                  <FaStar className="text-xs" />
+                                </span>
+                              </div>
+
+                              {review.listing?.name && (
+                                <p className="text-sm text-blue-600 font-medium mb-2">
+                                  {review.listing.name}
+                                </p>
+                              )}
+
+                              <p className="text-gray-700 leading-relaxed">
+                                {review.comment || "No comment added."}
+                              </p>
+                            </div>
+
+                            <p className="text-sm text-gray-400 whitespace-nowrap">
+                              {review.createdAt
+                                ? new Date(review.createdAt).toLocaleDateString(
+                                    "en-IN",
+                                    {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    }
+                                  )
+                                : "—"}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               ) : activeTab === "messages" ? (
                 <>
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -717,7 +822,7 @@ const clearForm = () => {
                   icon={<FaStar />}
                   title="Average Rating"
                   value={stats.rating}
-                  subtitle="Total Reviews"
+                  subtitle={`${stats.reviewTotal} Reviews`}
                   color="yellow"
                 />
                 <StatCard
@@ -1286,3 +1391,6 @@ function MiniStat({ title, value, growth }) {
     </div>
   );
 }
+
+
+

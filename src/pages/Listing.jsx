@@ -8,7 +8,8 @@ import {
 } from "react-icons/fa";
 
 import FilterSidebar from "../components/FilterSidebar";
-import API from "../api/api";
+import { formatListingRating } from "../components/ReviewSection";
+import { searchListings } from "../api/api";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1200&auto=format&fit=crop";
@@ -21,17 +22,14 @@ export default function Listing() {
   const [search, setSearch] = useState("");
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
+  const [minRating, setMinRating] = useState("");
   const [loading, setLoading] = useState(true);
 
   const fetchListings = async (params = {}) => {
     try {
       setLoading(true);
 
-      const res = await API.get("/listings", {
-        params,
-      });
-      
-
+      const res = await searchListings(params);
       const data = res.data?.items || res.data?.data || [];
 
       setListings(data);
@@ -47,17 +45,20 @@ export default function Listing() {
     const q = searchParams.get("q") || "";
     const cityParam = searchParams.get("city") || "";
     const categoryParam = searchParams.get("category") || "";
+    const ratingParam = searchParams.get("minRating") || "";
 
     setSearch(q);
     setCity(cityParam);
     setCategory(categoryParam);
+    setMinRating(ratingParam);
 
     fetchListings(
-      [q, cityParam, categoryParam].some(Boolean)
+      [q, cityParam, categoryParam, ratingParam].some(Boolean)
         ? {
             ...(q ? { q } : {}),
             ...(cityParam ? { city: cityParam } : {}),
             ...(categoryParam ? { category: categoryParam } : {}),
+            ...(ratingParam ? { minRating: ratingParam } : {}),
           }
         : {}
     );
@@ -68,6 +69,7 @@ export default function Listing() {
     if (search) params.set("q", search);
     if (city) params.set("city", city);
     if (category) params.set("category", category);
+    if (minRating) params.set("minRating", minRating);
 
     navigate(`/listings?${params.toString()}`);
   };
@@ -80,6 +82,7 @@ export default function Listing() {
     if (search) params.set("q", search);
     if (city) params.set("city", city);
     if (nextCategory) params.set("category", nextCategory);
+    if (minRating) params.set("minRating", minRating);
 
     navigate(`/listings?${params.toString()}`);
   };
@@ -88,6 +91,7 @@ export default function Listing() {
     setSearch("");
     setCity("");
     setCategory("");
+    setMinRating("");
     navigate("/listings");
   };
 
@@ -133,6 +137,8 @@ export default function Listing() {
           <FilterSidebar
             selectedCategory={category || "All"}
             onCategoryChange={handleCategoryChange}
+            selectedRating={minRating}
+            onRatingChange={setMinRating}
             onApply={handleSearch}
             onReset={handleResetFilters}
           />
@@ -180,7 +186,7 @@ export default function Listing() {
 
                           <div className="flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-lg text-sm font-semibold">
                             <FaStar className="mr-1" />
-                            {item.rating || "New"}
+                            {formatListingRating(item.rating, item.reviewCount)}
                           </div>
                         </div>
 
