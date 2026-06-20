@@ -13,8 +13,19 @@ const categories = [
   "Repair",
 ];
 
+const priceRanges = [
+  { label: "Budget", value: "BUDGET" },
+  { label: "Mid Range", value: "MID_RANGE" },
+  { label: "Premium", value: "PREMIUM" },
+];
+
 export default function FilterSidebar({
   selectedCategory = "All",
+  selectedPrice = "",
+  selectedRating = "",
+  openNow = false,
+  onOpenNowChange = () => {},
+  onRatingChange = () => {},
   onCategoryChange = () => {},
   selectedRating = "",
   onRatingChange = () => {},
@@ -80,6 +91,16 @@ export default function FilterSidebar({
             </label>
           ))}
         </div>
+
+        {selectedRating && (
+          <button
+            type="button"
+            onClick={() => onRatingChange("")}
+            className="text-sm text-blue-600 hover:underline mt-3"
+          >
+            Clear rating
+          </button>
+        )}
       </div>
 
       <div className="mb-8">
@@ -90,7 +111,7 @@ export default function FilterSidebar({
           <input
             type="checkbox"
             checked={openNow}
-            onChange={(e) => setOpenNow(e.target.checked)}
+            onChange={(e) => onOpenNowChange(e.target.checked)}
             className="w-5 h-5 accent-blue-600"
           />
         </label>
@@ -108,14 +129,24 @@ export default function FilterSidebar({
               <input
                 type="radio"
                 name="price"
-                checked={selectedPrice === priceValue}
-                onChange={() => setSelectedPrice(priceValue)}
+                checked={selectedPrice === price.value}
+                onChange={() => onPriceChange(price.value)}
                 className="accent-blue-600"
               />
-              {priceValue}
+              {price.label}
             </label>
           ))}
         </div>
+
+        {selectedPrice && (
+          <button
+            type="button"
+            onClick={() => onPriceChange("")}
+            className="text-sm text-blue-600 hover:underline mt-3"
+          >
+            Clear price range
+          </button>
+        )}
       </div>
 
       <div className="flex gap-3">
@@ -127,7 +158,7 @@ export default function FilterSidebar({
         </button>
 
         <button
-          onClick={onReset}
+          onClick={handleReset}
           className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold transition"
         >
           Reset

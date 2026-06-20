@@ -126,6 +126,12 @@ export default function BusinessDetails() {
       .join(", ") ||
     "Location not available";
 
+  const shortLocation =
+    business.city?.name ||
+    business.addressLine2 ||
+    business.addressLine1 ||
+    "Location";
+
   const phone = business.contactPhone || business.phone || "";
   const website = business.website || "";
   const instagramUrl = business.instagramUrl || "";
@@ -201,7 +207,7 @@ export default function BusinessDetails() {
 
                 <div className="flex items-center">
                   <FaMapMarkerAlt className="mr-2" />
-                  {fullAddress}
+                  {shortLocation}
                 </div>
               </div>
             </div>
@@ -356,7 +362,13 @@ export default function BusinessDetails() {
               onSummaryUpdate={setReviewSummary}
             />
 
-            <MapSection />
+            <div className="bg-white rounded-3xl shadow p-4">
+              <MapSection
+                address={fullAddress}
+                latitude={business.latitude}
+                longitude={business.longitude}
+              />
+            </div>
           </div>
 
           <div className="sticky top-24">

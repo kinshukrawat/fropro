@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import {
   FaStar,
   FaMapMarkerAlt,
@@ -18,6 +23,7 @@ export default function Listing() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
   const [listings, setListings] = useState([]);
   const [search, setSearch] = useState("");
   const [city, setCity] = useState("");
@@ -31,8 +37,7 @@ export default function Listing() {
 
       const res = await searchListings(params);
       const data = res.data?.items || res.data?.data || [];
-
-      setListings(data);
+      setListings(Array.isArray(data) ? data : []);
     } catch (error) {
       console.log("Listings API Error:", error.response?.data || error);
       setListings([]);
@@ -64,7 +69,14 @@ export default function Listing() {
     );
   }, [location.search]);
 
-  const handleSearch = () => {
+  const updateUrl = ({
+    nextSearch = search,
+    nextCity = city,
+    nextCategory = category,
+    nextPriceRange = priceRange,
+    nextRating = rating,
+    nextOpenNow = openNow,
+  } = {}) => {
     const params = new URLSearchParams();
     if (search) params.set("q", search);
     if (city) params.set("city", city);
@@ -93,6 +105,13 @@ export default function Listing() {
     setCategory("");
     setMinRating("");
     navigate("/listings");
+  };
+
+  const formatPriceRange = (value) => {
+    if (value === "BUDGET") return "Budget";
+    if (value === "MID_RANGE") return "Mid Range";
+    if (value === "PREMIUM") return "Premium";
+    return "";
   };
 
   return (
@@ -136,6 +155,11 @@ export default function Listing() {
         <div className="flex flex-col lg:flex-row gap-8">
           <FilterSidebar
             selectedCategory={category || "All"}
+            selectedPrice={priceRange}
+            selectedRating={rating}
+            openNow={openNow}
+            onRatingChange={handleRatingChange}
+            onOpenNowChange={handleOpenNowChange}
             onCategoryChange={handleCategoryChange}
             selectedRating={minRating}
             onRatingChange={setMinRating}
@@ -145,7 +169,28 @@ export default function Listing() {
 
           <div className="flex-1">
             <div className="flex items-center justify-between mb-10">
-              <h2 className="text-3xl font-bold">Featured Businesses</h2>
+              <div>
+                <h2 className="text-3xl font-bold">Featured Businesses</h2>
+
+                {priceRange && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Showing: {formatPriceRange(priceRange)}
+                  </p>
+                )}
+
+                {rating && (
+                  <p className="text-sm text-yellow-600 mt-2">
+                    Showing: {rating} star & above
+                  </p>
+                )}
+
+                {openNow && (
+                  <p className="text-sm text-green-600 mt-2">
+                    Showing: Open Now
+                  </p>
+                )}
+              </div>
+
               <p className="text-gray-500">{listings.length} Listings Found</p>
             </div>
 
@@ -160,12 +205,20 @@ export default function Listing() {
                     item.images?.[0]?.url || item.imageUrl || fallbackImage;
 
                   const categoryName =
-                    item.category?.name || item.categoryName || item.category || "Business";
+                    item.category?.name ||
+                    item.categoryName ||
+                    item.category ||
+                    "Business";
 
                   const cityName =
-                    item.city?.name || item.cityName || item.city || item.addressLine1 || "Location";
+                    item.city?.name ||
+                    item.cityName ||
+                    item.city ||
+                    item.addressLine1 ||
+                    "Location";
 
-                  const phone = item.contactPhone || item.phone || item.whatsappPhone || "";
+                  const phone =
+                    item.contactPhone || item.phone || item.whatsappPhone || "";
 
                   return (
                     <div
@@ -179,12 +232,12 @@ export default function Listing() {
                       />
 
                       <div className="p-6">
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-start justify-between gap-3 mb-3">
                           <h3 className="text-2xl font-bold">
                             {item.name || "Business Name"}
                           </h3>
 
-                          <div className="flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-lg text-sm font-semibold">
+                          <div className="flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-lg text-sm font-semibold shrink-0">
                             <FaStar className="mr-1" />
                             {formatListingRating(item.rating, item.reviewCount)}
                           </div>
@@ -193,6 +246,12 @@ export default function Listing() {
                         <p className="text-blue-600 font-medium mb-3">
                           {categoryName}
                         </p>
+
+                        {item.priceRange && (
+                          <p className="inline-block bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-semibold mb-4">
+                            {formatPriceRange(item.priceRange)}
+                          </p>
+                        )}
 
                         <div className="flex items-center text-gray-500 mb-6">
                           <FaMapMarkerAlt className="mr-2" />
