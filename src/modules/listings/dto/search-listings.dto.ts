@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { PriceRange } from '@prisma/client';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 
 export class SearchListingsDto extends PaginationQueryDto {
@@ -25,4 +26,12 @@ export class SearchListingsDto extends PaginationQueryDto {
   @Min(1)
   @Max(5)
   minRating?: number;
+
+  @IsOptional()
+  @IsEnum(PriceRange)
+  priceRange?: PriceRange;
+
+  @IsOptional()
+  @IsString()
+  openNow?: string;
 }
