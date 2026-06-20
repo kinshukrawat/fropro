@@ -138,8 +138,6 @@ model BusinessListing {
   rating           Float         @default(0)
   submittedAt      DateTime?
   approvedAt       DateTime?
-  opensAt          String?
-  closesAt         String?
   priceRange       PriceRange?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
