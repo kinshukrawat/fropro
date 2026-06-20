@@ -22,4 +22,8 @@ export class SearchListingsDto extends PaginationQueryDto {
   @IsOptional()
   @IsEnum(PriceRange)
   priceRange?: PriceRange;
+
+  @IsOptional()
+  @IsString()
+  openNow?: string;
 }

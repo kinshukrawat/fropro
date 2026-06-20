@@ -79,6 +79,28 @@ export class ListingsService {
       });
     }
 
+    if (query.openNow === 'true') {
+      const now = new Date();
+
+      const currentTime = now.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Kolkata',
+      });
+
+      searchFilters.push({
+        opensAt: {
+          not: null,
+          lte: currentTime,
+        },
+        closesAt: {
+          not: null,
+          gte: currentTime,
+        },
+      });
+    }
+
     if (searchFilters.length > 0) {
       where.AND = searchFilters;
     }
