@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { EnquiryStatus, ListingStatus, Prisma, SubscriptionStatus } from '@prisma/client';
+import {
+  EnquiryStatus,
+  ListingStatus,
+  Prisma,
+  SubscriptionStatus,
+} from '@prisma/client';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { EnquiriesService } from '../enquiries/enquiries.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -14,20 +19,27 @@ export class AdminService {
 
   findListings(q?: string) {
     return this.prisma.businessListing.findMany({
-      where: q 
-        ? {
-            OR: [
-              { name: { contains: q, mode: 'insensitive' } },
-              { owner: { email: { contains: q, mode: 'insensitive' } } },
-              { category: { name: { contains: q, mode: 'insensitive' } } },
-            ],
-          }
-        : undefined,
+      where: {
+        isDeleted: false,
+
+        ...(q
+          ? {
+              OR: [
+                { name: { contains: q, mode: 'insensitive' } },
+                { owner: { email: { contains: q, mode: 'insensitive' } } },
+                { category: { name: { contains: q, mode: 'insensitive' } } },
+              ],
+            }
+          : {}),
+      },
       include: {
         owner: { select: { id: true, name: true, email: true, phone: true } },
         category: true,
         city: true,
-        subscriptions: { include: { plan: true }, orderBy: { createdAt: 'desc' } },
+        subscriptions: {
+          include: { plan: true },
+          orderBy: { createdAt: 'desc' },
+        },
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -41,6 +53,7 @@ export class AdminService {
           status: ListingStatus.APPROVED,
           approvedAt: new Date(),
           rejectionReason: null,
+          isDeleted: false,
         },
       }),
       this.audit(adminId, 'listing.approved', 'BusinessListing', id),
