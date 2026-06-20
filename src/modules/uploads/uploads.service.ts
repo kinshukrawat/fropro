@@ -7,7 +7,7 @@ import {
 import { v2 as cloudinary } from 'cloudinary';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddListingImageDto } from './dto/add-listing-image.dto';
-import type { File as MulterFile } from 'multer';
+import { UploadedImageFile } from '../../common/types/uploaded-file.type';
 
 @Injectable()
 export class UploadsService {
@@ -19,7 +19,7 @@ export class UploadsService {
     });
   }
 
-  async uploadImage(file: MulterFile) {
+  async uploadImage(file: UploadedImageFile) {
     if (!file) {
       throw new BadRequestException('Image file is required.');
     }

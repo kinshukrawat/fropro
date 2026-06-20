@@ -11,10 +11,10 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserRole } from '@prisma/client';
-import type { File as MulterFile } from 'multer';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { UploadedImageFile } from '../../common/types/uploaded-file.type';
 import { AddListingImageDto } from './dto/add-listing-image.dto';
 import { UploadsService } from './uploads.service';
 
@@ -26,7 +26,7 @@ export class UploadsController {
 
   @Post('image')
   @UseInterceptors(FileInterceptor('file'))
-  uploadImage(@UploadedFile() file: MulterFile) {
+  uploadImage(@UploadedFile() file: UploadedImageFile) {
     return this.uploads.uploadImage(file);
   }
 
