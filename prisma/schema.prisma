@@ -45,6 +45,12 @@ enum EnquiryStatus {
   SPAM
 }
 
+enum PriceRange {
+  BUDGET
+  MID_RANGE
+  PREMIUM
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -129,8 +135,12 @@ model BusinessListing {
   isDeleted        Boolean       @default(false)
   viewCount        Int           @default(0)
   whatsappTapCount Int           @default(0)
+  rating           Float         @default(0)
   submittedAt      DateTime?
   approvedAt       DateTime?
+  opensAt          String?
+  closesAt         String?
+  priceRange       PriceRange?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
@@ -148,6 +158,7 @@ model BusinessListing {
   @@index([categoryId, status])
   @@index([cityId, status])
   @@index([isFeatured, status])
+  @@index([rating])
 }
 
 model ListingCatalogueItem {
@@ -174,7 +185,7 @@ model Enquiry {
   status    EnquiryStatus @default(NEW)
   listingId String?
   createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  updatedAt DateTime      @default(now()) @updatedAt
 
   listing BusinessListing? @relation(fields: [listingId], references: [id])
 

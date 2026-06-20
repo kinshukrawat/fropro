@@ -40,7 +40,11 @@ export class ListingsService {
       searchFilters.push({
         OR: [
           { category: { slug: query.category } },
-          { category: { name: { contains: query.category, mode: 'insensitive' } } },
+          {
+            category: {
+              name: { contains: query.category, mode: 'insensitive' },
+            },
+          },
         ],
       });
     }
@@ -49,7 +53,11 @@ export class ListingsService {
       searchFilters.push({
         OR: [
           { city: { slug: query.city } },
-          { city: { name: { contains: query.city, mode: 'insensitive' } } },
+          {
+            city: {
+              name: { contains: query.city, mode: 'insensitive' },
+            },
+          },
         ],
       });
     }
@@ -63,6 +71,34 @@ export class ListingsService {
           { landmark: { contains: query.location, mode: 'insensitive' } },
           { pincode: { contains: query.location, mode: 'insensitive' } },
         ],
+      });
+    }
+
+    if (query.priceRange) {
+      searchFilters.push({
+        priceRange: query.priceRange,
+      });
+    }
+
+    if (query.openNow === 'true') {
+      const now = new Date();
+
+      const currentTime = now.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Kolkata',
+      });
+
+      searchFilters.push({
+        opensAt: {
+          not: null,
+          lte: currentTime,
+        },
+        closesAt: {
+          not: null,
+          gte: currentTime,
+        },
       });
     }
 
