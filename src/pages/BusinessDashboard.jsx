@@ -451,7 +451,7 @@ const [formData, setFormData] = useState({
           <div className="space-y-2">
             {[
               [FaHome, "Dashboard", "dashboard"],
-              [FaStore, "My Business", "dashboard"],
+              [FaStore, "My Business", "myBusiness"],
               [FaCalendarAlt, "Bookings", "bookings"],
               [FaRegStar, "Reviews", "reviews"],
               [FaChartLine, "Analytics", "analytics"],
@@ -826,7 +826,7 @@ const [formData, setFormData] = useState({
             </div>
           )}
 
-          {activeTab === "dashboard" && (
+          {activeTab === "myBusiness" && (
             <>
             
 
