@@ -113,32 +113,44 @@ export default function BusinessDetails() {
   };
 
   const handleAskForPrice = async (serviceTitle) => {
-    const token = localStorage.getItem("token");
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const token = localStorage.getItem("token");
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-    if (!token) {
-      setShowLoginPopup(true);
-      return;
-    }
+  if (!token) {
+    setShowLoginPopup(true);
+    return;
+  }
 
-    try {
-      setSendingEnquiry(true);
+  const userPhone =
+    storedUser.phone ||
+    storedUser.mobile ||
+    storedUser.contactPhone ||
+    "";
 
-      await createEnquiry({
-        name: storedUser.name || "Customer",
-        email: storedUser.email || "customer@example.com",
-        phone: storedUser.phone || "0000000000",
-        message: `Business: ${business.name} | Asked About: ${serviceTitle} | Customer requested information about ${serviceTitle}`,
-      });
+  if (!userPhone || userPhone.replace(/\D/g, "").length < 10) {
+    alert("Your phone number is missing. Please sign up with phone number or update profile.");
+    return;
+  }
 
-      alert("Enquiry sent successfully.");
-    } catch (error) {
-      console.log("Create Enquiry Error:", error.response?.data || error);
-      alert(JSON.stringify(error.response?.data || "Failed to send enquiry."));
-    } finally {
-      setSendingEnquiry(false);
-    }
-  };
+  try {
+    setSendingEnquiry(true);
+
+    await createEnquiry({
+      name: storedUser.name || "Customer",
+      phone: userPhone.replace(/\D/g, "").slice(-10),
+      message: `Business: ${business.name} | Asked About: ${serviceTitle} | Customer Email: ${
+        storedUser.email || "Not available"
+      } | Customer requested information about ${serviceTitle}`,
+    });
+
+    alert("Enquiry sent successfully.");
+  } catch (error) {
+    console.log("Create Enquiry Error:", error.response?.data || error);
+    alert(JSON.stringify(error.response?.data || "Failed to send enquiry."));
+  } finally {
+    setSendingEnquiry(false);
+  }
+};
 
   if (loading) {
     return (
@@ -223,7 +235,7 @@ export default function BusinessDetails() {
   )}`;
 
   const isOpen = business.opensAt && business.closesAt;
-  
+
 
   return (
     <div className="bg-gray-100 min-h-screen">
