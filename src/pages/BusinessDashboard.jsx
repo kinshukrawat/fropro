@@ -831,198 +831,300 @@ const [formData, setFormData] = useState({
             
 
           <div className="bg-white rounded-3xl shadow-sm border p-6 mb-8">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-              <div>
-                <h2 className="text-2xl font-bold">Quick Actions</h2>
-                <p className="text-gray-500 mt-1">
-                  Manage and grow your business listings.
-                </p>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold">
+                {editingId ? "Update Listing" : "Add New Listing"}
+              </h2>
+              <p className="text-gray-500 mt-1">
+                Add business details, contact options, timings and exact map location.
+              </p>
+            </div>
+
+            <form
+              onSubmit={editingId ? handleUpdateListing : handleAddListing}
+              className="grid md:grid-cols-2 gap-4"
+            >
+              <InputBox
+                icon={<FaBuilding />}
+                label="Business Name"
+                name="name"
+                placeholder="Enter business name"
+                value={formData.name}
+                onChange={handleChange}
+              />
+
+              <InputBox
+                icon={<FaPhoneAlt />}
+                label="Phone Number"
+                name="phone"
+                placeholder="Enter phone number"
+                value={formData.phone}
+                onChange={handleChange}
+              />
+
+              <InputBox
+                icon={<FaEnvelopeOpenText />}
+                label="Email"
+                name="email"
+                type="email"
+                placeholder="business@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                required={false}
+              />
+
+              <InputBox
+                icon={<FaPhoneAlt />}
+                label="WhatsApp Number"
+                name="whatsappPhone"
+                placeholder="Enter WhatsApp number"
+                value={formData.whatsappPhone}
+                onChange={handleChange}
+                required={false}
+              />
+
+              <InputBox
+                icon={<FaInstagram />}
+                label="Instagram Handle / URL"
+                name="instagramUrl"
+                placeholder="@businessname or https://instagram.com/businessname"
+                value={formData.instagramUrl}
+                onChange={handleChange}
+                required={false}
+              />
+
+              <InputBox
+                icon={<FaMapMarkerAlt />}
+                label="Address Line 1"
+                name="addressLine1"
+                placeholder="Shop no, building, market"
+                value={formData.addressLine1}
+                onChange={handleChange}
+              />
+
+              <InputBox
+                icon={<FaMapMarkerAlt />}
+                label="Address Line 2"
+                name="addressLine2"
+                placeholder="Sector, area, nearby place"
+                value={formData.addressLine2}
+                onChange={handleChange}
+                required={false}
+              />
+
+              <InputBox
+                icon={<FaMapMarkerAlt />}
+                label="Landmark"
+                name="landmark"
+                placeholder="Near metro, mall, school etc."
+                value={formData.landmark}
+                onChange={handleChange}
+                required={false}
+              />
+
+              <InputBox
+                icon={<FaMapMarkerAlt />}
+                label="Pincode"
+                name="pincode"
+                placeholder="110085"
+                value={formData.pincode}
+                onChange={handleChange}
+                required={false}
+              />
+
+              <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div>
+                    <label className="text-sm text-gray-500">
+                      Exact Map Location
+                    </label>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Use current location or enter latitude and longitude manually.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleUseCurrentLocation}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold"
+                  >
+                    Use Current Location
+                  </button>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-3 mt-4">
+                  <input
+                    type="number"
+                    step="any"
+                    name="latitude"
+                    placeholder="Latitude, e.g. 28.7389123"
+                    value={formData.latitude}
+                    onChange={handleChange}
+                    className="w-full border rounded-xl px-4 py-3 outline-none focus:border-blue-500"
+                  />
+                  <input
+                    type="number"
+                    step="any"
+                    name="longitude"
+                    placeholder="Longitude, e.g. 77.1214567"
+                    value={formData.longitude}
+                    onChange={handleChange}
+                    className="w-full border rounded-xl px-4 py-3 outline-none focus:border-blue-500"
+                  />
+                </div>
               </div>
 
-                  <form
-                    onSubmit={editingId ? handleUpdateListing : handleAddListing}
-                    className="grid md:grid-cols-2 gap-4"
-                  >
-                    <InputBox
-                      icon={<FaBuilding />}
-                      label="Business Name"
-                      name="name"
-                      placeholder="Enter business name"
-                      value={formData.name}
-                      onChange={handleChange}
-                    />
+              <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
+                <label className="text-sm text-gray-500">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="categoryId"
+                  value={formData.categoryId}
+                  onChange={handleChange}
+                  className="w-full outline-none bg-transparent mt-2"
+                  required
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                    <InputBox
-                      icon={<FaPhoneAlt />}
-                      label="Phone Number"
-                      name="phone"
-                      placeholder="Enter phone number"
-                      value={formData.phone}
-                      onChange={handleChange}
-                    />
+              <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
+                <label className="text-sm text-gray-500">
+                  City <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="cityId"
+                  value={formData.cityId}
+                  onChange={handleChange}
+                  className="w-full outline-none bg-transparent mt-2"
+                  required
+                >
+                  <option value="">Select City</option>
+                  {cities.map((city) => (
+                    <option key={city.id} value={city.id}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                    <InputBox
-                      icon={<FaInstagram />}
-                      label="Instagram Handle / URL"
-                      name="instagramUrl"
-                      placeholder="@businessname or https://instagram.com/businessname"
-                      value={formData.instagramUrl}
-                      onChange={handleChange}
-                      required={false}
-                    />
+              <TimeInputBox
+                icon={<FaClock />}
+                label="Opening Time"
+                name="opensAt"
+                value={formData.opensAt}
+                onChange={handleChange}
+              />
 
-                    <InputBox
-                      icon={<FaMapMarkerAlt />}
-                      label="Address Line 1"
-                      name="addressLine1"
-                      placeholder="Shop no, building, market"
-                      value={formData.addressLine1}
-                      onChange={handleChange}
-                    />
+              <TimeInputBox
+                icon={<FaClock />}
+                label="Closing Time"
+                name="closesAt"
+                value={formData.closesAt}
+                onChange={handleChange}
+              />
 
-                    <InputBox
-                      icon={<FaMapMarkerAlt />}
-                      label="Address Line 2"
-                      name="addressLine2"
-                      placeholder="Sector, area, nearby place"
-                      value={formData.addressLine2}
-                      onChange={handleChange}
-                      required={false}
-                    />
+              <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
+                <label className="text-sm text-gray-500">Services</label>
+                <textarea
+                  name="servicesText"
+                  placeholder="Haircut, facial, spa"
+                  value={formData.servicesText}
+                  onChange={handleChange}
+                  className="w-full outline-none bg-transparent mt-2 min-h-[90px] resize-none"
+                />
+              </div>
 
-                    <InputBox
-                      icon={<FaMapMarkerAlt />}
-                      label="Landmark"
-                      name="landmark"
-                      placeholder="Near metro, mall, school etc."
-                      value={formData.landmark}
-                      onChange={handleChange}
-                      required={false}
-                    />
+              <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
+                <label className="text-sm text-gray-500">Description</label>
+                <textarea
+                  name="description"
+                  placeholder="Describe your business"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="w-full outline-none bg-transparent mt-2 min-h-[110px] resize-none"
+                />
+              </div>
 
-                    <InputBox
-                      icon={<FaMapMarkerAlt />}
-                      label="Pincode"
-                      name="pincode"
-                      placeholder="110085"
-                      value={formData.pincode}
-                      onChange={handleChange}
-                      required={false}
-                    />
-
-                    
-                    <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                        <div>
-                          <label className="text-sm text-gray-500">
-                            Exact Map Location
-                          </label>
-                          <p className="text-xs text-gray-400 mt-1">
-                            Use current location or enter latitude and longitude manually.
-                          </p>
-                        </div>
+              {existingImages.length > 0 && (
+                <div className="md:col-span-2">
+                  <p className="text-sm font-semibold text-gray-700 mb-3">
+                    Existing Images
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    {existingImages.map((image) => (
+                      <div key={image.id || image.url} className="relative">
+                        <img
+                          src={image.url}
+                          alt={image.altText || formData.name}
+                          className="w-full aspect-square object-cover rounded-2xl border"
+                        />
                         <button
                           type="button"
-                          onClick={handleUseCurrentLocation}
-                          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold"
+                          onClick={() => handleRemoveExistingImage(image.id)}
+                          className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-7 h-7 text-xs"
                         >
-                          Use Current Location
+                          x
                         </button>
                       </div>
-
-                      <div className="grid md:grid-cols-2 gap-3 mt-4">
-                        <input
-                          type="number"
-                          step="any"
-                          name="latitude"
-                          placeholder="Latitude, e.g. 28.7389123"
-                          value={formData.latitude}
-                          onChange={handleChange}
-                          className="w-full border rounded-xl px-4 py-3 outline-none focus:border-blue-500"
-                        />
-                        <input
-                          type="number"
-                          step="any"
-                          name="longitude"
-                          placeholder="Longitude, e.g. 77.1214567"
-                          value={formData.longitude}
-                          onChange={handleChange}
-                          className="w-full border rounded-xl px-4 py-3 outline-none focus:border-blue-500"
-                        />
-                      </div>
-                    </div><InputBox
-                      icon={<FaPhoneAlt />}
-                      label="WhatsApp Number"
-                      name="whatsappPhone"
-                      placeholder="Enter WhatsApp number"
-                      value={formData.whatsappPhone}
-                      onChange={handleChange}
-                      required={false}
-                    />
-
-                    <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
-                      <label className="text-sm text-gray-500">
-                        Category <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        name="categoryId"
-                        value={formData.categoryId}
-                        onChange={handleChange}
-                        className="w-full outline-none bg-transparent mt-2"
-                        required
-                      >
-                        <option value="">Select Category</option>
-                        {categories.map((category) => (
-                          <option key={category.id} value={category.id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-            <div className="grid md:grid-cols-3 gap-5">
-              <button
-                onClick={() => navigate("/business-dashboard/add-listing")}
-                className="border rounded-2xl p-5 flex items-center gap-4 hover:bg-gray-50 transition text-left"
-              >
-                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl">
-                  <FaPlusCircle />
+                    ))}
+                  </div>
                 </div>
+              )}
 
-                <div>
-                  <h3 className="font-bold text-lg">Add New Listing</h3>
-                  <p className="text-gray-500 text-sm">List a new business</p>
-                </div>
-              </button>
+              <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
+                <label className="text-sm text-gray-500">Business Images</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                  className="w-full mt-3"
+                />
 
-              <button
-                onClick={() => window.scrollTo({ top: 700, behavior: "smooth" })}
-                className="border rounded-2xl p-5 flex items-center gap-4 hover:bg-gray-50 transition text-left"
-              >
-                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl">
-                  <FaStore />
-                </div>
+                {imagePreviews.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+                    {imagePreviews.map((preview) => (
+                      <img
+                        key={preview}
+                        src={preview}
+                        alt="Selected business"
+                        className="w-full aspect-square object-cover rounded-2xl border"
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
 
-                <div>
-                  <h3 className="font-bold text-lg">View My Listings</h3>
-                  <p className="text-gray-500 text-sm">Manage your listings</p>
-                </div>
-              </button>
+              <div className="md:col-span-2 flex flex-wrap gap-3">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold disabled:opacity-60"
+                >
+                  {loading
+                    ? "Saving..."
+                    : editingId
+                      ? "Update Listing"
+                      : "Create Listing"}
+                </button>
 
-              <button
-                onClick={() => setActiveTab("messages")}
-                className="border rounded-2xl p-5 flex items-center gap-4 hover:bg-gray-50 transition text-left"
-              >
-                <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl">
-                  <FaComments />
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-lg">Messages</h3>
-                  <p className="text-gray-500 text-sm">View customer enquiries</p>
-                </div>
-              </button>
-            </div>
+                {editingId && (
+                  <button
+                    type="button"
+                    onClick={clearForm}
+                    className="border px-6 py-3 rounded-xl font-semibold hover:bg-gray-50"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
+              </div>
+            </form>
           </div>
           
                         <div className="bg-white rounded-3xl shadow-sm border p-6">
