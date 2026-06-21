@@ -127,17 +127,17 @@ export default function BusinessDetails() {
     storedUser.contactPhone ||
     "";
 
-  if (!userPhone || userPhone.replace(/\D/g, "").length < 10) {
-    alert("Your phone number is missing. Please sign up with phone number or update profile.");
-    return;
-  }
-
+  const finalPhone =
+  userPhone && userPhone.replace(/\D/g, "").length >= 10
+    ? userPhone.replace(/\D/g, "").slice(-10)
+    : "9999999999";
+    
   try {
     setSendingEnquiry(true);
 
     await createEnquiry({
       name: storedUser.name || "Customer",
-      phone: userPhone.replace(/\D/g, "").slice(-10),
+      phone: `+91${finalPhone}`,
       message: `Business: ${business.name} | Asked About: ${serviceTitle} | Customer Email: ${
         storedUser.email || "Not available"
       } | Customer requested information about ${serviceTitle}`,
