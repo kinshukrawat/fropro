@@ -1,6 +1,9 @@
+import { PriceRange } from '@prisma/client';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsEmail,
+  IsEnum,
   IsLatitude,
   IsLongitude,
   IsOptional,
@@ -12,7 +15,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+
 
 export class ListingCatalogueItemDto {
   @IsString()
@@ -68,6 +71,10 @@ export class CreateListingDto {
   @IsString()
   @MaxLength(255)
   instagramUrl?: string;
+
+  @IsOptional()
+  @IsEnum(PriceRange)
+  priceRange?: PriceRange;
 
   @IsOptional()
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
