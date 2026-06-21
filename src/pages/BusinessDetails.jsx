@@ -114,6 +114,7 @@ export default function BusinessDetails() {
 
   const handleAskForPrice = async (serviceTitle) => {
     const token = localStorage.getItem("token");
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
     if (!token) {
       setShowLoginPopup(true);
@@ -124,15 +125,16 @@ export default function BusinessDetails() {
       setSendingEnquiry(true);
 
       await createEnquiry({
-        listingId: business.id,
-        serviceTitle,
-        message: `Customer requested information about ${serviceTitle}`,
+        name: storedUser.name || "Customer",
+        email: storedUser.email || "customer@example.com",
+        phone: storedUser.phone || "0000000000",
+        message: `Business: ${business.name} | Asked About: ${serviceTitle} | Customer requested information about ${serviceTitle}`,
       });
 
       alert("Enquiry sent successfully.");
     } catch (error) {
       console.log("Create Enquiry Error:", error.response?.data || error);
-      alert("Failed to send enquiry.");
+      alert(JSON.stringify(error.response?.data || "Failed to send enquiry."));
     } finally {
       setSendingEnquiry(false);
     }
