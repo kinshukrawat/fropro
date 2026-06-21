@@ -138,6 +138,12 @@ const [formData, setFormData] = useState({
     fetchOwnerReviews();
   }, []);
 
+  useEffect(() => {
+  if (activeTab === "messages") {
+    fetchOwnerMessages();
+  }
+}, [activeTab]);
+
   const stats = useMemo(() => {
     const approved = listings.filter(
       (item) => item.status?.toLowerCase() === "approved"

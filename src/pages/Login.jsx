@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { FaEnvelope, FaLock, FaUser, FaPhoneAlt } from "react-icons/fa";
 import API from "../api/api";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const redirect = searchParams.get("redirect");
 
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -23,6 +26,21 @@ export default function Login() {
     });
   };
 
+  const goAfterLogin = (user) => {
+    const role = user?.role?.toUpperCase();
+
+    if (redirect) {
+      navigate(redirect);
+      return;
+    }
+
+    if (role === "ADMIN") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/business-dashboard");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -35,7 +53,6 @@ export default function Login() {
           password: formData.password,
         });
 
-        console.log("LOGIN RESPONSE:", res.data);
 
         const token = res.data.accessToken || res.data.token;
 
@@ -50,15 +67,7 @@ export default function Login() {
         localStorage.setItem("user", JSON.stringify(user));
 
         alert("Login successful");
-
-        // ✅ Fixed: case-insensitive role check
-        const role = user?.role?.toUpperCase();
-        if (role === "ADMIN") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/business-dashboard");
-        }
-
+        goAfterLogin(user);
       } else {
         await API.post("/auth/register", {
           name: formData.name,
@@ -82,14 +91,14 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-r from-blue-600 to-blue-400 flex items-center justify-center px-4 py-10">
       <div className="bg-white w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl grid md:grid-cols-2">
 
-        {/* Left Panel */}
+
         <div className="hidden md:flex flex-col justify-center bg-blue-600 text-white p-12">
           <h1 className="text-5xl font-bold mb-6">Welcome to FroPro</h1>
           <p className="text-lg leading-8 text-blue-100">
             Discover trusted local businesses, explore nearby services, and
             connect with the best salons, gyms, cafes, restaurants, and more.
           </p>
-          
+
           <div className="mt-10">
             <img
               src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop"
@@ -99,9 +108,9 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Right Panel */}
+
         <div className="p-8 md:p-12">
-          {/* Toggle */}
+
           <div className="flex justify-center mb-10">
             <div className="bg-gray-100 rounded-xl p-1 flex">
               <button
@@ -127,7 +136,7 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Heading */}
+
           <div className="mb-8">
             <h2 className="text-4xl font-bold mb-3">
               {isLogin ? "Login" : "Create Account"}
@@ -140,7 +149,7 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Form */}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <>

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+
 import MapSection from "../components/MapSection";
 import ReviewSection, { formatListingRating } from "../components/ReviewSection";
-import { getListingBySlug } from "../api/api";
+import { createEnquiry, getListingBySlug } from "../api/api";
 
 import {
   FaStar,
@@ -53,11 +54,17 @@ const getInstagramUrl = (value) => {
 
 export default function BusinessDetails() {
   const { slug } = useParams();
+  const navigate = useNavigate();
 
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [reviewSummary, setReviewSummary] = useState({ rating: 0, reviewCount: 0 });
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [sendingEnquiry, setSendingEnquiry] = useState(false);
+  const [reviewSummary, setReviewSummary] = useState({
+    rating: 0,
+    reviewCount: 0,
+  });
 
   const reviewSectionRef = useRef(null);
 
@@ -72,6 +79,7 @@ export default function BusinessDetails() {
     try {
       setLoading(true);
       const res = await getListingBySlug(slug);
+
       setBusiness(res.data);
       setReviewSummary({
         rating: res.data?.rating ?? 0,
@@ -88,6 +96,47 @@ export default function BusinessDetails() {
   useEffect(() => {
     if (slug) fetchBusinessDetails();
   }, [slug]);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: business.name,
+      text: `Check out ${business.name}`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      await navigator.share(shareData);
+    } else {
+      await navigator.clipboard.writeText(window.location.href);
+      alert("Link copied!");
+    }
+  };
+
+  const handleAskForPrice = async (serviceTitle) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setShowLoginPopup(true);
+      return;
+    }
+
+    try {
+      setSendingEnquiry(true);
+
+      await createEnquiry({
+        listingId: business.id,
+        serviceTitle,
+        message: `Customer requested information about ${serviceTitle}`,
+      });
+
+      alert("Enquiry sent successfully.");
+    } catch (error) {
+      console.log("Create Enquiry Error:", error.response?.data || error);
+      alert("Failed to send enquiry.");
+    } finally {
+      setSendingEnquiry(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -113,10 +162,12 @@ export default function BusinessDetails() {
       : [image];
 
   const category = business.category?.name || business.category || "Business";
+
   const ratingLabel = formatListingRating(
     reviewSummary.rating,
     reviewSummary.reviewCount
   );
+
   const reviewCountLabel = reviewSummary.reviewCount || 0;
 
   const fullAddress =
@@ -170,21 +221,7 @@ export default function BusinessDetails() {
   )}`;
 
   const isOpen = business.opensAt && business.closesAt;
-
-  const handleShare = async () => {
-    const shareData = {
-      title: business.name,
-      text: `Check out ${business.name}`,
-      url: window.location.href,
-    };
-
-    if (navigator.share) {
-      await navigator.share(shareData);
-    } else {
-      await navigator.clipboard.writeText(window.location.href);
-      alert("Link copied!");
-    }
-  };
+  
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -401,8 +438,12 @@ export default function BusinessDetails() {
                       View More
                     </button>
 
-                    <button className="w-full border border-blue-500 text-blue-600 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition">
-                      Ask for Price
+                    <button
+                      onClick={() => handleAskForPrice(item.title)}
+                      disabled={sendingEnquiry}
+                      className="w-full border border-blue-500 text-blue-600 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition disabled:opacity-60"
+                    >
+                      {sendingEnquiry ? "Sending..." : "Ask for Price"}
                     </button>
                   </div>
                 ))}
@@ -430,6 +471,37 @@ export default function BusinessDetails() {
             onClick={(e) => e.stopPropagation()}
             className="max-w-full max-h-[90vh] rounded-2xl object-contain"
           />
+        </div>
+      )}
+
+      {showLoginPopup && (
+        <div className="fixed inset-0 bg-black/50 z-[999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-xl">
+            <h2 className="text-2xl font-bold mb-3">Login Required</h2>
+
+            <p className="text-gray-500 mb-6">
+              Please login first to ask for price. Your enquiry will be shared
+              with the business owner.
+            </p>
+
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setShowLoginPopup(false)}
+                className="px-5 py-3 border rounded-xl font-semibold hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() =>
+                  navigate(`/login?redirect=/business/detail/${business.slug}`)
+                }
+                className="px-5 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700"
+              >
+                Login
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
