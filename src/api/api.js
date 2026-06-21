@@ -65,3 +65,6 @@ export const getRecentReviews = (limit = 20) =>
   API.get("/reviews/recent", { params: { limit } });
 
 export const getOwnerReviews = () => API.get("/reviews/owner/mine");
+
+export const getOwnerEnquiries = () => API.get("/enquiries/owner/mine");
+

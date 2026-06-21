@@ -37,6 +37,7 @@ import API, {
   getCities,
   getMyListings,
   getOwnerReviews,
+  getOwnerEnquiries,
   removeListingImage,
 } from "../api/api";
 
@@ -64,6 +65,8 @@ const [formData, setFormData] = useState({
   addressLine2: "",
   landmark: "",
   pincode: "",
+  latitude: "",
+  longitude: "",
   phone: "",
   email: "",
   whatsappPhone: "",
@@ -101,7 +104,7 @@ const [formData, setFormData] = useState({
   const fetchOwnerMessages = async () => {
     setMessagesLoading(true);
     try {
-      const res = await API.get("/messages/owner");
+      const res = await getOwnerEnquiries();
       setMessages(res.data?.items || res.data?.data || res.data || []);
     } catch (error) {
       console.log("Messages Error:", error.response?.data || error);
@@ -201,6 +204,26 @@ const [formData, setFormData] = useState({
     }));
   };
 
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Current location is not supported in this browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setFormData((prev) => ({
+          ...prev,
+          latitude: position.coords.latitude.toFixed(7),
+          longitude: position.coords.longitude.toFixed(7),
+        }));
+      },
+      () => {
+        alert("Unable to get current location. Please allow location access or enter latitude/longitude manually.");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files || []);
 
@@ -225,6 +248,8 @@ const [formData, setFormData] = useState({
       addressLine2: "",
       landmark: "",
       pincode: "",
+      latitude: "",
+      longitude: "",
       phone: "",
       whatsappPhone: "",
       instagramUrl: "",
@@ -242,26 +267,38 @@ const [formData, setFormData] = useState({
     setImagePreviews([]);
   };
 
-  const getPayload = () => ({
-  name: formData.name,
-  description: formData.description,
-  categoryId: formData.categoryId,
-  cityId: formData.cityId,
-  contactPhone: formData.phone,
-  email: formData.email,
-  whatsappPhone: formData.whatsappPhone || formData.phone,
-  instagramUrl: formData.instagramUrl,
-  addressLine1: formData.addressLine1,
-  addressLine2: formData.addressLine2,
-  landmark: formData.landmark,
-  pincode: formData.pincode,
-  opensAt: formData.opensAt,
-  closesAt: formData.closesAt,
-  services: formData.servicesText
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean),
-});
+  const getPayload = () => {
+    const payload = {
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      categoryId: formData.categoryId,
+      cityId: formData.cityId,
+      contactPhone: formData.phone.trim(),
+      email: formData.email.trim(),
+      whatsappPhone: (formData.whatsappPhone || formData.phone).trim(),
+      instagramUrl: formData.instagramUrl.trim(),
+      addressLine1: formData.addressLine1.trim(),
+      addressLine2: formData.addressLine2.trim(),
+      landmark: formData.landmark.trim(),
+      pincode: formData.pincode.trim(),
+      latitude: formData.latitude ? Number(formData.latitude) : undefined,
+      longitude: formData.longitude ? Number(formData.longitude) : undefined,
+      opensAt: formData.opensAt,
+      closesAt: formData.closesAt,
+      services: formData.servicesText
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
+    };
+
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === "" || payload[key] === undefined || Number.isNaN(payload[key])) {
+        delete payload[key];
+      }
+    });
+
+    return payload;
+  };
 
   const uploadImagesForListing = async (listingId) => {
     if (!imageFiles.length || !listingId) return;
@@ -320,6 +357,8 @@ const [formData, setFormData] = useState({
     addressLine2: listing.addressLine2 || "",
     landmark: listing.landmark || "",
     pincode: listing.pincode || "",
+    latitude: listing.latitude || "",
+    longitude: listing.longitude || "",
     phone: listing.contactPhone || "",
     email: listing.email || "",
     whatsappPhone: listing.whatsappPhone || "",
@@ -907,7 +946,47 @@ const [formData, setFormData] = useState({
                       required={false}
                     />
 
-                    <InputBox
+                    
+                    <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div>
+                          <label className="text-sm text-gray-500">
+                            Exact Map Location
+                          </label>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Use current location or enter latitude and longitude manually.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleUseCurrentLocation}
+                          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold"
+                        >
+                          Use Current Location
+                        </button>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-3 mt-4">
+                        <input
+                          type="number"
+                          step="any"
+                          name="latitude"
+                          placeholder="Latitude, e.g. 28.7389123"
+                          value={formData.latitude}
+                          onChange={handleChange}
+                          className="w-full border rounded-xl px-4 py-3 outline-none focus:border-blue-500"
+                        />
+                        <input
+                          type="number"
+                          step="any"
+                          name="longitude"
+                          placeholder="Longitude, e.g. 77.1214567"
+                          value={formData.longitude}
+                          onChange={handleChange}
+                          className="w-full border rounded-xl px-4 py-3 outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    </div><InputBox
                       icon={<FaPhoneAlt />}
                       label="WhatsApp Number"
                       name="whatsappPhone"
@@ -1407,6 +1486,14 @@ function MiniStat({ title, value, growth }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
 
 
 

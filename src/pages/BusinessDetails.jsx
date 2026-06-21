@@ -155,8 +155,18 @@ export default function BusinessDetails() {
     ? website
     : `https://${website}`;
 
+  const hasCoordinates =
+    business.latitude !== undefined &&
+    business.latitude !== null &&
+    business.longitude !== undefined &&
+    business.longitude !== null;
+
+  const mapDestination = hasCoordinates
+    ? `${business.latitude},${business.longitude}`
+    : fullAddress;
+
   const mapUrl = `https://maps.google.com/?q=${encodeURIComponent(
-    fullAddress
+    mapDestination
   )}`;
 
   const isOpen = business.opensAt && business.closesAt;
@@ -425,3 +435,5 @@ export default function BusinessDetails() {
     </div>
   );
 }
+
+
