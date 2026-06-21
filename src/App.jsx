@@ -13,6 +13,7 @@ import BusinessDetails from "./pages/BusinessDetails";
 import Login from "./pages/Login";
 import UserDashboard from "./pages/UserDashboard";
 import BusinessDashboard from "./pages/BusinessDashboard";
+import AddBusinessListing from "./pages/AddBusinessListing";
 
 import Categories from "./pages/Categories";
 import AllCategories from "./pages/AllCategories";
@@ -35,7 +36,7 @@ function AppContent() {
 
   const hideLayout =
     location.pathname.startsWith("/admin") ||
-    location.pathname === "/business-dashboard" ||
+    location.pathname.startsWith("/business-dashboard") ||
     location.pathname === "/user-dashboard";
 
   return (
@@ -43,8 +44,7 @@ function AppContent() {
       {!hideLayout && <Navbar />}
 
       <Routes>
-
-        {/* ✅ Public Routes */}
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/listings" element={<Listing />} />
@@ -59,7 +59,7 @@ function AppContent() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/viewdetail/:id" element={<ViewDetail />} />
 
-        {/* ✅ Protected — any logged in user */}
+        {/* Protected Routes */}
         <Route
           path="/user-dashboard"
           element={
@@ -68,6 +68,7 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/business-dashboard"
           element={
@@ -76,6 +77,16 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/business-dashboard/add-listing"
+          element={
+            <ProtectedRoute>
+              <AddBusinessListing />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/payments"
           element={
@@ -85,11 +96,11 @@ function AppContent() {
           }
         />
 
-        {/* ✅ Admin Routes */}
+        {/* Admin Routes */}
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/login" element={<AdminLogin />} />
 
-        {/* ✅ Protected — ADMIN role only */}
+
         <Route
           path="/admin/dashboard"
           element={

@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
   FaEnvelopeOpenText,
@@ -42,6 +43,7 @@ import API, {
 } from "../api/api";
 
 export default function BusinessDashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [listings, setListings] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -826,54 +828,16 @@ const [formData, setFormData] = useState({
 
           {activeTab === "dashboard" && (
             <>
-              <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-                <StatCard
-                  icon={<FaStore />}
-                  title="Total Businesses"
-                  value={stats.total}
-                  subtitle="Active Listings"
-                  color="blue"
-                />
-                <StatCard
-                  icon={<FaClipboardList />}
-                  title="Pending Listings"
-                  value={stats.pending}
-                  subtitle="Waiting approval"
-                  color="green"
-                />
-                <StatCard
-                  icon={<FaStar />}
-                  title="Average Rating"
-                  value={stats.rating}
-                  subtitle={`${stats.reviewTotal} Reviews`}
-                  color="yellow"
-                />
-                <StatCard
-                  icon={<FaChartLine />}
-                  title="Approved Listings"
-                  value={stats.approved}
-                  subtitle="Live on website"
-                  color="red"
-                />
-              </div>
+            
 
-              <div className="grid xl:grid-cols-2 gap-6 mb-8">
-                <div className="bg-white rounded-3xl shadow-sm border p-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-xl">
-                      {editingId ? <FaEdit /> : <FaPlusCircle />}
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">
-                        {editingId ? "Edit Business Listing" : "Add Business Listing"}
-                      </h2>
-                      {editingId && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          Update your business details and save changes.
-                        </p>
-                      )}
-                    </div>
-                  </div>
+          <div className="bg-white rounded-3xl shadow-sm border p-6 mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl font-bold">Quick Actions</h2>
+                <p className="text-gray-500 mt-1">
+                  Manage and grow your business listings.
+                </p>
+              </div>
 
                   <form
                     onSubmit={editingId ? handleUpdateListing : handleAddListing}
@@ -1016,235 +980,52 @@ const [formData, setFormData] = useState({
                       </select>
                     </div>
 
-                    <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
-                      <label className="text-sm text-gray-500">
-                        Price Range <span className="text-red-500">*</span>
-                      </label>
-                      
-                      <div className="flex items-center gap-3 mt-2">
-                        <FaRupeeSign className="text-gray-400" />
-                        <select
-                          name="priceRange"
-                          value={formData.priceRange}
-                          onChange={handleChange}
-                          className="w-full outline-none bg-transparent"
-                          required
-                        >
-                          <option value="">Select Price Range</option>
-                          <option value="BUDGET">Budget</option>
-                          <option value="MID_RANGE">Mid Range</option>
-                          <option value="PREMIUM">Premium</option>
-                        </select>
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Choose your business price segment.
-                      </p>
-                    </div>
-
-                    <TimeInputBox
-                      icon={<FaClock />}
-                      label="Opening Time"
-                      name="opensAt"
-                      value={formData.opensAt}
-                      onChange={handleChange}
-                    />
-
-                    <TimeInputBox
-                      icon={<FaClock />}
-                      label="Closing Time"
-                      name="closesAt"
-                      value={formData.closesAt}
-                      onChange={handleChange}
-                    />
-
-                    <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
-                      <label className="text-sm text-gray-500">
-                        City <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        name="cityId"
-                        value={formData.cityId}
-                        onChange={handleChange}
-                        className="w-full outline-none bg-transparent mt-2"
-                        required
-                      >
-                        <option value="">Select City</option>
-                        {cities.map((city) => (
-                          <option key={city.id} value={city.id}>
-                            {city.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
-                      <label className="text-sm text-gray-500">
-                        Services / Catalogue Items
-                      </label>
-                      <textarea
-                        name="servicesText"
-                        placeholder="Haircut, Spa, Facial, Bridal Makeup"
-                        value={formData.servicesText}
-                        onChange={handleChange}
-                        className="w-full mt-2 outline-none resize-none"
-                        rows="3"
-                      />
-                      <p className="text-xs text-gray-400 mt-1">
-                        Separate services using comma.
-                      </p>
-                    </div>
-
-                    {existingImages.length > 0 && (
-                      <div className="mt-4 md:col-span-2">
-                        <p className="text-sm font-semibold text-gray-700 mb-3">
-                          Existing Gallery
-                        </p>
-
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {existingImages.map((img) => (
-                            <div key={img.id} className="relative group">
-                              <img
-                                src={img.url}
-                                alt={img.altText || "Business image"}
-                                className="w-full h-32 object-cover rounded-xl border"
-                              />
-
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveExistingImage(img.id)}
-                                className="absolute top-2 right-2 bg-red-600 text-white text-xs px-3 py-1 rounded-full"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="border rounded-2xl px-4 py-3 md:col-span-2">
-                      <label className="text-sm text-gray-500">
-                        {editingId
-                          ? "Add More Business Images / Gallery"
-                          : "Business Images / Gallery"}
-                      </label>
-
-                      <div className="flex items-center gap-3 mt-3">
-                        <FaImage className="text-gray-400" />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={handleImageChange}
-                          className="w-full"
-                        />
-                      </div>
-
-                      {imagePreviews.length > 0 && (
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
-                          {imagePreviews.map((img, index) => (
-                            <img
-                              key={index}
-                              src={img}
-                              alt=""
-                              className="w-full h-32 object-cover rounded-xl border"
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
-                      <label className="text-sm text-gray-500">
-                        Business Description{" "}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <textarea
-                        name="description"
-                        placeholder="Write about your business, services, experience..."
-                        value={formData.description}
-                        onChange={handleChange}
-                        className="w-full mt-2 outline-none resize-none"
-                        rows="5"
-                        required
-                      />
-                      <p className="text-right text-xs text-gray-400">
-                        {formData.description.length}/500
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={clearForm}
-                      className="border hover:bg-gray-50 py-3 rounded-2xl font-semibold"
-                    >
-                      {editingId ? "Cancel Edit" : "Clear Form"}
-                    </button>
-
-                    <button
-                      disabled={loading}
-                      className="bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl font-semibold disabled:opacity-60"
-                    >
-                      {loading
-                        ? editingId
-                          ? "Saving..."
-                          : "Adding..."
-                        : editingId
-                        ? "Save Changes"
-                        : "Add Listing"}
-                    </button>
-                  </form>
+            <div className="grid md:grid-cols-3 gap-5">
+              <button
+                onClick={() => navigate("/business-dashboard/add-listing")}
+                className="border rounded-2xl p-5 flex items-center gap-4 hover:bg-gray-50 transition text-left"
+              >
+                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl">
+                  <FaPlusCircle />
                 </div>
 
-                <div className="bg-white rounded-3xl shadow-sm border p-6">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-xl">
-                      <FaChartLine />
-                    </div>
-                    <h2 className="text-2xl font-bold">Business Overview</h2>
-                  </div>
-
-                  <div className="h-72 flex items-end gap-4 border-b border-l p-4">
-                    {[35, 25, 52, 43, 75, 58, 68].map((height, index) => (
-                      <div
-                        key={index}
-                        className="flex-1 flex flex-col items-center gap-2"
-                      >
-                        <div
-                          className="w-full rounded-t-xl bg-gradient-to-t from-blue-600 to-blue-300"
-                          style={{ height: `${height}%` }}
-                        ></div>
-                        <span className="text-xs text-gray-400">
-                          {
-                            [
-                              "May",
-                              "Jun 5",
-                              "Jun 10",
-                              "Jun 15",
-                              "Jun 20",
-                              "Jun 25",
-                              "Now",
-                            ][index]
-                          }
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4 mt-6">
-                    <MiniStat title="Page Views" value="120" growth="+18%" />
-                    <MiniStat
-                      title="Search Appearances"
-                      value="85"
-                      growth="+12%"
-                    />
-                    <MiniStat title="Profile Clicks" value="24" growth="+8%" />
-                    <MiniStat title="Phone Clicks" value="15" growth="+5%" />
-                  </div>
+                <div>
+                  <h3 className="font-bold text-lg">Add New Listing</h3>
+                  <p className="text-gray-500 text-sm">List a new business</p>
                 </div>
-              </div>
+              </button>
 
-              <div className="bg-white rounded-3xl shadow-sm border p-6">
+              <button
+                onClick={() => window.scrollTo({ top: 700, behavior: "smooth" })}
+                className="border rounded-2xl p-5 flex items-center gap-4 hover:bg-gray-50 transition text-left"
+              >
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl">
+                  <FaStore />
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg">View My Listings</h3>
+                  <p className="text-gray-500 text-sm">Manage your listings</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("messages")}
+                className="border rounded-2xl p-5 flex items-center gap-4 hover:bg-gray-50 transition text-left"
+              >
+                <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl">
+                  <FaComments />
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg">Messages</h3>
+                  <p className="text-gray-500 text-sm">View customer enquiries</p>
+                </div>
+              </button>
+            </div>
+          </div>
+          
+                        <div className="bg-white rounded-3xl shadow-sm border p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-xl">
@@ -1252,16 +1033,6 @@ const [formData, setFormData] = useState({
                     </div>
                     <h2 className="text-2xl font-bold">My Listings</h2>
                   </div>
-
-                  <button
-                    onClick={() => {
-                      clearForm();
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl font-semibold"
-                  >
-                    Add New Listing
-                  </button>
                 </div>
 
                 {listings.length === 0 ? (
@@ -1360,7 +1131,7 @@ const [formData, setFormData] = useState({
                                 </button>
 
                                 <button
-                                  onClick={() => handleEditListing(item)}
+                                  onClick={() => navigate(`/business-dashboard/edit-listing/${item.id}`)}
                                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl flex items-center gap-2"
                                 >
                                   <FaEdit />

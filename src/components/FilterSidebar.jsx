@@ -82,7 +82,7 @@ export default function FilterSidebar({
                 ))}
               </span>
 
-              <span className="text-gray-500">& above</span>
+              <span className="text-gray-500"></span>
             </label>
           ))}
         </div>
