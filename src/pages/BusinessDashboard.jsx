@@ -1233,7 +1233,10 @@ const [formData, setFormData] = useState({
                                 </button>
 
                                 <button
-                                  onClick={() => navigate(`/business-dashboard/edit-listing/${item.id}`)}
+                                  onClick={() => {
+                                    setActiveTab("dashboard");
+                                    handleEditListing(item);
+                                  }}
                                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl flex items-center gap-2"
                                 >
                                   <FaEdit />

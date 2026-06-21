@@ -55,7 +55,7 @@ function AppContent() {
         <Route path="/all-categories" element={<AllCategories />} />
         <Route path="/popular-categories" element={<PopularCategories />} />
         <Route path="/reviews" element={<Reviews />} />
-        
+
         <Route path="/contact" element={<Contact />} />
         <Route path="/viewdetail/:id" element={<ViewDetail />} />
 
