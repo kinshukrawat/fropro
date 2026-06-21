@@ -75,6 +75,7 @@ const [formData, setFormData] = useState({
   instagramUrl: "",
   categoryId: "",
   cityId: "",
+  priceRange: "",
   opensAt: "",
   closesAt: "",
   servicesText: "",
@@ -275,6 +276,7 @@ const [formData, setFormData] = useState({
       description: formData.description.trim(),
       categoryId: formData.categoryId,
       cityId: formData.cityId,
+      priceRange: formData.priceRange,
       contactPhone: formData.phone.trim(),
       email: formData.email.trim(),
       whatsappPhone: (formData.whatsappPhone || formData.phone).trim(),
@@ -367,6 +369,7 @@ const [formData, setFormData] = useState({
     instagramUrl: listing.instagramUrl || "",
     categoryId: listing.categoryId || listing.category?.id || "",
     cityId: listing.cityId || listing.city?.id || "",
+    priceRange: listing.priceRange || "",
     opensAt: listing.opensAt || "",
     closesAt: listing.closesAt || "",
     servicesText: Array.isArray(listing.services)
@@ -1011,6 +1014,30 @@ const [formData, setFormData] = useState({
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
+                <label className="text-sm text-gray-500">
+                  Price Range <span className="text-red-500">*</span>
+                </label>
+
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="text-gray-400">
+                    <FaRupeeSign />
+                  </span>
+                  <select
+                    name="priceRange"
+                    value={formData.priceRange}
+                    onChange={handleChange}
+                    className="w-full outline-none bg-transparent"
+                    required
+                  >
+                    <option value="">Select Price Range</option>
+                    <option value="BUDGET">Budget</option>
+                    <option value="MID_RANGE">Mid Range</option>
+                    <option value="PREMIUM">Premium</option>
+                  </select>
+                </div>
               </div>
 
               <TimeInputBox
