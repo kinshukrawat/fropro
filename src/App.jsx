@@ -17,7 +17,7 @@ import AddBusinessListing from "./pages/AddBusinessListing";
 
 import Categories from "./pages/Categories";
 import AllCategories from "./pages/AllCategories";
-import PopularCategories from "./pages/PopularCategories";
+// import PopularCategories from "./pages/PopularCategories";
 import Reviews from "./pages/Reviews";
 import Payments from "./pages/Payments";
 import Contact from "./pages/Contact";
@@ -53,7 +53,15 @@ function AppContent() {
         <Route path="/login" element={<Login />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/all-categories" element={<AllCategories />} />
-        <Route path="/popular-categories" element={<PopularCategories />} />
+        
+
+        {/*
+        <Route
+          path="/popular-categories"
+          element={<PopularCategories />}
+        />
+        */}
+
         <Route path="/reviews" element={<Reviews />} />
 
         <Route path="/contact" element={<Contact />} />
