@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FaEnvelopeOpenText,
 
@@ -42,6 +42,23 @@ import API, {
   removeListingImage,
 } from "../api/api";
 
+// Order matches the visual top-to-bottom layout of the form so that
+// "first invalid field" scrolling/focus behaves predictably.
+const VALIDATION_FIELD_ORDER = [
+  "name",
+  "phone",
+  "email",
+  "addressLine1",
+  "pincode",
+  "categoryId",
+  "cityId",
+  "priceRange",
+  "opensAt",
+  "closesAt",
+  "description",
+  "images",
+];
+
 export default function BusinessDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -59,6 +76,13 @@ export default function BusinessDashboard() {
   const [ownerReviews, setOwnerReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [existingImages, setExistingImages] = useState([]);
+
+  // Validation error messages keyed by field name.
+  const [errors, setErrors] = useState({});
+
+  // DOM refs for each validated field, used to scroll to + focus the
+  // first invalid field on a failed submit.
+  const fieldRefs = useRef({});
 
 const [formData, setFormData] = useState({
   name: "",
@@ -207,10 +231,21 @@ const [formData, setFormData] = useState({
   };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
+
+    // Clear the error for this field as soon as the user starts typing.
+    if (errors[name]) {
+      setErrors((prev) => {
+        const updated = { ...prev };
+        delete updated[name];
+        return updated;
+      });
+    }
   };
 
   const handleUseCurrentLocation = () => {
@@ -247,6 +282,15 @@ const [formData, setFormData] = useState({
 
     setImageFiles(validFiles);
     setImagePreviews(validFiles.map((file) => URL.createObjectURL(file)));
+
+    // Clear the "at least one image" error as soon as files are chosen.
+    if (errors.images) {
+      setErrors((prev) => {
+        const updated = { ...prev };
+        delete updated.images;
+        return updated;
+      });
+    }
   };
 
   const clearForm = () => {
@@ -274,6 +318,91 @@ const [formData, setFormData] = useState({
     setExistingImages([]);
     setImageFiles([]);
     setImagePreviews([]);
+    setErrors({});
+  };
+
+  // Validates all required fields. Returns an object keyed by field name
+  // containing the error message for any invalid field.
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Business name is required";
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    } else if (!/^\d{10}$/.test(formData.phone.trim())) {
+      newErrors.phone = "Enter a valid 10 digit phone number";
+    }
+
+    if (
+      formData.email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())
+    ) {
+      newErrors.email = "Enter a valid email address";
+    }
+
+    if (!formData.addressLine1.trim()) {
+      newErrors.addressLine1 = "Address Line 1 is required";
+    }
+
+    if (
+      formData.pincode &&
+      !/^\d{6}$/.test(formData.pincode.trim())
+    ) {
+      newErrors.pincode = "Enter valid 6 digit pincode";
+    }
+
+    if (!formData.categoryId) {
+      newErrors.categoryId = "Category is required";
+    }
+
+    if (!formData.cityId) {
+      newErrors.cityId = "City is required";
+    }
+
+    if (!formData.priceRange) {
+      newErrors.priceRange = "Price range is required";
+    }
+
+    if (!formData.opensAt) {
+      newErrors.opensAt = "Opening time is required";
+    }
+
+    if (!formData.closesAt) {
+      newErrors.closesAt = "Closing time is required";
+    }
+
+    if (!formData.description.trim()) {
+      newErrors.description = "Description is required";
+    }
+
+    if (imageFiles.length === 0 && existingImages.length === 0) {
+      newErrors.images = "At least one image is required";
+    }
+
+    return newErrors;
+  };
+
+  // Scrolls to and focuses the first invalid field, following the
+  // visual top-to-bottom order of the form.
+  const focusFirstInvalidField = (validationErrors) => {
+    const firstInvalidField = VALIDATION_FIELD_ORDER.find(
+      (field) => validationErrors[field]
+    );
+
+    if (!firstInvalidField) return;
+
+    const node = fieldRefs.current[firstInvalidField];
+
+    if (node && typeof node.scrollIntoView === "function") {
+      node.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    if (node && typeof node.focus === "function") {
+      node.focus();
+    }
   };
 
   const getPayload = () => {
@@ -334,6 +463,16 @@ const [formData, setFormData] = useState({
 
   const handleAddListing = async (e) => {
     e.preventDefault();
+
+    const validationErrors = validateForm();
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      focusFirstInvalidField(validationErrors);
+      return;
+    }
+
+    setErrors({});
     setLoading(true);
 
     try {
@@ -386,12 +525,23 @@ const [formData, setFormData] = useState({
     setExistingImages(listing.images || []);
     setImageFiles([]);
     setImagePreviews([]);
+    setErrors({});
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleUpdateListing = async (e) => {
     e.preventDefault();
+
+    const validationErrors = validateForm();
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      focusFirstInvalidField(validationErrors);
+      return;
+    }
+
+    setErrors({});
     setLoading(true);
 
     try {
@@ -852,6 +1002,7 @@ const [formData, setFormData] = useState({
             <form
               onSubmit={editingId ? handleUpdateListing : handleAddListing}
               className="grid md:grid-cols-2 gap-4"
+              noValidate
             >
               <InputBox
                 icon={<FaBuilding />}
@@ -860,6 +1011,8 @@ const [formData, setFormData] = useState({
                 placeholder="Enter business name"
                 value={formData.name}
                 onChange={handleChange}
+                error={errors.name}
+                inputRef={(el) => (fieldRefs.current.name = el)}
               />
 
               <InputBox
@@ -869,6 +1022,8 @@ const [formData, setFormData] = useState({
                 placeholder="Enter phone number"
                 value={formData.phone}
                 onChange={handleChange}
+                error={errors.phone}
+                inputRef={(el) => (fieldRefs.current.phone = el)}
               />
 
               <InputBox
@@ -880,6 +1035,8 @@ const [formData, setFormData] = useState({
                 value={formData.email}
                 onChange={handleChange}
                 required={false}
+                error={errors.email}
+                inputRef={(el) => (fieldRefs.current.email = el)}
               />
 
               <InputBox
@@ -909,6 +1066,8 @@ const [formData, setFormData] = useState({
                 placeholder="Shop no, building, market"
                 value={formData.addressLine1}
                 onChange={handleChange}
+                error={errors.addressLine1}
+                inputRef={(el) => (fieldRefs.current.addressLine1 = el)}
               />
 
               <InputBox
@@ -939,6 +1098,8 @@ const [formData, setFormData] = useState({
                 value={formData.pincode}
                 onChange={handleChange}
                 required={false}
+                error={errors.pincode}
+                inputRef={(el) => (fieldRefs.current.pincode = el)}
               />
 
               <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
@@ -982,68 +1143,101 @@ const [formData, setFormData] = useState({
                 </div>
               </div>
 
-              <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
-                <label className="text-sm text-gray-500">
-                  Category <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="categoryId"
-                  value={formData.categoryId}
-                  onChange={handleChange}
-                  className="w-full outline-none bg-transparent mt-2"
-                  required
+              <div>
+                <div
+                  className={`border rounded-2xl px-4 py-3 focus-within:border-blue-500 ${
+                    errors.categoryId ? "border-red-500" : ""
+                  }`}
                 >
-                  <option value="">Select Category</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
-                <label className="text-sm text-gray-500">
-                  City <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="cityId"
-                  value={formData.cityId}
-                  onChange={handleChange}
-                  className="w-full outline-none bg-transparent mt-2"
-                  required
-                >
-                  <option value="">Select City</option>
-                  {cities.map((city) => (
-                    <option key={city.id} value={city.id}>
-                      {city.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
-                <label className="text-sm text-gray-500">
-                  Price Range <span className="text-red-500">*</span>
-                </label>
-
-                <div className="flex items-center gap-3 mt-2">
-                  <span className="text-gray-400">
-                    <FaRupeeSign />
-                  </span>
+                  <label className="text-sm text-gray-500">
+                    Category <span className="text-red-500">*</span>
+                  </label>
                   <select
-                    name="priceRange"
-                    value={formData.priceRange}
+                    name="categoryId"
+                    value={formData.categoryId}
                     onChange={handleChange}
-                    className="w-full outline-none bg-transparent"
-                    required
+                    className="w-full outline-none bg-transparent mt-2"
+                    ref={(el) => (fieldRefs.current.categoryId = el)}
                   >
-                    <option value="">Select Price Range</option>
-                    <option value="BUDGET">Budget</option>
-                    <option value="MID_RANGE">Mid Range</option>
-                    <option value="PREMIUM">Premium</option>
+                    <option value="">Select Category</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
+                {errors.categoryId && (
+                  <p className="text-red-500 text-xs mt-1 px-1">
+                    {errors.categoryId}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <div
+                  className={`border rounded-2xl px-4 py-3 focus-within:border-blue-500 ${
+                    errors.cityId ? "border-red-500" : ""
+                  }`}
+                >
+                  <label className="text-sm text-gray-500">
+                    City <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="cityId"
+                    value={formData.cityId}
+                    onChange={handleChange}
+                    className="w-full outline-none bg-transparent mt-2"
+                    ref={(el) => (fieldRefs.current.cityId = el)}
+                  >
+                    <option value="">Select City</option>
+                    {cities.map((city) => (
+                      <option key={city.id} value={city.id}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.cityId && (
+                  <p className="text-red-500 text-xs mt-1 px-1">
+                    {errors.cityId}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <div
+                  className={`border rounded-2xl px-4 py-3 focus-within:border-blue-500 ${
+                    errors.priceRange ? "border-red-500" : ""
+                  }`}
+                >
+                  <label className="text-sm text-gray-500">
+                    Price Range <span className="text-red-500">*</span>
+                  </label>
+
+                  <div className="flex items-center gap-3 mt-2">
+                    <span className="text-gray-400">
+                      <FaRupeeSign />
+                    </span>
+                    <select
+                      name="priceRange"
+                      value={formData.priceRange}
+                      onChange={handleChange}
+                      className="w-full outline-none bg-transparent"
+                      ref={(el) => (fieldRefs.current.priceRange = el)}
+                    >
+                      <option value="">Select Price Range</option>
+                      <option value="BUDGET">Budget</option>
+                      <option value="MID_RANGE">Mid Range</option>
+                      <option value="PREMIUM">Premium</option>
+                    </select>
+                  </div>
+                </div>
+                {errors.priceRange && (
+                  <p className="text-red-500 text-xs mt-1 px-1">
+                    {errors.priceRange}
+                  </p>
+                )}
               </div>
 
               <TimeInputBox
@@ -1052,6 +1246,8 @@ const [formData, setFormData] = useState({
                 name="opensAt"
                 value={formData.opensAt}
                 onChange={handleChange}
+                error={errors.opensAt}
+                inputRef={(el) => (fieldRefs.current.opensAt = el)}
               />
 
               <TimeInputBox
@@ -1060,6 +1256,8 @@ const [formData, setFormData] = useState({
                 name="closesAt"
                 value={formData.closesAt}
                 onChange={handleChange}
+                error={errors.closesAt}
+                inputRef={(el) => (fieldRefs.current.closesAt = el)}
               />
 
               <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
@@ -1073,15 +1271,27 @@ const [formData, setFormData] = useState({
                 />
               </div>
 
-              <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
-                <label className="text-sm text-gray-500">Description</label>
-                <textarea
-                  name="description"
-                  placeholder="Describe your business"
-                  value={formData.description}
-                  onChange={handleChange}
-                  className="w-full outline-none bg-transparent mt-2 min-h-[110px] resize-none"
-                />
+              <div className="md:col-span-2">
+                <div
+                  className={`border rounded-2xl px-4 py-3 focus-within:border-blue-500 ${
+                    errors.description ? "border-red-500" : ""
+                  }`}
+                >
+                  <label className="text-sm text-gray-500">Description</label>
+                  <textarea
+                    name="description"
+                    placeholder="Describe your business"
+                    value={formData.description}
+                    onChange={handleChange}
+                    className="w-full outline-none bg-transparent mt-2 min-h-[110px] resize-none"
+                    ref={(el) => (fieldRefs.current.description = el)}
+                  />
+                </div>
+                {errors.description && (
+                  <p className="text-red-500 text-xs mt-1 px-1">
+                    {errors.description}
+                  </p>
+                )}
               </div>
 
               {existingImages.length > 0 && (
@@ -1110,27 +1320,39 @@ const [formData, setFormData] = useState({
                 </div>
               )}
 
-              <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500 md:col-span-2">
-                <label className="text-sm text-gray-500">Business Images</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageChange}
-                  className="w-full mt-3"
-                />
+              <div className="md:col-span-2">
+                <div
+                  className={`border rounded-2xl px-4 py-3 focus-within:border-blue-500 ${
+                    errors.images ? "border-red-500" : ""
+                  }`}
+                >
+                  <label className="text-sm text-gray-500">Business Images</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    className="w-full mt-3"
+                    ref={(el) => (fieldRefs.current.images = el)}
+                  />
 
-                {imagePreviews.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
-                    {imagePreviews.map((preview) => (
-                      <img
-                        key={preview}
-                        src={preview}
-                        alt="Selected business"
-                        className="w-full aspect-square object-cover rounded-2xl border"
-                      />
-                    ))}
-                  </div>
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+                      {imagePreviews.map((preview) => (
+                        <img
+                          key={preview}
+                          src={preview}
+                          alt="Selected business"
+                          className="w-full aspect-square object-cover rounded-2xl border"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {errors.images && (
+                  <p className="text-red-500 text-xs mt-1 px-1">
+                    {errors.images}
+                  </p>
                 )}
               </div>
 
@@ -1339,47 +1561,64 @@ function InputBox({
   value,
   onChange,
   required = true,
+  error,
+  inputRef,
+  type = "text",
 }) {
   return (
-    <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
-      <label className="text-sm text-gray-500">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+    <div>
+      <div
+        className={`border rounded-2xl px-4 py-3 focus-within:border-blue-500 ${
+          error ? "border-red-500" : ""
+        }`}
+      >
+        <label className="text-sm text-gray-500">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
 
-      <div className="flex items-center gap-3 mt-2">
-        <span className="text-gray-400">{icon}</span>
-        <input
-          type="text"
-          name={name}
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          className="w-full outline-none"
-          required={required}
-        />
+        <div className="flex items-center gap-3 mt-2">
+          <span className="text-gray-400">{icon}</span>
+          <input
+            type={type}
+            name={name}
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            className="w-full outline-none"
+            ref={inputRef}
+          />
+        </div>
       </div>
+      {error && <p className="text-red-500 text-xs mt-1 px-1">{error}</p>}
     </div>
   );
 }
 
-function TimeInputBox({ icon, label, name, value, onChange }) {
+function TimeInputBox({ icon, label, name, value, onChange, error, inputRef }) {
   return (
-    <div className="border rounded-2xl px-4 py-3 focus-within:border-blue-500">
-      <label className="text-sm text-gray-500">
-        {label} <span className="text-red-500">*</span>
-      </label>
+    <div>
+      <div
+        className={`border rounded-2xl px-4 py-3 focus-within:border-blue-500 ${
+          error ? "border-red-500" : ""
+        }`}
+      >
+        <label className="text-sm text-gray-500">
+          {label} <span className="text-red-500">*</span>
+        </label>
 
-      <div className="flex items-center gap-3 mt-2">
-        <span className="text-gray-400">{icon}</span>
-        <input
-          type="time"
-          name={name}
-          value={value}
-          onChange={onChange}
-          className="w-full outline-none"
-          required
-        />
+        <div className="flex items-center gap-3 mt-2">
+          <span className="text-gray-400">{icon}</span>
+          <input
+            type="time"
+            name={name}
+            value={value}
+            onChange={onChange}
+            className="w-full outline-none"
+            ref={inputRef}
+          />
+        </div>
       </div>
+      {error && <p className="text-red-500 text-xs mt-1 px-1">{error}</p>}
     </div>
   );
 }
