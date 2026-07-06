@@ -208,12 +208,16 @@ export default function Login() {
             </div>
 
             {isLogin && (
-              <div className="text-right">
-                <button type="button" className="text-blue-600 hover:underline">
-                  Forgot Password?
-                </button>
-              </div>
-            )}
+  <div className="text-right">
+    <button
+      type="button"
+      onClick={() => navigate("/forgot-password")}
+      className="text-blue-600 hover:underline"
+    >
+      Forgot Password?
+    </button>
+  </div>
+)}
 
             <button
               type="submit"

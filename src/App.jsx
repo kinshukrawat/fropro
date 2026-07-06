@@ -27,6 +27,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/admin/Dashboard";
 import AdminLogin from "./pages/admin/AdminLogin";
 
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+
 function AppContent() {
   const location = useLocation();
 
@@ -66,6 +69,10 @@ function AppContent() {
 
         <Route path="/contact" element={<Contact />} />
         <Route path="/viewdetail/:id" element={<ViewDetail />} />
+
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Protected Routes */}
         <Route
