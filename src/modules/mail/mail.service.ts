@@ -21,7 +21,7 @@ export class MailService {
       host,
       port,
       secure: false, // 587 => false
-      requireTLS: true,
+      
       auth: {
         user,
         pass,
