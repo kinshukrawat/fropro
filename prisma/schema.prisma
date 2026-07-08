@@ -66,15 +66,16 @@ model User {
   payments      Payment[]
   subscriptions Subscription[]
   resetTokens   PasswordResetToken[]
+  savedListings SavedListing[]
 }
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  tokenHash String   @unique
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -141,15 +142,16 @@ model BusinessListing {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
-  owner         User           @relation(fields: [ownerId], references: [id])
-  category      Category       @relation(fields: [categoryId], references: [id])
-  city          City?          @relation(fields: [cityId], references: [id])
+  owner          User                   @relation(fields: [ownerId], references: [id])
+  category       Category               @relation(fields: [categoryId], references: [id])
+  city           City?                  @relation(fields: [cityId], references: [id])
   images         ListingImage[]
   catalogueItems ListingCatalogueItem[]
-  subscriptions Subscription[]
-  payments      Payment[]
-  enquiries     Enquiry[]
-  reviews       Review[]
+  subscriptions  Subscription[]
+  payments       Payment[]
+  enquiries      Enquiry[]
+  reviews        Review[]
+  savedBy        SavedListing[]
 
   @@index([status, isDeleted])
   @@index([categoryId, status])
@@ -172,6 +174,7 @@ model ListingCatalogueItem {
 
   @@index([listingId, sortOrder])
 }
+
 model Enquiry {
   id        String        @id @default(cuid())
   name      String
@@ -190,20 +193,21 @@ model Enquiry {
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  listingId String
-  name      String?
-  rating    Int
-  comment   String?
-  isApproved Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  listingId  String
+  name       String?
+  rating     Int
+  comment    String?
+  isApproved Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   listing BusinessListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@index([listingId, createdAt])
   @@index([isApproved])
 }
+
 model ListingImage {
   id           String   @id @default(cuid())
   listingId    String
@@ -286,4 +290,16 @@ model AuditLog {
   @@index([actorUserId])
 }
 
+model SavedListing {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
 
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing BusinessListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
+}

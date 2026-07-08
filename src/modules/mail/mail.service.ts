@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import * as dns from 'node:dns';
+
+// Force Node.js to prefer IPv4 over IPv6
+dns.setDefaultResultOrder('ipv4first');
 
 @Injectable()
 export class MailService {
@@ -8,27 +12,20 @@ export class MailService {
   private transporter: nodemailer.Transporter;
 
   constructor(private readonly config: ConfigService) {
-    const host = this.config.get<string>('MAIL_HOST');
-    const port = Number(this.config.get<string>('MAIL_PORT'));
+    
     const user = this.config.get<string>('MAIL_USER');
     const pass = this.config.get<string>('MAIL_PASS');
 
-    this.logger.log(`MAIL_HOST = ${host}`);
-    this.logger.log(`MAIL_PORT = ${port}`);
+
     this.logger.log(`MAIL_USER = ${user}`);
 
     this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: false, // 587 => false
-      
+      service: 'gmail',
       auth: {
         user,
         pass,
       },
-      tls: {
-        rejectUnauthorized: false,
-      },
+
     });
   }
 
@@ -57,11 +54,13 @@ export class MailService {
       html: `
         <h2>Reset Password</h2>
         <p>You requested to reset your password.</p>
+
         <p>
           <a href="${resetLink}">
             Click here to reset your password
           </a>
         </p>
+
         <p>This link will expire in 30 minutes.</p>
       `,
     });

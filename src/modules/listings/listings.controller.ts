@@ -9,10 +9,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { UserRole } from '@prisma/client';
+
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { RolesGuard } from '../../common/guards/roles.guard';
+
 import { CreateListingDto } from './dto/create-listing.dto';
 import { SearchListingsDto } from './dto/search-listings.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
@@ -23,33 +22,37 @@ export class ListingsController {
   constructor(private readonly listings: ListingsService) {}
 
   @Get('debug/all')
-debugAll() {
-  return this.listings.findPublicListings();
-}
+  debugAll() {
+    return this.listings.findPublicListings();
+  }
 
   @Get()
   searchPublic(@Query() query: SearchListingsDto) {
     return this.listings.searchPublic(query);
   }
-  
 
+  // ==========================
+  // TEMP DEBUG
+  // ==========================
   @Post()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(UserRole.BUSINESS_OWNER)
-  create(@CurrentUser() user: CurrentUser, @Body() dto: CreateListingDto) {
+  @UseGuards(AuthGuard('jwt'))
+  create(
+    @CurrentUser() user: CurrentUser,
+    @Body() dto: CreateListingDto,
+  ) {
+    console.log('USER =>', user);
+
     return this.listings.createOwnerListing(user.id, dto);
   }
 
   @Get('owner/mine')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(UserRole.BUSINESS_OWNER)
+  @UseGuards(AuthGuard('jwt'))
   findMine(@CurrentUser() user: CurrentUser) {
     return this.listings.findOwnerListings(user.id);
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(UserRole.BUSINESS_OWNER)
+  @UseGuards(AuthGuard('jwt'))
   update(
     @CurrentUser() user: CurrentUser,
     @Param('id') id: string,
@@ -59,9 +62,11 @@ debugAll() {
   }
 
   @Post(':id/submit')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(UserRole.BUSINESS_OWNER)
-  submit(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
+  @UseGuards(AuthGuard('jwt'))
+  submit(
+    @CurrentUser() user: CurrentUser,
+    @Param('id') id: string,
+  ) {
     return this.listings.submitOwnerListing(user.id, id);
   }
 
@@ -70,3 +75,4 @@ debugAll() {
     return this.listings.findPublicBySlug(slug);
   }
 }
+

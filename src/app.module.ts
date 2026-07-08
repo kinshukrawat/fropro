@@ -2,24 +2,30 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 
-import { AdminModule } from './modules/admin/admin.module';
-import { AnalyticsModule } from './modules/analytics/analytics.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { CategoriesModule } from './modules/categories/categories.module';
-import { CitiesModule } from './modules/cities/cities.module';
-import { ContactModule } from './modules/contact/contact.module';
-import { EnquiriesModule } from './modules/enquiries/enquiries.module';
-
-import { ListingsModule } from './modules/listings/listings.module';
-import { MailModule } from './modules/mail/mail.module';
-import { PaymentsModule } from './modules/payments/payments.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
-import { ReviewsModule } from './modules/reviews/reviews.module';
 
-import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
-import { UploadsModule } from './modules/uploads/uploads.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 
+import { CategoriesModule } from './modules/categories/categories.module';
+import { CitiesModule } from './modules/cities/cities.module';
+
+
+import { ListingsModule } from './modules/listings/listings.module';
+import { SavedListingsModule } from './modules/saved-listings/saved-listings.module';
+
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+
+import { ReviewsModule } from './modules/reviews/reviews.module';
+
+
+import { UploadsModule } from './modules/uploads/uploads.module';
+import { EnquiriesModule } from './modules/enquiries/enquiries.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { ContactModule } from './modules/contact/contact.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
   imports: [
@@ -36,16 +42,23 @@ import { UsersModule } from './modules/users/users.module';
     ]),
 
     PrismaModule,
+
     AuthModule,
     UsersModule,
+
     CategoriesModule,
     CitiesModule,
-    EnquiriesModule,
+
     ListingsModule,
+    SavedListingsModule,
+
     SubscriptionsModule,
     PaymentsModule,
+
     ReviewsModule,
     UploadsModule,
+    EnquiriesModule,
+
     AnalyticsModule,
     AdminModule,
     ContactModule,
