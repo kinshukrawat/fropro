@@ -82,40 +82,44 @@ export class AuthService {
   }
 
   async requestPasswordReset(email: string) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        email: email.toLowerCase(),
-      },
-    });
+  console.log("Password reset API called");
 
-    // Security: same response even if email doesn't exist
-    if (!user) {
-      return {
-        message: 'If the account exists, a reset email has been sent.',
-      };
-    }
+  const user = await this.prisma.user.findUnique({
+    where: {
+      email: email.toLowerCase(),
+    },
+  });
 
-    const token = crypto.randomBytes(32).toString('hex');
-    const tokenHash = this.hashResetToken(token);
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
-
-    await this.prisma.passwordResetToken.create({
-      data: {
-        userId: user.id,
-        tokenHash,
-        expiresAt,
-      },
-    });
-
-    await this.mailService.sendPasswordResetEmail(
-      user.email,
-      token,
-    );
+  if (!user) {
+    console.log("User not found");
 
     return {
-      message: 'If the account exists, a reset email has been sent.',
+      message: "If the account exists, a reset email has been sent.",
     };
   }
+
+  console.log("User found:", user.email);
+
+  const token = this.jwt.sign(
+    { sub: user.id },
+    {
+      secret: this.config.get('JWT_SECRET'),
+      expiresIn: '30m',
+    },
+  );
+
+  console.log("Generated token:", token);
+
+  console.log("Sending mail to:", user.email);
+
+  await this.mailService.sendPasswordResetEmail(user.email, token);
+
+  console.log("Mail sent successfully");
+
+  return {
+    message: "If the account exists, a reset email has been sent.",
+  };
+}
 
   async resetPassword(token: string, newPassword: string) {
     const tokenHash = this.hashResetToken(token);

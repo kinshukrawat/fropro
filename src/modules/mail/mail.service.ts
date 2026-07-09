@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import * as dns from 'node:dns';
 
-// Force Node.js to prefer IPv4 over IPv6
 dns.setDefaultResultOrder('ipv4first');
 
 @Injectable()
@@ -12,10 +11,14 @@ export class MailService {
   private transporter: nodemailer.Transporter;
 
   constructor(private readonly config: ConfigService) {
-    
     const user = this.config.get<string>('MAIL_USER');
     const pass = this.config.get<string>('MAIL_PASS');
 
+    if (!user || !pass) {
+      throw new Error(
+        'MAIL_USER or MAIL_PASS is missing in your .env.local file',
+      );
+    }
 
     this.logger.log(`MAIL_USER = ${user}`);
 
@@ -25,7 +28,6 @@ export class MailService {
         user,
         pass,
       },
-
     });
   }
 
@@ -47,24 +49,44 @@ export class MailService {
       throw err;
     }
 
-    await this.transporter.sendMail({
-      from: `"Hyperlocal" <${this.config.get('MAIL_USER')}>`,
-      to: email,
-      subject: 'Reset Your Password',
-      html: `
-        <h2>Reset Password</h2>
-        <p>You requested to reset your password.</p>
+    try {
+      await this.transporter.sendMail({
+        from: `"Oye Rohini" <${this.config.get('MAIL_USER')}>`,
+        to: email,
+        subject: 'Reset Your Password',
+        html: `
+          <div style="font-family:Arial,sans-serif;padding:20px;">
+            <h2>Password Reset</h2>
 
-        <p>
-          <a href="${resetLink}">
-            Click here to reset your password
-          </a>
-        </p>
+            <p>You requested to reset your password.</p>
 
-        <p>This link will expire in 30 minutes.</p>
-      `,
-    });
+            <p>
+              <a
+                href="${resetLink}"
+                style="
+                  background:#2563eb;
+                  color:#fff;
+                  padding:12px 20px;
+                  text-decoration:none;
+                  border-radius:6px;
+                  display:inline-block;
+                "
+              >
+                Reset Password
+              </a>
+            </p>
 
-    this.logger.log(`Password reset email sent to ${email}`);
+            <p>This link will expire in <b>30 minutes</b>.</p>
+
+            <p>If you didn't request this, you can ignore this email.</p>
+          </div>
+        `,
+      });
+
+      this.logger.log(`Password reset email sent to ${email}`);
+    } catch (err) {
+      this.logger.error('Error sending email', err);
+      throw err;
+    }
   }
 }

@@ -1,4 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -13,7 +16,7 @@ type JwtPayload = {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    config: ConfigService,
+    private readonly config: ConfigService,
     private readonly prisma: PrismaService,
   ) {
     super({
@@ -21,18 +24,48 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ignoreExpiration: false,
       secretOrKey: config.get<string>('JWT_SECRET'),
     });
+
+    console.log(
+      'JWT_SECRET =',
+      config.get<string>('JWT_SECRET'),
+    );
   }
 
   async validate(payload: JwtPayload) {
+    console.log('==============================');
+    console.log('JWT STRATEGY CALLED');
+    console.log('Payload:', payload);
+
     const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-      select: { id: true, email: true, role: true, isActive: true },
+      where: {
+        id: payload.sub,
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isActive: true,
+      },
     });
 
-    if (!user?.isActive) {
-      throw new UnauthorizedException('User is inactive or does not exist.');
+    console.log('DB User:', user);
+
+    if (!user) {
+      console.log('USER NOT FOUND');
+      throw new UnauthorizedException('User not found');
     }
 
-    return { id: user.id, email: user.email, role: user.role };
+    if (!user.isActive) {
+      console.log('USER INACTIVE');
+      throw new UnauthorizedException('User inactive');
+    }
+
+    console.log('JWT SUCCESS');
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    };
   }
 }
