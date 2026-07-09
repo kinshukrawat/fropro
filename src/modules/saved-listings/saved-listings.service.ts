@@ -13,34 +13,41 @@ export class SavedListingsService {
   // Save Listing
   // ==========================
   async saveListing(userId: string, listingId: string) {
-    console.log('==============================');
-    console.log('Received User ID =>', userId);
-    console.log('Received Listing ID =>', listingId);
+    console.log('======================================');
+    console.log('SAVE LISTING API CALLED');
+    console.log('User ID =>', userId);
+    console.log('Listing ID =>', listingId);
 
+    // Show all listings present in database
     const allListings = await this.prisma.businessListing.findMany({
       select: {
         id: true,
         name: true,
+        slug: true,
+        status: true,
       },
     });
 
-    console.log('Business Listings In Database =>');
+    console.log('--------------------------------------');
+    console.log('ALL BUSINESS LISTINGS');
     console.log(allListings);
+    console.log('--------------------------------------');
 
+    // Find requested listing
     const listing = await this.prisma.businessListing.findUnique({
       where: {
         id: listingId,
       },
     });
 
-    console.log('Matched Listing =>');
+    console.log('MATCHED LISTING =>');
     console.log(listing);
 
     if (!listing) {
-      
       throw new NotFoundException('Listing not found');
     }
 
+    // Check already saved
     const alreadySaved = await this.prisma.savedListing.findUnique({
       where: {
         userId_listingId: {
@@ -50,13 +57,14 @@ export class SavedListingsService {
       },
     });
 
-
+    console.log('ALREADY SAVED =>');
+    console.log(alreadySaved);
 
     if (alreadySaved) {
-
       throw new BadRequestException('Listing already saved');
     }
 
+    // Save listing
     const savedListing = await this.prisma.savedListing.create({
       data: {
         userId,
@@ -64,8 +72,9 @@ export class SavedListingsService {
       },
     });
 
-    console.log('Saved Successfully =>');
+    console.log('SAVED SUCCESSFULLY');
     console.log(savedListing);
+    console.log('======================================');
 
     return savedListing;
   }
@@ -74,6 +83,10 @@ export class SavedListingsService {
   // Remove Saved Listing
   // ==========================
   async removeSavedListing(userId: string, listingId: string) {
+    console.log('REMOVE SAVED LISTING');
+    console.log('User ID =>', userId);
+    console.log('Listing ID =>', listingId);
+
     const saved = await this.prisma.savedListing.findUnique({
       where: {
         userId_listingId: {
@@ -82,6 +95,9 @@ export class SavedListingsService {
         },
       },
     });
+
+    console.log('Saved Record =>');
+    console.log(saved);
 
     if (!saved) {
       throw new NotFoundException('Saved listing not found');
@@ -96,6 +112,8 @@ export class SavedListingsService {
       },
     });
 
+    console.log('Listing Removed Successfully');
+
     return {
       message: 'Listing removed from saved',
     };
@@ -105,7 +123,10 @@ export class SavedListingsService {
   // Get All Saved Listings
   // ==========================
   async getSavedListings(userId: string) {
-    return this.prisma.savedListing.findMany({
+    console.log('GET SAVED LISTINGS');
+    console.log('User ID =>', userId);
+
+    const listings = await this.prisma.savedListing.findMany({
       where: {
         userId,
       },
@@ -122,12 +143,21 @@ export class SavedListingsService {
         createdAt: 'desc',
       },
     });
+
+    console.log('Saved Listings =>');
+    console.log(listings);
+
+    return listings;
   }
 
   // ==========================
-  // Check Saved
+  // Check Saved Listing
   // ==========================
   async isListingSaved(userId: string, listingId: string) {
+    console.log('CHECK SAVED');
+    console.log('User ID =>', userId);
+    console.log('Listing ID =>', listingId);
+
     const saved = await this.prisma.savedListing.findUnique({
       where: {
         userId_listingId: {
@@ -136,6 +166,8 @@ export class SavedListingsService {
         },
       },
     });
+
+    console.log('Saved =>', saved);
 
     return {
       saved: !!saved,
