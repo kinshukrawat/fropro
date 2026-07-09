@@ -11,11 +11,19 @@ export class SavedListingsService {
 
   // Save Listing
   async saveListing(userId: string, listingId: string) {
+    console.log('======================================');
+    console.log('SAVE LISTING API HIT');
+    console.log('User ID =>', userId);
+    console.log('Listing ID =>', listingId);
+
     const listing = await this.prisma.businessListing.findUnique({
       where: { id: listingId },
     });
 
+    console.log('Listing Found =>', listing);
+
     if (!listing) {
+      console.log('ERROR => Listing not found');
       throw new NotFoundException('Listing not found');
     }
 
@@ -28,16 +36,24 @@ export class SavedListingsService {
       },
     });
 
+    console.log('Already Saved =>', alreadySaved);
+
     if (alreadySaved) {
+      console.log('ERROR => Listing already saved');
       throw new BadRequestException('Listing already saved');
     }
 
-    return this.prisma.savedListing.create({
+    const saved = await this.prisma.savedListing.create({
       data: {
         userId,
         listingId,
       },
     });
+
+    console.log('Saved Successfully =>', saved);
+    console.log('======================================');
+
+    return saved;
   }
 
   // Remove Saved Listing
