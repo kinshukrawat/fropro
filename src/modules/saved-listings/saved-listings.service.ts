@@ -9,21 +9,35 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SavedListingsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // ==========================
   // Save Listing
+  // ==========================
   async saveListing(userId: string, listingId: string) {
-    console.log('======================================');
-    console.log('SAVE LISTING API HIT');
-    console.log('User ID =>', userId);
-    console.log('Listing ID =>', listingId);
+    console.log('==============================');
+    console.log('Received User ID =>', userId);
+    console.log('Received Listing ID =>', listingId);
 
-    const listing = await this.prisma.businessListing.findUnique({
-      where: { id: listingId },
+    const allListings = await this.prisma.businessListing.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
     });
 
-    console.log('Listing Found =>', listing);
+    console.log('Business Listings In Database =>');
+    console.log(allListings);
+
+    const listing = await this.prisma.businessListing.findUnique({
+      where: {
+        id: listingId,
+      },
+    });
+
+    console.log('Matched Listing =>');
+    console.log(listing);
 
     if (!listing) {
-      console.log('ERROR => Listing not found');
+      
       throw new NotFoundException('Listing not found');
     }
 
@@ -36,27 +50,29 @@ export class SavedListingsService {
       },
     });
 
-    console.log('Already Saved =>', alreadySaved);
+
 
     if (alreadySaved) {
-      console.log('ERROR => Listing already saved');
+
       throw new BadRequestException('Listing already saved');
     }
 
-    const saved = await this.prisma.savedListing.create({
+    const savedListing = await this.prisma.savedListing.create({
       data: {
         userId,
         listingId,
       },
     });
 
-    console.log('Saved Successfully =>', saved);
-    console.log('======================================');
+    console.log('Saved Successfully =>');
+    console.log(savedListing);
 
-    return saved;
+    return savedListing;
   }
 
+  // ==========================
   // Remove Saved Listing
+  // ==========================
   async removeSavedListing(userId: string, listingId: string) {
     const saved = await this.prisma.savedListing.findUnique({
       where: {
@@ -85,7 +101,9 @@ export class SavedListingsService {
     };
   }
 
+  // ==========================
   // Get All Saved Listings
+  // ==========================
   async getSavedListings(userId: string) {
     return this.prisma.savedListing.findMany({
       where: {
@@ -106,7 +124,9 @@ export class SavedListingsService {
     });
   }
 
-  // Check if Listing is Saved
+  // ==========================
+  // Check Saved
+  // ==========================
   async isListingSaved(userId: string, listingId: string) {
     const saved = await this.prisma.savedListing.findUnique({
       where: {
