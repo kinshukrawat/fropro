@@ -31,7 +31,6 @@ import { MailModule } from './modules/mail/mail.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      ignoreEnvFile: true,
     }),
 
     ThrottlerModule.forRoot([

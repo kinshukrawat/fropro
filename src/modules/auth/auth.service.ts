@@ -100,13 +100,17 @@ export class AuthService {
 
   console.log("User found:", user.email);
 
-  const token = this.jwt.sign(
-    { sub: user.id },
-    {
-      secret: this.config.get('JWT_SECRET'),
-      expiresIn: '30m',
+  const token = crypto.randomBytes(32).toString('hex');
+  const tokenHash = this.hashResetToken(token);
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+  await this.prisma.passwordResetToken.create({
+    data: {
+      userId: user.id,
+      tokenHash,
+      expiresAt,
     },
-  );
+  });
 
   console.log("Generated token:", token);
 
