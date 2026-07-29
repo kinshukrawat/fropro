@@ -9,6 +9,7 @@ import {
   FaImage,
   FaClock,
   FaRupeeSign,
+  FaTimes,
 } from "react-icons/fa";
 
 import API, { getCategories, getCities } from "../api/api";
@@ -19,8 +20,7 @@ export default function AddBusinessListing() {
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [imageFiles, setImageFiles] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
+  const [mediaFiles, setMediaFiles] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -64,20 +64,78 @@ export default function AddBusinessListing() {
     }));
   };
 
-  const handleImageChange = (e) => {
+  const handleMediaChange = (e) => {
     const files = Array.from(e.target.files || []);
-
     if (!files.length) return;
 
-    const validFiles = files.filter((file) => file.type.startsWith("image/"));
+    const allowedImageExtensions = ["jpg", "jpeg", "png", "webp"];
+    const allowedVideoExtensions = ["mp4", "mov", "webm"];
 
-    if (validFiles.length > 10) {
-      alert("Maximum 10 images allowed");
-      return;
+    let newMedia = [...mediaFiles];
+    let errors = [];
+
+    files.forEach((file) => {
+      const ext = file.name.split(".").pop().toLowerCase();
+      const type = file.type.toLowerCase();
+      
+      const isImage = allowedImageExtensions.includes(ext) || type.startsWith("image/");
+      const isVideo = allowedVideoExtensions.includes(ext) || type.startsWith("video/");
+
+      if (!isImage && !isVideo) {
+        errors.push(`"${file.name}" is not a supported file format.`);
+        return;
+      }
+
+      if (isImage) {
+        if (file.size > 10 * 1024 * 1024) {
+          errors.push(`"${file.name}" exceeds the 10 MB limit for images.`);
+          return;
+        }
+        const imageCount = newMedia.filter((m) => m.type === "IMAGE").length;
+        if (imageCount >= 20) {
+          errors.push(`Maximum of 20 images allowed.`);
+          return;
+        }
+        newMedia.push({
+          file,
+          preview: URL.createObjectURL(file),
+          type: "IMAGE",
+        });
+      } else {
+        if (file.size > 100 * 1024 * 1024) {
+          errors.push(`"${file.name}" exceeds the 100 MB limit for videos.`);
+          return;
+        }
+        const videoCount = newMedia.filter((m) => m.type === "VIDEO").length;
+        if (videoCount >= 5) {
+          errors.push(`Maximum of 5 videos allowed.`);
+          return;
+        }
+        newMedia.push({
+          file,
+          preview: URL.createObjectURL(file),
+          type: "VIDEO",
+        });
+      }
+    });
+
+    if (errors.length) {
+      alert(errors.join("\n"));
     }
 
-    setImageFiles(validFiles);
-    setImagePreviews(validFiles.map((file) => URL.createObjectURL(file)));
+    setMediaFiles(newMedia);
+  };
+
+  const handleRemoveMedia = (indexToRemove) => {
+    setMediaFiles((prev) =>
+      prev.filter((_, idx) => {
+        if (idx === indexToRemove) {
+          URL.revokeObjectURL(prev[idx].preview);
+          return false;
+        }
+        return true;
+      })
+    );
   };
 
   const getPayload = () => ({
@@ -102,12 +160,12 @@ export default function AddBusinessListing() {
       .filter(Boolean),
   });
 
-  const uploadImagesForListing = async (listingId) => {
-    if (!imageFiles.length || !listingId) return;
+  const uploadMediaForListing = async (listingId) => {
+    if (!mediaFiles.length || !listingId) return;
 
-    for (const file of imageFiles) {
+    for (const item of mediaFiles) {
       const uploadForm = new FormData();
-      uploadForm.append("file", file);
+      uploadForm.append("file", item.file);
 
       const uploadRes = await API.post("/uploads/image", uploadForm, {
         headers: {
@@ -120,6 +178,7 @@ export default function AddBusinessListing() {
         url: uploadRes.data.url,
         cloudinaryId: uploadRes.data.cloudinaryId,
         altText: formData.name,
+        mediaType: item.type,
       });
     }
   };
@@ -136,7 +195,7 @@ export default function AddBusinessListing() {
 
       const listingId = createdListing?.id;
 
-      await uploadImagesForListing(listingId);
+      await uploadMediaForListing(listingId);
 
       alert("Business listing created successfully");
       navigate("/business-dashboard");
@@ -331,31 +390,53 @@ export default function AddBusinessListing() {
             </p>
           </div>
 
-          <div className="border rounded-2xl px-4 py-3 md:col-span-2">
-            <label className="text-sm text-gray-500">
-              Business Images / Gallery
+          <div className="border rounded-2xl p-5 md:col-span-2 bg-white shadow-sm">
+            <label className="text-sm font-semibold text-gray-700">
+              Business Media (Photos & Videos)
             </label>
+            <p className="text-xs text-gray-400 mt-1">
+              Upload promotional photos (max 20, up to 10MB each) and videos (max 5, up to 100MB each).
+            </p>
 
-            <div className="flex items-center gap-3 mt-3">
-              <FaImage className="text-gray-400" />
+            <div className="flex items-center gap-3 mt-3 p-3 border-2 border-dashed border-gray-200 rounded-xl hover:border-blue-500 transition duration-200">
+              <FaImage className="text-gray-400 text-lg" />
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/webp,video/mp4,video/mov,video/webm"
                 multiple
-                onChange={handleImageChange}
-                className="w-full"
+                onChange={handleMediaChange}
+                className="w-full cursor-pointer text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 file:hover:bg-blue-100"
               />
             </div>
 
-            {imagePreviews.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-                {imagePreviews.map((img, index) => (
-                  <img
-                    key={index}
-                    src={img}
-                    alt=""
-                    className="w-full h-32 object-cover rounded-xl border"
-                  />
+            {mediaFiles.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                {mediaFiles.map((item, index) => (
+                  <div key={index} className="relative group rounded-xl overflow-hidden border border-gray-100 shadow-sm h-32">
+                    {item.type === "IMAGE" ? (
+                      <img
+                        src={item.preview}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <video
+                        src={item.preview}
+                        controls
+                        className="w-full h-full object-cover bg-black"
+                      />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMedia(index)}
+                      className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full shadow transition opacity-90 hover:scale-105 border-none cursor-pointer"
+                    >
+                      <FaTimes className="text-xs" />
+                    </button>
+                    <span className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+                      {item.type === "IMAGE" ? "Image" : "Video"}
+                    </span>
+                  </div>
                 ))}
               </div>
             )}

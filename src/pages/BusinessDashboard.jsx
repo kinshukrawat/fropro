@@ -31,6 +31,7 @@ import {
   FaInstagram,
   FaEdit,
   FaRupeeSign,
+  FaTimes,
 } from "react-icons/fa";
 
 import API, {
@@ -66,8 +67,7 @@ export default function BusinessDashboard() {
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [imageFiles, setImageFiles] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
+  const [mediaFiles, setMediaFiles] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
 
@@ -268,22 +268,70 @@ const [formData, setFormData] = useState({
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
-  const handleImageChange = (e) => {
+  const handleMediaChange = (e) => {
     const files = Array.from(e.target.files || []);
-
     if (!files.length) return;
 
-    const validFiles = files.filter((file) => file.type.startsWith("image/"));
+    const allowedImageExtensions = ["jpg", "jpeg", "png", "webp"];
+    const allowedVideoExtensions = ["mp4", "mov", "webm"];
 
-    if (validFiles.length > 10) {
-      alert("Maximum 10 images allowed");
-      return;
+    let newMedia = [...mediaFiles];
+    let errorsList = [];
+
+    files.forEach((file) => {
+      const ext = file.name.split(".").pop().toLowerCase();
+      const type = file.type.toLowerCase();
+      
+      const isImage = allowedImageExtensions.includes(ext) || type.startsWith("image/");
+      const isVideo = allowedVideoExtensions.includes(ext) || type.startsWith("video/");
+
+      if (!isImage && !isVideo) {
+        errorsList.push(`"${file.name}" is not a supported file format.`);
+        return;
+      }
+
+      if (isImage) {
+        if (file.size > 10 * 1024 * 1024) {
+          errorsList.push(`"${file.name}" exceeds the 10 MB limit for images.`);
+          return;
+        }
+        const imageCount = newMedia.filter((m) => m.type === "IMAGE").length;
+        const existingImageCount = existingImages.filter((img) => img.mediaType === "IMAGE" || !img.mediaType).length;
+        if (imageCount + existingImageCount >= 20) {
+          errorsList.push(`Maximum of 20 images allowed.`);
+          return;
+        }
+        newMedia.push({
+          file,
+          preview: URL.createObjectURL(file),
+          type: "IMAGE",
+        });
+      } else {
+        if (file.size > 100 * 1024 * 1024) {
+          errorsList.push(`"${file.name}" exceeds the 100 MB limit for videos.`);
+          return;
+        }
+        const videoCount = newMedia.filter((m) => m.type === "VIDEO").length;
+        const existingVideoCount = existingImages.filter((img) => img.mediaType === "VIDEO").length;
+        if (videoCount + existingVideoCount >= 5) {
+          errorsList.push(`Maximum of 5 videos allowed.`);
+          return;
+        }
+        newMedia.push({
+          file,
+          preview: URL.createObjectURL(file),
+          type: "VIDEO",
+        });
+      }
+    });
+
+    if (errorsList.length) {
+      alert(errorsList.join("\n"));
     }
 
-    setImageFiles(validFiles);
-    setImagePreviews(validFiles.map((file) => URL.createObjectURL(file)));
+    setMediaFiles(newMedia);
 
-    // Clear the "at least one image" error as soon as files are chosen.
+    // Clear the error as soon as files are chosen.
     if (errors.images) {
       setErrors((prev) => {
         const updated = { ...prev };
@@ -291,6 +339,18 @@ const [formData, setFormData] = useState({
         return updated;
       });
     }
+  };
+
+  const handleRemoveMedia = (indexToRemove) => {
+    setMediaFiles((prev) =>
+      prev.filter((_, idx) => {
+        if (idx === indexToRemove) {
+          URL.revokeObjectURL(prev[idx].preview);
+          return false;
+        }
+        return true;
+      })
+    );
   };
 
   const clearForm = () => {
@@ -316,8 +376,7 @@ const [formData, setFormData] = useState({
 
     setEditingId(null);
     setExistingImages([]);
-    setImageFiles([]);
-    setImagePreviews([]);
+    setMediaFiles([]);
     setErrors({});
   };
 
@@ -378,8 +437,8 @@ const [formData, setFormData] = useState({
       newErrors.description = "Description is required";
     }
 
-    if (imageFiles.length === 0 && existingImages.length === 0) {
-      newErrors.images = "At least one image is required";
+    if (mediaFiles.length === 0 && existingImages.length === 0) {
+      newErrors.images = "At least one media item (image or video) is required";
     }
 
     return newErrors;
@@ -439,12 +498,12 @@ const [formData, setFormData] = useState({
     return payload;
   };
 
-  const uploadImagesForListing = async (listingId) => {
-    if (!imageFiles.length || !listingId) return;
+  const uploadMediaForListing = async (listingId) => {
+    if (!mediaFiles.length || !listingId) return;
 
-    for (const file of imageFiles) {
+    for (const item of mediaFiles) {
       const uploadForm = new FormData();
-      uploadForm.append("file", file);
+      uploadForm.append("file", item.file);
 
       const uploadRes = await API.post("/uploads/image", uploadForm, {
         headers: {
@@ -457,6 +516,7 @@ const [formData, setFormData] = useState({
         url: uploadRes.data.url,
         cloudinaryId: uploadRes.data.cloudinaryId,
         altText: formData.name,
+        mediaType: item.type,
       });
     }
   };
@@ -483,7 +543,7 @@ const [formData, setFormData] = useState({
 
       const listingId = createdListing?.id;
 
-      await uploadImagesForListing(listingId);
+      await uploadMediaForListing(listingId);
 
       alert("Business listing created successfully");
       clearForm();
@@ -547,7 +607,7 @@ const [formData, setFormData] = useState({
     try {
       await API.patch(`/listings/${editingId}`, getPayload());
 
-      await uploadImagesForListing(editingId);
+      await uploadMediaForListing(editingId);
 
       alert("Listing updated successfully");
       clearForm();
@@ -1297,23 +1357,34 @@ const [formData, setFormData] = useState({
               {existingImages.length > 0 && (
                 <div className="md:col-span-2">
                   <p className="text-sm font-semibold text-gray-700 mb-3">
-                    Existing Images
+                    Existing Media
                   </p>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {existingImages.map((image) => (
-                      <div key={image.id || image.url} className="relative">
-                        <img
-                          src={image.url}
-                          alt={image.altText || formData.name}
-                          className="w-full aspect-square object-cover rounded-2xl border"
-                        />
+                      <div key={image.id || image.url} className="relative group rounded-xl overflow-hidden border border-gray-100 shadow-sm h-32">
+                        {image.mediaType === "VIDEO" ? (
+                          <video
+                            src={image.url}
+                            controls
+                            className="w-full h-full object-cover bg-black"
+                          />
+                        ) : (
+                          <img
+                            src={image.url}
+                            alt={image.altText || formData.name}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                         <button
                           type="button"
                           onClick={() => handleRemoveExistingImage(image.id)}
-                          className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-7 h-7 text-xs"
+                          className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs shadow transition cursor-pointer border-none"
                         >
                           x
                         </button>
+                        <span className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+                          {image.mediaType === "VIDEO" ? "Video" : "Image"}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -1322,29 +1393,55 @@ const [formData, setFormData] = useState({
 
               <div className="md:col-span-2">
                 <div
-                  className={`border rounded-2xl px-4 py-3 focus-within:border-blue-500 ${
-                    errors.images ? "border-red-500" : ""
+                  className={`border rounded-2xl p-5 bg-white shadow-sm focus-within:border-blue-500 ${
+                    errors.images ? "border-red-500 font-semibold" : ""
                   }`}
                 >
-                  <label className="text-sm text-gray-500">Business Images</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageChange}
-                    className="w-full mt-3"
-                    ref={(el) => (fieldRefs.current.images = el)}
-                  />
+                  <label className="text-sm font-semibold text-gray-700">Business Media (Photos & Videos)</label>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Select photos (max 20) or promotional videos (max 5) to add to your listing.
+                  </p>
 
-                  {imagePreviews.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
-                      {imagePreviews.map((preview) => (
-                        <img
-                          key={preview}
-                          src={preview}
-                          alt="Selected business"
-                          className="w-full aspect-square object-cover rounded-2xl border"
-                        />
+                  <div className="flex items-center gap-3 mt-3 p-3 border-2 border-dashed border-gray-200 rounded-xl hover:border-blue-500 transition duration-200">
+                    <FaImage className="text-gray-400 text-lg" />
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,video/mp4,video/mov,video/webm"
+                      multiple
+                      onChange={handleMediaChange}
+                      className="w-full cursor-pointer text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 file:hover:bg-blue-100"
+                      ref={(el) => (fieldRefs.current.images = el)}
+                    />
+                  </div>
+
+                  {mediaFiles.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+                      {mediaFiles.map((item, index) => (
+                        <div key={index} className="relative group rounded-xl overflow-hidden border border-gray-100 shadow-sm h-32">
+                          {item.type === "IMAGE" ? (
+                            <img
+                              src={item.preview}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <video
+                              src={item.preview}
+                              controls
+                              className="w-full h-full object-cover bg-black"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMedia(index)}
+                            className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full shadow transition opacity-90 hover:scale-105 border-none cursor-pointer"
+                          >
+                            <FaTimes className="text-xs" />
+                          </button>
+                          <span className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+                            {item.type === "IMAGE" ? "Image" : "Video"}
+                          </span>
+                        </div>
                       ))}
                     </div>
                   )}
@@ -1419,15 +1516,28 @@ const [formData, setFormData] = useState({
                             <td className="p-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 overflow-hidden">
-                                  {item.images?.[0]?.url ? (
-                                    <img
-                                      src={item.images[0].url}
-                                      alt={item.name}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <FaStore />
-                                  )}
+                                  {(() => {
+                                    const firstImg = item.images?.find((img) => img.mediaType === "IMAGE" || !img.mediaType);
+                                    if (firstImg) {
+                                      return (
+                                        <img
+                                          src={firstImg.url}
+                                          alt={item.name}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      );
+                                    }
+                                    const firstVid = item.images?.find((img) => img.mediaType === "VIDEO");
+                                    if (firstVid) {
+                                      return (
+                                        <div className="relative w-full h-full bg-black flex items-center justify-center">
+                                          <video src={firstVid.url} className="w-full h-full object-cover opacity-60" />
+                                          <div className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold bg-black/20">▶</div>
+                                        </div>
+                                      );
+                                    }
+                                    return <FaStore />;
+                                  })()}
                                 </div>
                                 <div>
                                   <h4 className="font-bold">{item.name}</h4>

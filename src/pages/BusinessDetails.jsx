@@ -2,8 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import MapSection from "../components/MapSection";
-import ReviewSection, { formatListingRating } from "../components/ReviewSection";
-import { createEnquiry, getListingBySlug } from "../api/api";
+import ReviewSection, {
+  formatListingRating,
+} from "../components/ReviewSection";
+
+import {
+  createEnquiry,
+  getListingBySlug,
+  saveListing,
+  removeSavedListing,
+  checkSavedListing,
+} from "../api/api";
 
 import {
   FaStar,
@@ -11,11 +20,13 @@ import {
   FaPhoneAlt,
   FaClock,
   FaGlobe,
-  FaHeart,
+  FaBookmark,
+  FaRegBookmark,
   FaShareAlt,
   FaInstagram,
   FaWhatsapp,
 } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?q=80&w=1200&auto=format&fit=crop";
@@ -56,12 +67,16 @@ export default function BusinessDetails() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedMedia, setSelectedMedia] = useState(null);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [sendingEnquiry, setSendingEnquiry] = useState(false);
   const [reviewSummary, setReviewSummary] = useState({
+    
     rating: 0,
     reviewCount: 0,
   });
@@ -96,6 +111,27 @@ export default function BusinessDetails() {
   useEffect(() => {
     if (slug) fetchBusinessDetails();
   }, [slug]);
+
+  useEffect(() => {
+    if (!business?.id) return;
+
+    const checkSaved = () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      checkSavedListing(business.id)
+        .then((res) => {
+          setSaved(res.data.saved);
+        })
+        .catch(() => {});
+    };
+
+    checkSaved();
+
+    window.addEventListener("saved-listings-updated", checkSaved);
+    return () => {
+      window.removeEventListener("saved-listings-updated", checkSaved);
+    };
+  }, [business]);
 
   const handleShare = async () => {
     const shareData = {
@@ -168,12 +204,13 @@ export default function BusinessDetails() {
     );
   }
 
-  const image = business.images?.[0]?.url || business.image || fallbackImage;
+  const firstImage = business.images?.find((img) => img.mediaType === "IMAGE" || !img.mediaType);
+  const image = firstImage?.url || business.images?.[0]?.url || business.image || fallbackImage;
 
   const gallery =
     business.images?.length > 0
-      ? business.images.map((img) => img.url)
-      : [image];
+      ? business.images
+      : [{ url: image, mediaType: "IMAGE" }];
 
   const category = business.category?.name || business.category || "Business";
 
@@ -236,6 +273,56 @@ export default function BusinessDetails() {
 
   const isOpen = business.opensAt && business.closesAt;
 
+  const handleSaveListing = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate(`/login?redirect=/business/detail/${business.slug}`);
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      if (saved) {
+        await removeSavedListing(business.id);
+        setSaved(false);
+        window.dispatchEvent(new CustomEvent("saved-listings-updated"));
+        toast.success("Removed from saved listings", {
+          position: "bottom-right",
+        });
+      } else {
+        await saveListing(business.id);
+        setSaved(true);
+        window.dispatchEvent(new CustomEvent("saved-listings-updated"));
+        toast((t) => (
+          <div className="flex items-center justify-between w-full gap-4">
+            <span className="text-gray-800 font-medium">✓ Listing saved successfully</span>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                window.dispatchEvent(new CustomEvent("open-saved-drawer"));
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition select-none cursor-pointer border-none"
+            >
+              View Saved
+            </button>
+          </div>
+        ), {
+          duration: 5000,
+          position: "bottom-right",
+        });
+      }
+    } catch (err) {
+      console.log(err);
+      toast.error("Something went wrong", {
+        position: "bottom-right",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -274,9 +361,22 @@ export default function BusinessDetails() {
             </div>
 
             <div className="flex gap-4">
-              <button className="bg-white text-black px-5 py-3 rounded-2xl font-semibold flex items-center gap-2 hover:bg-gray-200 transition">
-                <FaHeart />
-                Save
+              <button
+                onClick={handleSaveListing}
+                disabled={saving}
+                className={`px-5 py-3 rounded-2xl font-semibold flex items-center gap-2 transition border-none cursor-pointer ${
+                  saved
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-black hover:bg-gray-200"
+                }`}
+              >
+                {saved ? <FaBookmark /> : <FaRegBookmark />}
+
+                {saving
+                  ? "Saving..."
+                  : saved
+                  ? "Saved"
+                  : "Save"}
               </button>
 
               <button
@@ -402,14 +502,33 @@ export default function BusinessDetails() {
               <h2 className="text-2xl font-bold mb-6">Gallery</h2>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {gallery.map((img, index) => (
-                  <img
+                {gallery.map((mediaItem, index) => (
+                  <div
                     key={index}
-                    src={img}
-                    alt={`${business.name} ${index + 1}`}
-                    onClick={() => setSelectedImage(img)}
-                    className="rounded-2xl h-40 object-cover w-full hover:scale-105 transition duration-300 cursor-pointer"
-                  />
+                    onClick={() => setSelectedMedia(mediaItem)}
+                    className="relative group rounded-2xl h-40 overflow-hidden hover:scale-105 transition duration-300 cursor-pointer shadow-sm bg-black"
+                  >
+                    {mediaItem.mediaType === "VIDEO" ? (
+                      <>
+                        <video
+                          src={mediaItem.url}
+                          className="w-full h-full object-cover opacity-80"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center text-white text-3xl font-bold bg-black/20">
+                          ▶
+                        </div>
+                      </>
+                    ) : (
+                      <img
+                        src={mediaItem.url}
+                        alt={`${business.name} ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    <span className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+                      {mediaItem.mediaType === "VIDEO" ? "Video" : "Image"}
+                    </span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -467,24 +586,34 @@ export default function BusinessDetails() {
         </div>
       </section>
 
-      {selectedImage && (
+      {selectedMedia && (
         <div
-          onClick={() => setSelectedImage(null)}
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedMedia(null)}
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
         >
           <button
-            onClick={() => setSelectedImage(null)}
-            className="absolute top-5 right-6 text-white text-5xl font-bold"
+            onClick={() => setSelectedMedia(null)}
+            className="absolute top-5 right-6 text-white text-5xl font-bold cursor-pointer border-none bg-transparent"
           >
             ×
           </button>
 
-          <img
-            src={selectedImage}
-            alt="Preview"
-            onClick={(e) => e.stopPropagation()}
-            className="max-w-full max-h-[90vh] rounded-2xl object-contain"
-          />
+          {selectedMedia.mediaType === "VIDEO" ? (
+            <video
+              src={selectedMedia.url}
+              controls
+              autoPlay
+              onClick={(e) => e.stopPropagation()}
+              className="max-w-full max-h-[90vh] rounded-2xl object-contain"
+            />
+          ) : (
+            <img
+              src={selectedMedia.url}
+              alt="Preview"
+              onClick={(e) => e.stopPropagation()}
+              className="max-w-full max-h-[90vh] rounded-2xl object-contain"
+            />
+          )}
         </div>
       )}
 

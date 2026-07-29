@@ -29,6 +29,9 @@ import AdminLogin from "./pages/admin/AdminLogin";
 
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import SavedListings from "./pages/SavedListings";
+import SavedListingsFAB from "./components/SavedListingsFAB";
+import { Toaster } from "react-hot-toast";
 
 function AppContent() {
   const location = useLocation();
@@ -84,6 +87,8 @@ function AppContent() {
           }
         />
 
+        <Route path="/saved-listings" element={<SavedListings />} />
+
         <Route
           path="/business-dashboard"
           element={
@@ -128,6 +133,8 @@ function AppContent() {
       </Routes>
 
       {!hideLayout && <Footer />}
+      <SavedListingsFAB />
+      <Toaster />
     </>
   );
 }

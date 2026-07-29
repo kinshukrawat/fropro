@@ -10,11 +10,19 @@ import {
   FaMapMarkerAlt,
   FaPhoneAlt,
   FaSearch,
+  FaBookmark,
+  FaRegBookmark,
 } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 import FilterSidebar from "../components/FilterSidebar";
 import { formatListingRating } from "../components/ReviewSection";
-import { searchListings } from "../api/api";
+import {
+  searchListings,
+  getSavedListings,
+  saveListing,
+  removeSavedListing,
+} from "../api/api";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1200&auto=format&fit=crop";
@@ -25,6 +33,7 @@ export default function Listing() {
   const [searchParams] = useSearchParams();
 
   const [listings, setListings] = useState([]);
+  const [savedListings, setSavedListings] = useState([]);
   const [search, setSearch] = useState("");
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
@@ -32,6 +41,74 @@ export default function Listing() {
   const [priceRange, setPriceRange] = useState("");
   const [openNow, setOpenNow] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const fetchSaved = () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      getSavedListings()
+        .then((res) => {
+          const list = res.data || [];
+          setSavedListings(list.map((item) => item.listingId));
+        })
+        .catch((err) => console.log("Error fetching saved listings:", err));
+    } else {
+      setSavedListings([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchSaved();
+    window.addEventListener("saved-listings-updated", fetchSaved);
+    return () => {
+      window.removeEventListener("saved-listings-updated", fetchSaved);
+    };
+  }, []);
+
+  const handleSaveListing = async (listingId) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate(`/login?redirect=${location.pathname}${location.search}`);
+      return;
+    }
+
+    const isSaved = savedListings.includes(listingId);
+    try {
+      if (isSaved) {
+        await removeSavedListing(listingId);
+        setSavedListings((prev) => prev.filter((id) => id !== listingId));
+        window.dispatchEvent(new CustomEvent("saved-listings-updated"));
+        toast.success("Removed from saved listings", {
+          position: "bottom-right",
+        });
+      } else {
+        await saveListing(listingId);
+        setSavedListings((prev) => [...prev, listingId]);
+        window.dispatchEvent(new CustomEvent("saved-listings-updated"));
+        toast((t) => (
+          <div className="flex items-center justify-between w-full gap-4">
+            <span className="text-gray-800 font-medium">✓ Listing saved successfully</span>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                window.dispatchEvent(new CustomEvent("open-saved-drawer"));
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition select-none cursor-pointer border-none"
+            >
+              View Saved
+            </button>
+          </div>
+        ), {
+          duration: 5000,
+          position: "bottom-right",
+        });
+      }
+    } catch (err) {
+      console.log("Error saving/removing listing:", err);
+      toast.error("Something went wrong", {
+        position: "bottom-right",
+      });
+    }
+  };
 
   const buildFetchParams = ({
     q = search,
@@ -225,7 +302,10 @@ export default function Listing() {
               <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
                 {listings.map((item) => {
                   const image =
-                    item.images?.[0]?.url || item.imageUrl || fallbackImage;
+                    item.images?.find((img) => img.mediaType === "IMAGE" || !img.mediaType)?.url ||
+                    item.images?.[0]?.url ||
+                    item.imageUrl ||
+                    fallbackImage;
 
                   const categoryName =
                     item.category?.name ||
@@ -246,8 +326,22 @@ export default function Listing() {
                   return (
                     <div
                       key={item.id}
-                      className="bg-white rounded-2xl overflow-hidden shadow hover:shadow-2xl transition duration-300"
+                      className="relative bg-white rounded-2xl overflow-hidden shadow hover:shadow-2xl transition duration-300"
                     >
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSaveListing(item.id);
+                        }}
+                        className="absolute top-4 right-4 z-10 bg-white/80 hover:bg-white text-gray-600 p-2.5 rounded-full shadow transition border-none cursor-pointer"
+                      >
+                        {savedListings.includes(item.id) ? (
+                          <FaBookmark className="text-blue-600" />
+                        ) : (
+                          <FaRegBookmark className="text-gray-400" />
+                        )}
+                      </button>
+
                       <img
                         src={image}
                         alt={item.name || "Business"}

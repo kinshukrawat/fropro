@@ -1,3 +1,4 @@
+import logo from "../assets/oye-rohini-logo.png";
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { FaEnvelope, FaLock, FaUser, FaPhoneAlt } from "react-icons/fa";
