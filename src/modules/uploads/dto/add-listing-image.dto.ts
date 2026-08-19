@@ -13,4 +13,8 @@ export class AddListingImageDto {
   @IsOptional()
   @IsString()
   altText?: string;
+
+  @IsOptional()
+  @IsString()
+  mediaType?: string;
 }
