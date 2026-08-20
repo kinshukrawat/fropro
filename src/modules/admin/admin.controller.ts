@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { UserRole } from '@prisma/client';
+import { EnquiryStatus, UserRole } from '@prisma/client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -13,6 +13,12 @@ import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 @Roles(UserRole.ADMIN)
 export class AdminController {
   constructor(private readonly admin: AdminService) {}
+
+  @Get('contact')
+  getContact() {
+    return this.admin.findEnquiries();
+  }
+
 
   @Get('stats')
   stats() {
@@ -71,6 +77,19 @@ export class AdminController {
     return this.admin.findPayments();
   }
 
+  @Get('enquiries')
+  enquiries(@Query('status') status?: EnquiryStatus) {
+    return this.admin.findEnquiries(status);
+  }
+
+  @Patch('enquiries/:id/status')
+  updateEnquiryStatus(
+    @Param('id') id: string,
+    @Body('status') status: EnquiryStatus,
+  ) {
+    return this.admin.updateEnquiryStatus(id, status);
+  }
+
   @Get('subscriptions')
   subscriptions() {
     return this.admin.findSubscriptions();
@@ -85,3 +104,4 @@ export class AdminController {
     return this.admin.updateSubscription(user.id, id, dto.status, dto.expiresAt);
   }
 }
+

@@ -39,7 +39,7 @@ export class PaymentsController {
     return this.payments.findOwnerPayments(user.id);
   }
 
-  @Post('razorpay/webhook')
+  @Post('webhook')
   async webhook(
     @Req() request: RawBodyRequest<Request>,
     @Headers('x-razorpay-signature') signature?: string,

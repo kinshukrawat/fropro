@@ -1,9 +1,20 @@
-import { Body, Controller, Delete, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Param,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { UploadedImageFile } from '../../common/types/uploaded-file.type';
 import { AddListingImageDto } from './dto/add-listing-image.dto';
 import { UploadsService } from './uploads.service';
 
@@ -12,6 +23,12 @@ import { UploadsService } from './uploads.service';
 @Roles(UserRole.BUSINESS_OWNER)
 export class UploadsController {
   constructor(private readonly uploads: UploadsService) {}
+
+  @Post('image')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadImage(@UploadedFile() file: UploadedImageFile) {
+    return this.uploads.uploadImage(file);
+  }
 
   @Post('listing-images')
   addListingImage(@CurrentUser() user: CurrentUser, @Body() dto: AddListingImageDto) {
