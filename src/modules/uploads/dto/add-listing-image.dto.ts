@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsIn, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class AddListingImageDto {
   @IsString()
@@ -15,6 +15,6 @@ export class AddListingImageDto {
   altText?: string;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['IMAGE', 'VIDEO'])
   mediaType?: string;
 }
